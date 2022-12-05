@@ -16,10 +16,13 @@ for D in $(find /home/sites/*/ -mindepth 1 -maxdepth 1 -type d -name www); do
 	# get user/group
 	SHUSER=$(stat -c "%U" ${D})
 	SHGROUP=$(stat -c "%G" ${D})
+	WPCLILOC=$(which wp)
+	SUDOLOC=$(which sudo)
+	
 
 	# no splitting
 	echo "Running WP-CLI as user ${SHUSER} and group ${SHGROUP} on ${D}"; 
-	cd ${D} && /usr/bin/sudo -u ${SHUSER} -g ${SHGROUP} /usr/bin/wp cron event run --due-now > ${D}/wp-content/cron.log
+	cd ${D} && ${SUDOLOC} -u ${SHUSER} -g ${SHGROUP} ${WPCLILOC} cron event run --due-now > ${D}/wp-content/cron.log
 
 done
 
