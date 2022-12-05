@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # run the wp cli cronjobs as the same php user
-# */2 * * * * cd /home/scripts/wpcron.sh > /dev/null 2>&1
+# */2 * * * * /home/scripts/wpcron.sh > /dev/null 2>&1
 #
 
 # Backup Directories ########################
