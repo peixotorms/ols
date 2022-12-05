@@ -20,7 +20,6 @@ for D in $(find /home/sites/*/ -mindepth 1 -maxdepth 1 -type d -name www); do
 	# no splitting
 	echo "Running WP-CLI as user ${SHUSER} and group ${SHGROUP} on ${D}"; 
 	cd ${D} && /usr/bin/sudo -u ${SHUSER} -g ${SHGROUP} /usr/bin/wp cron event run --due-now > ${D}/wp-content/cron.log
-	cd ${D} && /usr/bin/sudo -u ${SHUSER} -g ${SHGROUP} /usr/bin/wp action-scheduler run > ${D}/wp-content/cron-scheduler.log
 
 done
 
