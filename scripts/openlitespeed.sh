@@ -1272,10 +1272,11 @@ accessControl  {
 extprocessor lsphp {
   type                    lsapi
   address                 uds://tmp/lshttpd/lsphp.sock
-  maxConns                64
-  env                     PHP_LSAPI_CHILDREN=64
-  env                     PHP_LSAPI_MAX_REQUESTS=500
+  maxConns                24
+  env                     PHP_LSAPI_CHILDREN=24
+  env                     PHP_LSAPI_MAX_REQUESTS=5000
   env                     LSAPI_AVOID_FORK=1
+  env                     LSAPI_ACCEPT_NOTIFY=1
   initTimeout             60
   retryTimeout            0
   persistConn             1
@@ -1285,8 +1286,8 @@ extprocessor lsphp {
   backlog                 100
   instances               1
   priority                0
-  memSoftLimit            2047M
-  memHardLimit            2047M
+  memSoftLimit            4096M
+  memHardLimit            4096M
   procSoftLimit           1400
   procHardLimit           1500
 }
@@ -1481,6 +1482,7 @@ mysqli.default_host =
 mysqli.default_user =
 mysqli.default_pw =
 mysqli.reconnect = Off
+mysqli.allow_local_infile = ON
 [mysqlnd]
 mysqlnd.collect_statistics = On
 mysqlnd.collect_memory_statistics = Off
@@ -1653,6 +1655,7 @@ mysqli.default_host =
 mysqli.default_user =
 mysqli.default_pw =
 mysqli.reconnect = Off
+mysqli.allow_local_infile = On
 [mysqlnd]
 mysqlnd.collect_statistics = On
 mysqlnd.collect_memory_statistics = Off

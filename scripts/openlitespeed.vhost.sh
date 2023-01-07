@@ -419,10 +419,11 @@ add                     lsapi:${PHPVER} php
 extprocessor ${PHPVER} {
 type                    lsapi
 address                 uds://tmp/lshttpd/${MY_DOMAIN}.sock
-maxConns                64
-env                     PHP_LSAPI_CHILDREN=64
+maxConns                24
+env                     PHP_LSAPI_CHILDREN=24
 env                     PHP_LSAPI_MAX_REQUESTS=500
 env                     LSAPI_AVOID_FORK=1
+env                     LSAPI_ACCEPT_NOTIFY=1
 initTimeout             60
 retryTimeout            0
 persistConn             1
@@ -430,15 +431,15 @@ respBuffer              0
 autoStart               1
 path                    ${LSDIR}/${PHPVER}/bin/lsphp
 backlog                 100
-instances               4
+instances               1
 extUser                 ${USER}
 extGroup                ${GROUP}
 runOnStartUp            1
 priority                0
-memSoftLimit            2047M
-memHardLimit            2047M
-procSoftLimit           400
-procHardLimit           500
+memSoftLimit            4096M
+memHardLimit            4096M
+procSoftLimit           1400
+procHardLimit           1500
 }
 
 rewrite  {
