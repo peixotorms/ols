@@ -93,16 +93,16 @@ END
 function setup_repositories
 {
     # percona
-	echo "Adding percona repo..."
+	echo "Adding Percona repo..."
     silent curl -sO https://repo.percona.com/apt/percona-release_latest.generic_all.deb
     silent apt-get -y -f install gnupg2 lsb-release ./percona-release_latest.generic_all.deb
 	
 	# ols
-	echo "Adding ols repo..."
+	echo "Adding OLS repositories..."
 	silent wget -q -O - https://repo.litespeed.sh | sudo bash
 	
 	# Add ondrej/php PPA for PHP packages, if not added already
-	echo "Adding php repo..."
+	echo "Adding PHP repositories..."
     if ! grep ^ /etc/apt/sources.list /etc/apt/sources.list.d/* | grep -q "ondrej/php"; then
         echo "Adding ondrej/php PPA for PHP packages..."
         silent add-apt-repository -y ppa:ondrej/php
@@ -315,7 +315,7 @@ function setup_selfsigned_cert
 }
 
 
-# The function downloads and updates configuration files for sshd, PHP, OpenLiteSpeed, MySQL, Redis, and Postfix.
+# This function downloads and updates configuration files for sshd, PHP, OpenLiteSpeed, MySQL, Redis, and Postfix.
 function setup_configs
 {
 	
@@ -323,14 +323,9 @@ function setup_configs
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/sshd/sshd_config > /tmp/sshd_config
 	cat /tmp/sshd_config | grep -q "ListenAddress" && cp /tmp/sshd_config /etc/ssh/sshd_config && echo "sshd_config updated." || echo "Error downloading sshd_config ..."
 	rm /tmp/sshd_config
-	service sshd restart
+	service sshd restart	
 	
-	# Download php.ini file
-	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/php/php.ini > /tmp/php.ini
-	if cat /tmp/php.ini | grep -q "max_input_vars"; then find /etc/php -type f -iname php.ini -exec cp /tmp/php.ini {} \; && echo "php.ini files updated."; else echo "Error downloading php.ini ..."; fi
-	rm /tmp/php.ini
-	for version in 7.4 8.0 8.1 8.2; do systemctl restart php${version}-fpm; done
-
+	
 	# download ols	
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/ols/httpd_config.conf > /tmp/httpd_config.conf
 	cat /tmp/httpd_config.conf | grep -q "autoLoadHtaccess" && cp /tmp/httpd_config.conf /usr/local/lsws/conf/httpd_config.conf && echo "httpd_config.conf updated." || echo "Error downloading httpd_config.conf ..."
@@ -338,20 +333,61 @@ function setup_configs
 	chown -R lsadm:lsadm /usr/local/lsws/conf/
 	systemctl restart lshttpd
 	
+	
 	# download my.cnf
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/sql/my.cnf > /tmp/my.cnf
 	cat /tmp/my.cnf | grep -q "mysqld" && cp /tmp/my.cnf /etc/mysql/my.cnf && echo "my.cnf updated." || echo "Error downloading my.cnf ..."
 	rm /tmp/my.cnf
-	sed -i "s/^innodb_buffer_pool_instances.*$/innodb_buffer_pool_instances $PHP_POOL_COUNT/" /etc/mysql/my.cnf
+	MYSQL_MEM=$(calculate_memory_configs "MYSQL_MEM")
+	MYSQL_POOL_COUNT=$(calculate_memory_configs "MYSQL_POOL_COUNT")
+	MYSQL_LOG_SIZE=$(calculate_memory_configs "MYSQL_LOG_SIZE")	
+	sed -i "s/^innodb_buffer_pool_instances.*$/innodb_buffer_pool_instances $MYSQL_POOL_COUNT/" /etc/mysql/my.cnf
 	sed -i "s/^innodb_buffer_pool_size.*$/innodb_buffer_pool_size ${MYSQL_MEM}M/" /etc/mysql/my.cnf
 	sed -i "s/^innodb_log_file_size.*$/innodb_log_file_size $MYSQL_LOG_SIZE/" /etc/mysql/my.cnf
 	systemctl restart mysql
+	
+	
+	# Download php.ini file
+	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/php/php.ini > /tmp/php.ini
+	if cat /tmp/php.ini | grep -q "max_input_vars"; then find /etc/php -type f -iname php.ini -exec cp /tmp/php.ini {} \; && echo "php.ini files updated."; else echo "Error downloading php.ini ..."; fi
+	rm /tmp/php.ini
+	
+	# cli adjustments
+	find /etc/php -type f -path "*cli/*" -iname php.ini | while read file; do
+        sed -i "s/^max_input_time.*$/max_input_time = 7200/" "$file"
+		sed -i "s/^max_execution_time.*$/max_execution_time = 7200/" "$file"
+		sed -i "s/^memory_limit.*$/memory_limit = 4096M/" "$file"
+		sed -i "s/^opcache\.enable.*$/opcache.enable=0/" "$file"		
+    done
+		
+	# Download php-fpm.conf
+	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/php/php-fpm.conf > /tmp/php-fpm.conf
+	if cat /tmp/php-fpm.conf | grep -q "error_log"; then find /etc/php -type f -iname php-fpm.conf -exec cp /tmp/php-fpm.conf {} \; && echo "php-fpm.conf file updated."; else echo "Error downloading php-fpm.conf ..."; fi
+	rm /tmp/php-fpm.conf
+	find /etc/php -type f -iname php-fpm.conf | while read file; do
+		version=$(echo "$file" | awk -F'/' '{print $4}')
+		sed -i "s/#php_ver#/$version/g" "$file"
+		systemctl stop php${version}-fpm
+	done
+	
+	# delete default pools
+	find /etc/php/ -type f -path "*/pool.d/*" -name "www.conf" -delete
+	
+	# restart if other pools exist
+	find find /etc/php/ -type f -path "*/pool.d/*" -name "*.conf" | while read file; do
+        version=$(echo "$file" | awk -F'/' '{print $4}')
+		systemctl restart php${version}-fpm
+    done
+	
 	
 	# redis
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/redis/redis.conf > /tmp/redis.conf
 	cat /tmp/redis.conf | grep -q "maxmemory" && cp /tmp/redis.conf /etc/redis/redis.conf && echo "redis.conf updated." || echo "Error downloading redis.conf ..."
 	rm /tmp/redis.conf
+	REDIS_MEM=$(calculate_memory_configs "REDIS_MEM")
+	sed -i "s/^maxmemory 128mb.*$/maxmemory ${REDIS_MEM}mb/" /etc/redis/redis.conf
 	service redis-server restart
+	
 	
 	# download postfix	
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/postfix/main.cf > /tmp/main.cf
