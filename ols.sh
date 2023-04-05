@@ -141,7 +141,7 @@ function setup_sshd
 {
 	
 	# download sshd_config
-	echo "Updating sshd_config..."
+	echo -n "Updating sshd_config..."
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/sshd/sshd_config > /tmp/sshd_config
 	cat /tmp/sshd_config | grep -q "ListenAddress" && cp /tmp/sshd_config /etc/ssh/sshd_config && echo "sshd_config updated." || echo "Error downloading sshd_config ..."
 	rm /tmp/sshd_config
@@ -165,7 +165,6 @@ function setup_repositories
 	# Add ondrej/php PPA for PHP packages, if not added already
 	echo "Adding PHP repositories..."
 	if ! grep ^ /etc/apt/sources.list /etc/apt/sources.list.d/* | grep -q "ondrej/php"; then
-		echo "Adding ondrej/php PPA for PHP packages..."
 		silent add-apt-repository -y ppa:ondrej/php
 	fi
 
