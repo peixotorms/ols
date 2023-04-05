@@ -126,7 +126,7 @@ calculate_memory_configs() {
 function update_system
 {
 	if [ -d /etc/needrestart/conf.d ]; then
-		echo 'List Restart services only'
+		echo 'Disabling pending kernel upgrade notice...'
 		echo -e "\$nrconf{restart} = 'l';\n\$nrconf{kernelhints} = 0;" > /etc/needrestart/conf.d/disable.conf
 	fi
 	
