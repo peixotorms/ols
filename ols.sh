@@ -83,9 +83,9 @@ function update_system
 END
     fi
 	
-	silent DEBIAN_FRONTEND=noninteractive apt update
-	silent DEBIAN_FRONTEND=noninteractive apt upgrade -y
-	silent DEBIAN_FRONTEND=noninteractive apt autoremove -y
+	DEBIAN_FRONTEND=noninteractive silent apt update
+	DEBIAN_FRONTEND=noninteractive silent apt upgrade -y
+	DEBIAN_FRONTEND=noninteractive silent apt autoremove -y
 }
 
 
@@ -110,8 +110,8 @@ function setup_repositories
     fi
 
     # update
-    silent DEBIAN_FRONTEND=noninteractive apt update
-    silent DEBIAN_FRONTEND=noninteractive apt upgrade -y >/dev/null 2>&1
+    DEBIAN_FRONTEND=noninteractive silent apt update
+    DEBIAN_FRONTEND=noninteractive silent apt upgrade -y >/dev/null 2>&1
 }
 
 
@@ -125,7 +125,7 @@ function setup_firewall
 	   
 	# Check if ufw is already installed, and only reinstall if not
 	if ! command -v ufw &> /dev/null; then
-		silent DEBIAN_FRONTEND=noninteractive apt install -y ufw
+		DEBIAN_FRONTEND=noninteractive silent apt install -y ufw
 		echo "y" | silent ufw reset
 	fi
 
@@ -235,11 +235,11 @@ function setup_packages
 
 	# basic
 	echo "Installing basic packages..."
-	silent DEBIAN_FRONTEND=noninteractive apt install -y -o Dpkg::Options::="--force-confdef" certbot pv pigz curl wget zip memcached redis-server
+	DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" certbot pv pigz curl wget zip memcached redis-server
 
 	# ols
 	echo "Installing OLS..."
-	silent DEBIAN_FRONTEND=noninteractive apt install -y -o Dpkg::Options::="--force-confdef" openlitespeed lsphp80 lsphp80-common lsphp80-curl
+	DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" openlitespeed lsphp80 lsphp80-common lsphp80-curl
 
 
 	# php
@@ -258,7 +258,7 @@ function setup_packages
 	done
 
 	if [[ ! -z $all_packages ]]; then
-	  silent DEBIAN_FRONTEND=noninteractive apt install -y -o Dpkg::Options::="--force-confdef" $all_packages
+	  DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" $all_packages
 	else
 	  echo "No packages available for any PHP version."
 	fi
@@ -280,12 +280,12 @@ function setup_packages
 	echo "Installing Postfix..."
 	debconf-set-selections <<< "postfix postfix/mailname string localhost"
 	debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"
-	silent DEBIAN_FRONTEND=noninteractive apt install -y -o Dpkg::Options::="--force-confdef"  ssl-cert postfix mailutils
+	DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef"  ssl-cert postfix mailutils
 	
 	# percona
 	echo "Installing Percona..."
 	silent percona-release setup ps80 
-    silent DEBIAN_FRONTEND=noninteractive apt install -y -o Dpkg::Options::="--force-confdef" percona-server-server percona-server-client
+    DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" percona-server-server percona-server-client
 
 }
 
