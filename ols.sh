@@ -304,8 +304,7 @@ function setup_packages
 	# percona
 	echo "Installing Percona..."
 	silent percona-release setup ps80 
-    silent DEBIAN_FRONTEND=noninteractive apt -y -f --allow-unauthenticated install percona-server-server percona-server-client
-    systemctl restart mysql
+    silent DEBIAN_FRONTEND=noninteractive apt install -y -o Dpkg::Options::="--force-confdef" percona-server-server percona-server-client
 
 }
 
@@ -387,6 +386,14 @@ function setup_configs
 	sed -i "s/^innodb_buffer_pool_size.*$/innodb_buffer_pool_size ${MYSQL_MEM}M/" /etc/mysql/my.cnf
 	sed -i "s/^innodb_log_file_size.*$/innodb_log_file_size $MYSQL_LOG_SIZE/" /etc/mysql/my.cnf
 	systemctl restart mysql
+	
+	echo "CPU_CORES: $CPU_CORES"
+echo "REDIS_MEM: $REDIS_MEM"
+echo "MYSQL_MEM: $MYSQL_MEM"
+echo "PHP_MEM: $PHP_MEM"
+echo "MYSQL_POOL_COUNT: $MYSQL_POOL_COUNT"
+echo "PHP_POOL_COUNT: $PHP_POOL_COUNT"
+echo "MYSQL_LOG_SIZE: $MYSQL_LOG_SIZE"
 	
 	# redis
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/redis/redis.conf > /tmp/redis.conf
