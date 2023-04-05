@@ -96,14 +96,6 @@ function calculate_memory() {
         export PHP_POOL_COUNT=$PHP_POOL_COUNT
         export MYSQL_LOG_SIZE=$MYSQL_LOG_SIZE
 
-        # Output the values of the six variables
-        echo "CPU_CORES: $CPU_CORES"
-        echo "REDIS_MEM: $REDIS_MEM MB"
-        echo "MYSQL_MEM: $MYSQL_MEM MB"
-        echo "PHP_MEM: $PHP_MEM MB"
-        echo "MYSQL_POOL_COUNT: $MYSQL_POOL_COUNT"
-        echo "PHP_POOL_COUNT: $PHP_POOL_COUNT"
-		echo "MYSQL_LOG_SIZE: $MYSQL_LOG_SIZE MB"
 	fi
 }
 
@@ -132,12 +124,12 @@ function setup_repositories
 {
     # percona
 	echo "Adding percona repo..."
-    curl -sO https://repo.percona.com/apt/percona-release_latest.generic_all.deb
+    silent curl -sO https://repo.percona.com/apt/percona-release_latest.generic_all.deb
     silent apt-get -y -f install gnupg2 lsb-release ./percona-release_latest.generic_all.deb
 	
 	# ols
 	echo "Adding ols repo..."
-	sudo wget -q -O - https://repo.litespeed.sh | sudo bash >/dev/null 2>&1
+	silent wget -q -O - https://repo.litespeed.sh | sudo bash
 	
 	# Add ondrej/php PPA for PHP packages, if not added already
 	echo "Adding php repo..."
@@ -165,7 +157,7 @@ function setup_firewall
 	# Check if ufw is already installed, and only reinstall if not
 	if ! command -v ufw &> /dev/null; then
 		silent DEBIAN_FRONTEND=noninteractive apt install -y ufw
-		echo "y" | ufw reset
+		echo "y" | silent ufw reset
 	fi
 
 	# default policy
@@ -184,7 +176,7 @@ function setup_firewall
 	silent ufw allow 7080/tcp   # ols
 
 	# save and enable
-	echo "y" | ufw enable
+	echo "y" | silent ufw enable
 	ufw status verbose
 
 }
@@ -194,10 +186,10 @@ function setup_firewall
 function setup_basic
 {
     # Basic settings
-    dpkg-reconfigure -f noninteractive tzdata
-    locale-gen en_US en_US.utf8
-    localectl set-locale LANG=en_US.utf8
-    update-locale LC_ALL=en_US.utf8
+    silent dpkg-reconfigure -f noninteractive tzdata
+    silent locale-gen en_US en_US.utf8
+    silent localectl set-locale LANG=en_US.utf8
+    silent update-locale LC_ALL=en_US.utf8
     echo "SELECTED_EDITOR=\"/bin/nano\"" > /root/.selected_editor
     grep -qxF '127.0.0.1 localhost' /etc/hosts || echo "127.0.0.1 localhost" >> /etc/hosts
 
@@ -214,12 +206,12 @@ function setup_basic
 	if [ ! -f /swapfile ]; then
 	  # Create a new permanent swap of 2GB
 	  echo "Creating a new permanent swap of 2GB..."
-	  sudo fallocate -l 2G /swapfile
-	  sudo chmod 600 /swapfile
-	  sudo mkswap /swapfile
-	  sudo swapon /swapfile
+	  fallocate -l 2G /swapfile
+	  chmod 600 /swapfile
+	  mkswap /swapfile
+	  swapon /swapfile
 	  # Update /etc/fstab to reflect the new size
-	  sudo bash -c 'echo "/swapfile swap swap defaults 0 0" >> /etc/fstab'
+	  bash -c 'echo "/swapfile swap swap defaults 0 0" >> /etc/fstab'
 	else
 	  # Check if swap is enabled
 	  if grep -q "swapfile" /proc/swaps; then
@@ -230,26 +222,25 @@ function setup_basic
 		if [ $swap_size_gb -ne 2 ]; then
 		  # Resize the swap to 2GB
 		  echo "Resizing swap to 2GB..."
-		  sudo swapoff -a
-		  sudo dd if=/dev/zero of=/swapfile bs=1G count=2
-		  sudo chmod 600 /swapfile
-		  sudo mkswap /swapfile
-		  sudo swapon /swapfile
+		  swapoff -a
+		  dd if=/dev/zero of=/swapfile bs=1G count=2
+		  chmod 600 /swapfile
+		  mkswap /swapfile
+		  swapon /swapfile
 		  # Update /etc/fstab to reflect the new size
-		  sudo bash -c 'sed -i "/swapfile/c\\/swapfile swap swap defaults 0 0" /etc/fstab'
+		  bash -c 'sed -i "/swapfile/c\\/swapfile swap swap defaults 0 0" /etc/fstab'
 		fi
 	  else
 		# Create a new permanent swap of 2GB
 		echo "Creating a new permanent swap of 2GB..."
-		sudo fallocate -l 2G /swapfile
-		sudo chmod 600 /swapfile
-		sudo mkswap /swapfile
-		sudo swapon /swapfile
+		fallocate -l 2G /swapfile
+		chmod 600 /swapfile
+		mkswap /swapfile
+		swapon /swapfile
 		# Update /etc/fstab to reflect the new size
-		sudo bash -c 'echo "/swapfile swap swap defaults 0 0" >> /etc/fstab'
+		bash -c 'echo "/swapfile swap swap defaults 0 0" >> /etc/fstab'
 	  fi
 	fi
-
 
     # Set up idempotency for limits.conf and fstab
     sed -i '/^#/d;/^$/d' /etc/security/limits.conf
@@ -289,7 +280,6 @@ function setup_packages
 	done
 
 	if [[ ! -z $all_packages ]]; then
-	  echo "The following packages are available for all PHP versions: $all_packages"
 	  echo "Installing all available packages..."
 	  silent DEBIAN_FRONTEND=noninteractive apt install -y -o Dpkg::Options::="--force-confdef" $all_packages
 	else
@@ -303,7 +293,7 @@ function setup_packages
 	if ! command -v wp &> /dev/null; then INSTALLED_VERSION="0.0.0"; else INSTALLED_VERSION=$(wp --version --allow-root | awk '{print $2}'); fi
 	LATEST_VERSION=$(curl -s https://api.github.com/repos/wp-cli/wp-cli/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")')
 	if [ "$INSTALLED_VERSION" != "$LATEST_VERSION" ]; then
-	  curl -o wp-cli.phar https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+	  silent curl -o wp-cli.phar https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
 	  chmod +x wp-cli.phar
 	  mv wp-cli.phar /usr/local/bin/wp	  
 	  [ ! -f /usr/bin/wp ] && sudo ln -s /usr/local/bin/wp /usr/bin/wp
