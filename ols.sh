@@ -122,7 +122,7 @@ function update_system
 END
     fi
 	
-	DEBIAN_FRONTEND=noninteractive apt update && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y >/dev/null 2>&1
+	DEBIAN_FRONTEND=noninteractive apt update && DEBIAN_FRONTEND=noninteractive apt upgrade -y >/dev/null 2>&1
 }
 
 
@@ -148,8 +148,8 @@ function setup_repositories
     fi
 
     # update
-    silent DEBIAN_FRONTEND=noninteractive apt-get update
-    silent DEBIAN_FRONTEND=noninteractive apt-get upgrade -y >/dev/null 2>&1
+    silent DEBIAN_FRONTEND=noninteractive apt update
+    silent DEBIAN_FRONTEND=noninteractive apt upgrade -y >/dev/null 2>&1
 }
 
 
@@ -322,7 +322,7 @@ function setup_packages
 	# percona
 	echo "Installing Percona..."
 	percona-release setup ps80 > /dev/null 2>&1
-    silent DEBIAN_FRONTEND=noninteractive apt-get -y -f --allow-unauthenticated install percona-server percona-server-server > /dev/null 2>&1
+    silent DEBIAN_FRONTEND=noninteractive apt -y -f --allow-unauthenticated install percona-server percona-server-server > /dev/null 2>&1
     systemctl restart mysql
 
 }
