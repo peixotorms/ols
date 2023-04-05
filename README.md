@@ -11,7 +11,7 @@ To run the script, you can use the following command:
 
 ## What it does
 
-The shell script performs various functions such as calculating memory configurations for your server size, updating the system, setting up necessary repositories, configuring the firewall, performing basic server setup tasks, installing required packages including OpenLiteSpeed web server, PHP, WP-CLI, Postfix, and Percona Server for database management. It also generates and installs a self-signed SSL certificate for the server and install letsencrypt.
+The shell script performs various functions such as calculating memory configurations for your server size, updating the system, setting up repositories, reconfiguring the firewall, installing OpenLiteSpeed, LetsEncrypt, PHP-FPM (7.4,8.0,8.1,8.2) with OPCACHE, WP-CLI, Percona Server 8.0 for MySQL, Postfix and Redis.
 
 ## License
 
