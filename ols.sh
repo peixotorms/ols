@@ -137,8 +137,6 @@ function setup_repositories
     if ! grep ^ /etc/apt/sources.list /etc/apt/sources.list.d/* | grep -q "ondrej/php"; then
         echo "Adding ondrej/php PPA for PHP packages..."
         silent add-apt-repository -y ppa:ondrej/php
-    else
-        echo "ondrej/php PPA for PHP packages already exists, skipping..."
     fi
 
     # update
@@ -288,7 +286,7 @@ function setup_packages
 	# wp cli
 	echo "Installing wp-cli..."
 	if ! command -v wp &> /dev/null; then INSTALLED_VERSION="0.0.0"; else INSTALLED_VERSION=$(wp --version --allow-root | awk '{print $2}'); fi
-	LATEST_VERSION=$(curl -s https://api.github.com/repos/wp-cli/wp-cli/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")')
+	LATEST_VERSION=$(curl -s https://api.github.com/repos/wp-cli/wp-cli/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")' | sed 's/^v//')
 	if [ "$INSTALLED_VERSION" != "$LATEST_VERSION" ]; then
 	  silent curl -o wp-cli.phar https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
 	  chmod +x wp-cli.phar
