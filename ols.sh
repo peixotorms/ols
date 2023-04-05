@@ -1,26 +1,43 @@
 #!/bin/bash
 
 ##############################################################################
-#		Open LiteSpeed + PerconaDB setup																				#
-#		Author: Raul Peixoto, WP Raiser																				 #
-#		Based on: LiteSpeed 1-Click Install OLS																 #
+#		Open LiteSpeed + PHP FPM + PerconaDB + Redis + Postfix               #
+#		Author: Raul Peixoto, WP Raiser										 #
 ##############################################################################
 
 
 # Function to print usage instructions
 function print_usage() {
-  echo "Usage: $0 [-f <function_names>] [-v] [-h]"
-  echo ""
-  echo "Options:"
-  echo "-f <function_names>   Run a comma-separated list of function names (default: \"update_system,setup_sshd,setup_repositories,setup_firewall,install_basic_packages,install_ols,install_php,install_wp_cli,install_percona,install_redis,install_postfix\")"
-  echo "                      Available functions: update_system, setup_sshd, setup_repositories, setup_firewall, install_basic_packages, install_ols, install_php, install_wp_cli, install_percona, install_redis, install_postfix"
-  echo "-v                    Enable verbose mode"
-  echo "-h                    Show this help message"
-  echo ""
-  echo "Examples:"
-  echo "$0"
-  echo "$0 -f install_ols,install_php"
-  echo "$0 -v"
+	echo ""
+	printf "    "
+	echo "Usage: bash [-f <function_names>] [-v] [-h]"
+	echo ""
+	printf "    "
+	echo "Options:"
+	echo ""
+	printf "        "
+	echo "-f          Run a comma-separated list of function names:"
+	printf "                        "
+	IFS=',' read -ra FUNC_NAMES <<< "update_system,setup_sshd,setup_repositories,setup_firewall,install_basic_packages,install_ols,install_php,install_wp_cli,install_percona,install_redis,install_postfix"
+	for FUNC_NAME in "${FUNC_NAMES[@]}"; do
+		printf "%s\n                        " "$FUNC_NAME"
+	done
+	
+	echo ""
+	printf "        "
+	echo "-v          Enable verbose mode"
+	echo ""
+	printf "        "
+	echo "-h          Show this help message"
+	echo ""
+	printf "    "
+	echo "Examples:"
+	echo ""
+	printf "        "
+	echo "./ols.sh | bash -s -f install_ols,install_php"
+	printf "        "
+	echo "./ols.sh -f install_ols,install_php"
+	echo ""
 }
 
 # Default variables
@@ -29,28 +46,28 @@ VERBOSE=0
 
 # Parse command-line arguments
 while getopts ":f:vh" opt; do
-  case ${opt} in
-    f ) # Run specific function(s)
-      FUNCTION_NAMES=$(echo "$OPTARG" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | uniq | tr '\n' ',')
-      ;;
-    v ) # Enable verbose mode
-      VERBOSE=1
-      ;;
-    h ) # Print usage instructions
-      print_usage
-      exit 0
-      ;;
-    \? ) # Invalid option
-      echo "Invalid option: -$OPTARG" >&2
-      print_usage
-      exit 1
-      ;;
-    : ) # Option requires an argument
-      echo "Option -$OPTARG requires an argument." >&2
-      print_usage
-      exit 1
-      ;;
-  esac
+	case ${opt} in
+		f ) # Run specific function(s)
+			FUNCTION_NAMES=$(echo "$OPTARG" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | uniq | tr '\n' ',')
+			;;
+		v ) # Enable verbose mode
+			VERBOSE=1
+			;;
+		h ) # Print usage instructions
+			print_usage
+			exit 0
+			;;
+		\? ) # Invalid option
+			echo "Invalid option: -$OPTARG" >&2
+			print_usage
+			exit 1
+			;;
+		: ) # Option requires an argument
+			echo "Option -$OPTARG requires an argument." >&2
+			print_usage
+			exit 1
+			;;
+	esac
 done
 
 
@@ -452,45 +469,45 @@ function install_postfix() {
 
 # Run selected functions in order
 for FUNCTION_NAME in $(echo "$FUNCTION_NAMES" | tr ',' '\n' | uniq); do
-  case $FUNCTION_NAME in
-    "update_system")
-      update_system
-      ;;
-    "setup_sshd")
-      setup_sshd
-      ;;
-    "setup_repositories")
-      setup_repositories
-      ;;
-    "setup_firewall")
-      setup_firewall
-      ;;
-    "install_basic_packages")
-      install_basic_packages
-      ;;
-    "install_ols")
-      install_ols
-      ;;
-    "install_php")
-      install_php
-      ;;
-    "install_wp_cli")
-      install_wp_cli
-      ;;
-    "install_percona")
-      install_percona
-      ;;
-    "install_redis")
-      install_redis
-      ;;
-    "install_postfix")
-      install_postfix
-      ;;
-    *)
-      echo "Invalid function name: $FUNCTION_NAME"
-      exit 1
-      ;;
-  esac
+	case $FUNCTION_NAME in
+		"update_system")
+			update_system
+			;;
+		"setup_sshd")
+			setup_sshd
+			;;
+		"setup_repositories")
+			setup_repositories
+			;;
+		"setup_firewall")
+			setup_firewall
+			;;
+		"install_basic_packages")
+			install_basic_packages
+			;;
+		"install_ols")
+			install_ols
+			;;
+		"install_php")
+			install_php
+			;;
+		"install_wp_cli")
+			install_wp_cli
+			;;
+		"install_percona")
+			install_percona
+			;;
+		"install_redis")
+			install_redis
+			;;
+		"install_postfix")
+			install_postfix
+			;;
+		*)
+			echo "Invalid function name: $FUNCTION_NAME"
+			exit 1
+			;;
+	esac
 done
 
 echo "All done!"
