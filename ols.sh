@@ -305,8 +305,8 @@ function setup_packages
 	
 	# percona
 	echo "Installing Percona..."
-	percona-release setup ps80 > /dev/null 2>&1
-    silent DEBIAN_FRONTEND=noninteractive apt -y -f --allow-unauthenticated install percona-server-server percona-server-client  > /dev/null 2>&1
+	silent percona-release setup ps80 
+    silent DEBIAN_FRONTEND=noninteractive apt -y -f --allow-unauthenticated install percona-server-server percona-server-client
     systemctl restart mysql
 
 }
