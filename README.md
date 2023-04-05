@@ -1,13 +1,12 @@
-# Open LiteSpeed + PerconaDB setup
+# OpenLiteSpeed, LetsEncrypt, PHP-FPM (7.4,8.0,8.1,8.2) with OPCACHE, WP-CLI, Percona Server 8.0 for MySQL, Postfix and Redis
 
-This repository contains a shell script compatible with Ubuntu 22.04 for setting up an Open LiteSpeed web server with PerconaDB and PHP FPM. It performs a variety of server setup tasks, installs the necessary packages, and generates a self-signed SSL certificate for the server.
+This repository contains a shell script compatible with Ubuntu 22.04 for setting up a high performance web server.
 
-## How to run
+## How to install
 
 To run the script, you can use the following command:
 
 ```curl -s https://raw.githubusercontent.com/peixotorms/ols/main/ols.sh | bash```
-
 
 ## What it does
 
