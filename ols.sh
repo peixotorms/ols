@@ -13,6 +13,10 @@ VERBOSE=1
 # Usage: silent <command>
 function silent { if [ "${VERBOSE}" = '1' ]; then "$@"; else "$@" >/dev/null 2>&1; fi; }
 
+# This function creates a 32-character password with three special characters in a random position
+gen_rand_pass() { random_string=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 32); for i in {1..3}; do pos=$((RANDOM % 24 + 5)); special_char=('-' '_' ','); random_string="${random_string:0:$(($pos-1))}${special_char[RANDOM % 3]}${random_string:$pos}"; done; echo "$random_string"; }; 
+
+
 
 # This function calculates memory configurations for various components based on the available system memory and CPU cores
 calculate_memory_configs() {
@@ -235,7 +239,21 @@ function setup_packages
 	# ols
 	echo "Installing OLS..."
 	DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" openlitespeed lsphp80 lsphp80-common lsphp80-curl
-
+	
+	# set admin credentials
+	ADMINUSER="admin"
+	ADMINPASSWORD=$(gen_rand_pass)
+	
+	ENCRYPT_PASS=`"/usr/local/lsws/admin/fcgi-bin/admin_php" -q "/usr/local/lsws/admin/misc/htpasswd.php" $ADMINPASSWORD`
+    if [ $? = 0 ] ; then
+        echo "${ADMINUSER}:$ENCRYPT_PASS" > "/usr/local/lsws/admin/conf/htpasswd"
+        if [ $? = 0 ] ; then
+			echo $ADMINPASSWORD > /usr/local/lsws/password.user.${ADMINUSER}
+        else
+            echo "OpenLiteSpeed WebAdmin password not changed."
+        fi
+    fi
+	
 
 	# php
 	echo "Installing PHP FPM..."
@@ -277,10 +295,34 @@ function setup_packages
 	debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"
 	DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef"  ssl-cert postfix mailutils
 	
+	
 	# percona
 	echo "Installing Percona..."
 	silent percona-release setup ps80 
     DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" percona-server-server percona-server-client
+	
+	# stop
+	if [ $(ps -ef | grep -E '(mysql|mariadb|percona)' | grep -v grep | wc -l) -gt 0 ]; then
+		service mysql stop
+	fi
+	
+	# change root password
+	ROOTPASSWORD=$(gen_rand_pass)
+	
+	# Start MySQL with skip-grant-tables
+	mysqld_safe --skip-grant-tables &
+
+	# Update the root password
+	service mysql stop && mysqld_safe --skip-grant-tables & && mysql -u root -e "USE mysql; UPDATE user SET authentication_string=PASSWORD('$ROOTPASSWORD'), plugin='mysql_native_password' WHERE User='root'; FLUSH PRIVILEGES;" && service mysql stop && service mysql start
+		
+	# Stop and start MySQL
+	pkill mysql
+	service mysql start
+
+	# Save the new password
+	echo "Saving the new password to /etc/mysql/root.pass.log..."
+	echo "$ROOTPASSWORD" | tee /etc/mysql/root.pass.log
+	chmod 600 /etc/mysql/root.pass.log	
 
 }
 
