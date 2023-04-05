@@ -141,7 +141,7 @@ function setup_sshd
 {
 	
 	# download sshd_config
-	echo -n "Updating sshd_config..."
+	echo -n "Updating sshd_config... "
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/sshd/sshd_config > /tmp/sshd_config
 	cat /tmp/sshd_config | grep -q "ListenAddress" && cp /tmp/sshd_config /etc/ssh/sshd_config && echo "sshd_config updated." || echo "Error downloading sshd_config ..."
 	rm /tmp/sshd_config
@@ -222,7 +222,7 @@ function install_basic_packages() {
 function install_ols() {
 
 	# start
-	echo "Installing OpenLiteSpeed..."
+	echo "Installing OpenLiteSpeed... "
 
 	# Install OLS
 	DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" openlitespeed lsphp80 lsphp80-common lsphp80-curl
@@ -236,15 +236,13 @@ function install_ols() {
 			echo "${ADMINUSER}:$ENCRYPT_PASS" > "/usr/local/lsws/admin/conf/htpasswd"
 			if [ $? = 0 ] ; then
 				echo $ADMINPASSWORD > /usr/local/lsws/password.user.${ADMINUSER}
-			else
-				echo "OpenLiteSpeed WebAdmin password not changed."
 			fi
 		fi
 	fi
 	
 	# download ols config
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/ols/httpd_config.conf > /tmp/httpd_config.conf
-	cat /tmp/httpd_config.conf | grep -q "autoLoadHtaccess" && cp /tmp/httpd_config.conf /usr/local/lsws/conf/httpd_config.conf && echo "httpd_config.conf updated." || echo "Error downloading httpd_config.conf ..."
+	cat /tmp/httpd_config.conf | grep -q "autoLoadHtaccess" && cp /tmp/httpd_config.conf /usr/local/lsws/conf/httpd_config.conf && echo "\thttpd_config.conf updated." || echo "\tError downloading httpd_config.conf ..."
 	rm /tmp/httpd_config.conf
 	chown -R lsadm:lsadm /usr/local/lsws/conf/
 	systemctl restart lshttpd
@@ -295,26 +293,26 @@ function install_php() {
 	if [[ ! -z $all_packages ]]; then
 		DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" $all_packages
 	else
-		echo "No packages available for any PHP version."
+		echo "\tNo packages available for any PHP version."
 	fi
 	
 	# configure
 	# Download php.ini file
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/php/php.ini > /tmp/php.ini
-	if cat /tmp/php.ini | grep -q "max_input_vars"; then find /etc/php -type f -iname php.ini -exec cp /tmp/php.ini {} \; && echo "php.ini files updated."; else echo "Error downloading php.ini ..."; fi
+	if cat /tmp/php.ini | grep -q "max_input_vars"; then find /etc/php -type f -iname php.ini -exec cp /tmp/php.ini {} \; && echo "\tphp.ini files updated."; else echo "\tError downloading php.ini ..."; fi
 	rm /tmp/php.ini
 	
 	# cli adjustments
 	find /etc/php -type f -path "*cli/*" -iname php.ini | while read file; do
-				sed -i "s/^max_input_time.*$/max_input_time = 7200/" "$file"
+		sed -i "s/^max_input_time.*$/max_input_time = 7200/" "$file"
 		sed -i "s/^max_execution_time.*$/max_execution_time = 7200/" "$file"
 		sed -i "s/^memory_limit.*$/memory_limit = 4096M/" "$file"
 		sed -i "s/^opcache\.enable.*$/opcache.enable=0/" "$file"		
-		done
+	done
 		
 	# Download php-fpm.conf
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/php/php-fpm.conf > /tmp/php-fpm.conf
-	if cat /tmp/php-fpm.conf | grep -q "error_log"; then find /etc/php -type f -iname php-fpm.conf -exec cp /tmp/php-fpm.conf {} \; && echo "php-fpm.conf file updated."; else echo "Error downloading php-fpm.conf ..."; fi
+	if cat /tmp/php-fpm.conf | grep -q "error_log"; then find /etc/php -type f -iname php-fpm.conf -exec cp /tmp/php-fpm.conf {} \; && echo "\tphp-fpm.conf file updated."; else echo "\tError downloading php-fpm.conf ..."; fi
 	rm /tmp/php-fpm.conf
 	find /etc/php -type f -iname php-fpm.conf | while read file; do
 		version=$(echo "$file" | awk -F'/' '{print $4}')
@@ -327,9 +325,9 @@ function install_php() {
 	
 	# restart if other pools exist
 	find /etc/php/ -type f -path "*/pool.d/*" -name "*.conf" | while read file; do
-				version=$(echo "$file" | awk -F'/' '{print $4}')
+		version=$(echo "$file" | awk -F'/' '{print $4}')
 		systemctl restart php${version}-fpm
-		done
+	done
 	
 }
 
@@ -347,7 +345,7 @@ function install_wp_cli() {
 		chmod +x wp-cli.phar
 		mv wp-cli.phar /usr/local/bin/wp
 		[ ! -f /usr/bin/wp ] && sudo ln -s /usr/local/bin/wp /usr/bin/wp
-		echo "Updated wp from version $INSTALLED_VERSION to $LATEST_VERSION"
+		echo "\tUpdated wp from version $INSTALLED_VERSION to $LATEST_VERSION"
 	fi
 	
 }
@@ -365,7 +363,7 @@ function install_percona() {
 	
 	# download my.cnf
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/sql/my.cnf > /tmp/my.cnf
-	cat /tmp/my.cnf | grep -q "mysqld" && cp /tmp/my.cnf /etc/mysql/my.cnf && echo "my.cnf updated." || echo "Error downloading my.cnf ..."
+	cat /tmp/my.cnf | grep -q "mysqld" && cp /tmp/my.cnf /etc/mysql/my.cnf && echo "\tmy.cnf updated." || echo "\tError downloading my.cnf ..."
 	rm /tmp/my.cnf
 	MYSQL_MEM=$(calculate_memory_configs "MYSQL_MEM")
 	MYSQL_POOL_COUNT=$(calculate_memory_configs "MYSQL_POOL_COUNT")
@@ -398,7 +396,7 @@ function install_percona() {
 	# mysql -u root -e "FLUSH PRIVILEGES; ALTER USER 'root'@'localhost' IDENTIFIED BY '$ROOTPASSWORD'; FLUSH PRIVILEGES;"
 	# echo -n "$ROOTPASSWORD" > /etc/mysql/root.pass.log
 	# chmod 600 /etc/mysql/root.pass.log
-	# echo "MySQL root password has been changed to $ROOTPASSWORD on /etc/mysql/root.pass.log"
+	# echo "\tMySQL root password has been changed to $ROOTPASSWORD on /etc/mysql/root.pass.log"
 	
 	# Find and kill mysqld_safe process
 	pkill mysql
