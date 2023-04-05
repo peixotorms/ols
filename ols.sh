@@ -1,21 +1,69 @@
 #!/bin/bash
 
 ##############################################################################
-#    Open LiteSpeed + PerconaDB setup                                        #
-#    Author: Raul Peixoto, WP Raiser                                         #
-#    Based on: LiteSpeed 1-Click Install OLS                                 #
+#		Open LiteSpeed + PerconaDB setup																				#
+#		Author: Raul Peixoto, WP Raiser																				 #
+#		Based on: LiteSpeed 1-Click Install OLS																 #
 ##############################################################################
 
-VERBOSE=1
+
+# Function to print usage instructions
+function print_usage() {
+  echo "Usage: $0 [-f <function_names>] [-v] [-h]"
+  echo ""
+  echo "Options:"
+  echo "-f <function_names>   Run a comma-separated list of function names (default: \"update_system,setup_sshd,setup_repositories,setup_firewall,install_basic_packages,install_ols,install_php,install_wp_cli,install_percona,install_redis,install_postfix\")"
+  echo "                      Available functions: update_system, setup_sshd, setup_repositories, setup_firewall, install_basic_packages, install_ols, install_php, install_wp_cli, install_percona, install_redis, install_postfix"
+  echo "-v                    Enable verbose mode"
+  echo "-h                    Show this help message"
+  echo ""
+  echo "Examples:"
+  echo "$0"
+  echo "$0 -f install_ols,install_php"
+  echo "$0 -v"
+}
+
+# Default variables
+FUNCTION_NAMES="update_system,setup_sshd,setup_repositories,setup_firewall,install_basic_packages,install_ols,install_php,install_wp_cli,install_percona,install_redis,install_postfix"
+VERBOSE=0
+
+# Parse command-line arguments
+while getopts ":f:vh" opt; do
+  case ${opt} in
+    f ) # Run specific function(s)
+      FUNCTION_NAMES=$(echo "$OPTARG" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | uniq | tr '\n' ',')
+      ;;
+    v ) # Enable verbose mode
+      VERBOSE=1
+      ;;
+    h ) # Print usage instructions
+      print_usage
+      exit 0
+      ;;
+    \? ) # Invalid option
+      echo "Invalid option: -$OPTARG" >&2
+      print_usage
+      exit 1
+      ;;
+    : ) # Option requires an argument
+      echo "Option -$OPTARG requires an argument." >&2
+      print_usage
+      exit 1
+      ;;
+  esac
+done
+
+
+
+# START FUNCTIONS
+
 
 # This function executes the given command and suppresses its output if the VERBOSE variable is not set to '1'. 
-# It can be useful when running commands that may produce a lot of output or when you only want to see the output in verbose mode. 
 # Usage: silent <command>
 function silent { if [ "${VERBOSE}" = '1' ]; then "$@"; else "$@" >/dev/null 2>&1; fi; }
 
 # This function creates a 32-character password with three special characters in a random position
 gen_rand_pass() { random_string=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 32); for i in {1..3}; do pos=$((RANDOM % 24 + 5)); special_char=('-' '_' ','); random_string="${random_string:0:$(($pos-1))}${special_char[RANDOM % 3]}${random_string:$pos}"; done; echo "$random_string"; }; 
-
 
 
 # This function calculates memory configurations for various components based on the available system memory and CPU cores
@@ -30,37 +78,37 @@ calculate_memory_configs() {
 	local PHP_MEM=$(($RAM - $REDIS_MEM - $MYSQL_MEM))
 	
 	case $OPTION in
-    "REDIS_MEM")
-        echo $REDIS_MEM
-        ;;
-    "MYSQL_MEM")
-        echo $MYSQL_MEM
-        ;;
-    "PHP_MEM")
-        echo $PHP_MEM
-        ;;
-    "MYSQL_POOL_COUNT")
-        local CPU_CORES=$(nproc)
-        local MYSQL_POOL_COUNT=$(($MYSQL_MEM/1024))
-        local MYSQL_MAX_POOL_COUNT=$(($CPU_CORES*4/5))
-        [ $MYSQL_POOL_COUNT -gt $MYSQL_MAX_POOL_COUNT ] && MYSQL_POOL_COUNT=$MYSQL_MAX_POOL_COUNT
-        [ $MYSQL_POOL_COUNT -lt 1 ] && MYSQL_POOL_COUNT=1
-        echo $MYSQL_POOL_COUNT
-        ;;
-    "PHP_POOL_COUNT")
-        local CPU_CORES=$(nproc)
-        local PHP_POOL_COUNT=$(($PHP_MEM/48))
-        local MAX_PHP_POOL_COUNT=$(($CPU_CORES*2))
-        [ $PHP_POOL_COUNT -gt $MAX_PHP_POOL_COUNT ] && PHP_POOL_COUNT=$MAX_PHP_POOL_COUNT
-        [ $PHP_POOL_COUNT -lt 1 ] && PHP_POOL_COUNT=1
-        echo $PHP_POOL_COUNT
-        ;;
-    "MYSQL_LOG_SIZE")
-        local MYSQL_LOG_SIZE=$(($MYSQL_MEM/4))
-        [ $MYSQL_LOG_SIZE -gt 2048 ] && MYSQL_LOG_SIZE=2048
-        [ $MYSQL_LOG_SIZE -lt 32 ] && MYSQL_LOG_SIZE=32
-        echo $MYSQL_LOG_SIZE
-        ;;
+		"REDIS_MEM")
+				echo $REDIS_MEM
+				;;
+		"MYSQL_MEM")
+				echo $MYSQL_MEM
+				;;
+		"PHP_MEM")
+				echo $PHP_MEM
+				;;
+		"MYSQL_POOL_COUNT")
+				local CPU_CORES=$(nproc)
+				local MYSQL_POOL_COUNT=$(($MYSQL_MEM/1024))
+				local MYSQL_MAX_POOL_COUNT=$(($CPU_CORES*4/5))
+				[ $MYSQL_POOL_COUNT -gt $MYSQL_MAX_POOL_COUNT ] && MYSQL_POOL_COUNT=$MYSQL_MAX_POOL_COUNT
+				[ $MYSQL_POOL_COUNT -lt 1 ] && MYSQL_POOL_COUNT=1
+				echo $MYSQL_POOL_COUNT
+				;;
+		"PHP_POOL_COUNT")
+				local CPU_CORES=$(nproc)
+				local PHP_POOL_COUNT=$(($PHP_MEM/48))
+				local MAX_PHP_POOL_COUNT=$(($CPU_CORES*2))
+				[ $PHP_POOL_COUNT -gt $MAX_PHP_POOL_COUNT ] && PHP_POOL_COUNT=$MAX_PHP_POOL_COUNT
+				[ $PHP_POOL_COUNT -lt 1 ] && PHP_POOL_COUNT=1
+				echo $PHP_POOL_COUNT
+				;;
+		"MYSQL_LOG_SIZE")
+				local MYSQL_LOG_SIZE=$(($MYSQL_MEM/4))
+				[ $MYSQL_LOG_SIZE -gt 2048 ] && MYSQL_LOG_SIZE=2048
+				[ $MYSQL_LOG_SIZE -lt 32 ] && MYSQL_LOG_SIZE=32
+				echo $MYSQL_LOG_SIZE
+				;;
 	esac
 	
 	# usage
@@ -77,10 +125,10 @@ calculate_memory_configs() {
 # This function updates the system and disables hints on pending kernel upgrades
 function update_system
 {
-    if [ -d /etc/needrestart/conf.d ]; then
-        echo 'List Restart services only'
-        echo -e "\$nrconf{restart} = 'l';\n\$nrconf{kernelhints} = 0;" > /etc/needrestart/conf.d/disable.conf
-    fi
+		if [ -d /etc/needrestart/conf.d ]; then
+				echo 'List Restart services only'
+				echo -e "\$nrconf{restart} = 'l';\n\$nrconf{kernelhints} = 0;" > /etc/needrestart/conf.d/disable.conf
+		fi
 	
 	DEBIAN_FRONTEND=noninteractive silent apt update
 	DEBIAN_FRONTEND=noninteractive silent apt upgrade -y
@@ -88,14 +136,26 @@ function update_system
 }
 
 
+# This function downloads and updates configuration files for sshd
+function setup_sshd
+{
+	
+	# download sshd_config
+	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/sshd/sshd_config > /tmp/sshd_config
+	cat /tmp/sshd_config | grep -q "ListenAddress" && cp /tmp/sshd_config /etc/ssh/sshd_config && echo "sshd_config updated." || echo "Error downloading sshd_config ..."
+	rm /tmp/sshd_config
+	service sshd restart
+	
+}
+
 
 # This function sets up the necessary repositories for Percona, OpenLiteSpeed and PHP
 function setup_repositories
 {
-    # percona
+		# percona
 	echo "Adding Percona repo..."
-    silent curl -sO https://repo.percona.com/apt/percona-release_latest.generic_all.deb
-    silent apt-get -y -f install gnupg2 lsb-release ./percona-release_latest.generic_all.deb
+		silent curl -sO https://repo.percona.com/apt/percona-release_latest.generic_all.deb
+		silent apt-get -y -f install gnupg2 lsb-release ./percona-release_latest.generic_all.deb
 	
 	# ols
 	echo "Adding OLS repositories..."
@@ -103,14 +163,14 @@ function setup_repositories
 	
 	# Add ondrej/php PPA for PHP packages, if not added already
 	echo "Adding PHP repositories..."
-    if ! grep ^ /etc/apt/sources.list /etc/apt/sources.list.d/* | grep -q "ondrej/php"; then
-        echo "Adding ondrej/php PPA for PHP packages..."
-        silent add-apt-repository -y ppa:ondrej/php
-    fi
+		if ! grep ^ /etc/apt/sources.list /etc/apt/sources.list.d/* | grep -q "ondrej/php"; then
+				echo "Adding ondrej/php PPA for PHP packages..."
+				silent add-apt-repository -y ppa:ondrej/php
+		fi
 
-    # update
-    DEBIAN_FRONTEND=noninteractive silent apt update
-    DEBIAN_FRONTEND=noninteractive silent apt upgrade -y >/dev/null 2>&1
+		# update
+		DEBIAN_FRONTEND=noninteractive silent apt update
+		DEBIAN_FRONTEND=noninteractive silent apt upgrade -y >/dev/null 2>&1
 }
 
 
@@ -121,7 +181,7 @@ function setup_firewall
 	# reinstall and reset firewall
 	silent iptables --flush
 	silent iptables --delete-chain
-	   
+		 
 	# Check if ufw is already installed, and only reinstall if not
 	if ! command -v ufw &> /dev/null; then
 		DEBIAN_FRONTEND=noninteractive silent apt install -y ufw
@@ -134,14 +194,14 @@ function setup_firewall
 	silent ufw default allow routed
 
 	# open or block ports: 
-	silent ufw allow 22/tcp     # ssh default
-	silent ufw allow 999/tcp    # ssh custom
-	silent ufw allow 123/udp    # ntp
-	silent ufw allow 51820/udp  # wg
-	silent ufw allow 80/tcp     # http
-	silent ufw allow 443/tcp    # https
-	silent ufw allow 443/udp    # http3
-	silent ufw allow 7080/tcp   # ols
+	silent ufw allow 22/tcp		 # ssh default
+	silent ufw allow 999/tcp		# ssh custom
+	silent ufw allow 123/udp		# ntp
+	silent ufw allow 51820/udp	# wg
+	silent ufw allow 80/tcp		 # http
+	silent ufw allow 443/tcp		# https
+	silent ufw allow 443/udp		# http3
+	silent ufw allow 7080/tcp	 # ols
 
 	# save and enable
 	echo "y" | silent ufw enable
@@ -150,255 +210,86 @@ function setup_firewall
 }
 
 
-# This function performs a variety of basic server setup tasks, including:
-# 1. Reconfiguring timezone and locale settings.
-# 2. Setting the default text editor to nano.
-# 3. Adding 'localhost' entry to /etc/hosts if it doesn't exist.
-# 4. Updating /etc/security/limits.conf with nofile limits.
-# 5. Creating or resizing the swapfile to a permanent 2GB size.
-# 6. Ensuring idempotency for /etc/security/limits.conf and /etc/fstab by removing comments and empty lines.
-function setup_basic
-{
-    # Basic settings
-    silent dpkg-reconfigure -f noninteractive tzdata
-    silent locale-gen en_US en_US.utf8
-    silent localectl set-locale LANG=en_US.utf8
-    silent update-locale LC_ALL=en_US.utf8
-    echo "SELECTED_EDITOR=\"/bin/nano\"" > /root/.selected_editor
-    grep -qxF '127.0.0.1 localhost' /etc/hosts || echo "127.0.0.1 localhost" >> /etc/hosts
-
-    # Add limits to limits.conf only if they don't already exist
-    if ! grep -qxF '* soft nofile 999999' /etc/security/limits.conf; then
-        echo '* soft nofile 999999' >> /etc/security/limits.conf
-    fi
-
-    if ! grep -qxF '* hard nofile 999999' /etc/security/limits.conf; then
-        echo '* hard nofile 999999' >> /etc/security/limits.conf
-    fi
-
-    # Check if the swap file already exists
-	if [ ! -f /swapfile ]; then
-	  # Create a new permanent swap of 2GB
-	  echo "Creating a new permanent swap of 2GB..."
-	  fallocate -l 2G /swapfile
-	  chmod 600 /swapfile
-	  mkswap /swapfile
-	  swapon /swapfile
-	  # Update /etc/fstab to reflect the new size
-	  bash -c 'echo "/swapfile swap swap defaults 0 0" >> /etc/fstab'
-	else
-	  # Check if swap is enabled
-	  if grep -q "swapfile" /proc/swaps; then
-		# Check the current swap size
-		swap_size_gb=$(free --giga | awk '/Swap/ {print $2}')
-		
-		# If the swap size is not 2GB
-		if [ $swap_size_gb -ne 2 ]; then
-		  # Resize the swap to 2GB
-		  echo "Resizing swap to 2GB..."
-		  swapoff -a
-		  dd if=/dev/zero of=/swapfile bs=1G count=2
-		  chmod 600 /swapfile
-		  mkswap /swapfile
-		  swapon /swapfile
-		  # Update /etc/fstab to reflect the new size
-		  bash -c 'sed -i "/swapfile/c\\/swapfile swap swap defaults 0 0" /etc/fstab'
-		fi
-	  else
-		# Create a new permanent swap of 2GB
-		echo "Creating a new permanent swap of 2GB..."
-		fallocate -l 2G /swapfile
-		chmod 600 /swapfile
-		mkswap /swapfile
-		swapon /swapfile
-		# Update /etc/fstab to reflect the new size
-		bash -c 'echo "/swapfile swap swap defaults 0 0" >> /etc/fstab'
-	  fi
-	fi
-
-    # Set up idempotency for limits.conf and fstab
-    sed -i '/^#/d;/^$/d' /etc/security/limits.conf
-    sed -i '/^#/d;/^$/d' /etc/fstab
+# Basic packages: certbot, pv, pigz, curl, wget, zip, memcached, etc
+function install_basic_packages() {
+	DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" certbot pv pigz curl wget zip memcached
 }
 
 
-# This function installs a variety of necessary packages for the server, including:
-# 1. Basic packages: certbot, pv, pigz, curl, wget, zip, memcached, and redis-server.
-# 2. OpenLiteSpeed web server and its PHP 8.0 packages.
-# 3. PHP FPM and its extensions for different PHP versions (7.4, 8.0, 8.1, and 8.2).
-# 4. WP-CLI, a command-line tool for managing WordPress installations.
-# 5. Postfix, an open-source mail transfer agent (MTA) for routing and delivering email.
-# 6. Percona Server, a high-performance alternative to MySQL, for database management.
-function setup_packages
-{
+# OpenLiteSpeed web server and its PHP 8.0 packages.
+function install_ols() {
 
-	# basic
-	echo "Installing basic packages..."
-	DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" certbot pv pigz curl wget zip memcached redis-server
-
-	# ols
-	echo "Installing OLS..."
+	# Install OLS
 	DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" openlitespeed lsphp80 lsphp80-common lsphp80-curl
-	
-	# set admin credentials
+
+	# Set admin credentials
 	ADMINUSER="admin"
 	ADMINPASSWORD=$(gen_rand_pass)
-	
 	ENCRYPT_PASS=`"/usr/local/lsws/admin/fcgi-bin/admin_php" -q "/usr/local/lsws/admin/misc/htpasswd.php" $ADMINPASSWORD`
-    if [ $? = 0 ] ; then
-        echo "${ADMINUSER}:$ENCRYPT_PASS" > "/usr/local/lsws/admin/conf/htpasswd"
-        if [ $? = 0 ] ; then
+
+	if [ $? = 0 ] ; then
+		echo "${ADMINUSER}:$ENCRYPT_PASS" > "/usr/local/lsws/admin/conf/htpasswd"
+		if [ $? = 0 ] ; then
 			echo $ADMINPASSWORD > /usr/local/lsws/password.user.${ADMINUSER}
-        else
-            echo "OpenLiteSpeed WebAdmin password not changed."
-        fi
-    fi
-	
-
-	# php
-	echo "Installing PHP FPM..."
-	all_packages=""
-	for version in 7.4 8.0 8.1 8.2; do
-	  available_packages=""
-	  for package in php${version}-fpm php${version}-cli php${version}-bcmath php${version}-common php${version}-curl php${version}-gd php${version}-gmp php${version}-imap php${version}-intl php${version}-mbstring php${version}-mysql php${version}-pgsql php${version}-soap php${version}-tidy php${version}-xml php${version}-xmlrpc php${version}-zip php${version}-opcache php${version}-xsl php${version}-imagick php${version}-redis php${version}-memcached; do
-		if apt-cache show $package > /dev/null 2>&1; then
-		  available_packages="$available_packages $package"
+		else
+			echo "OpenLiteSpeed WebAdmin password not changed."
 		fi
-	  done
-	  if [[ ! -z $available_packages ]]; then
-		all_packages="$all_packages $available_packages"
-	  fi
-	done
-
-	if [[ ! -z $all_packages ]]; then
-	  DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" $all_packages
-	else
-	  echo "No packages available for any PHP version."
-	fi
-
-
-	# wp cli
-	echo "Installing wp-cli..."
-	if ! command -v wp &> /dev/null; then INSTALLED_VERSION="0.0.0"; else INSTALLED_VERSION=$(wp --version --allow-root | awk '{print $2}'); fi
-	LATEST_VERSION=$(curl -s https://api.github.com/repos/wp-cli/wp-cli/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")' | sed 's/^v//')
-	if [ "$INSTALLED_VERSION" != "$LATEST_VERSION" ]; then
-	  silent curl -o wp-cli.phar https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
-	  chmod +x wp-cli.phar
-	  mv wp-cli.phar /usr/local/bin/wp	  
-	  [ ! -f /usr/bin/wp ] && sudo ln -s /usr/local/bin/wp /usr/bin/wp
-	  echo "Updated wp from version $INSTALLED_VERSION to $LATEST_VERSION"
 	fi
 	
-	# postfix
-	echo "Installing Postfix..."
-	debconf-set-selections <<< "postfix postfix/mailname string localhost"
-	debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"
-	DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef"  ssl-cert postfix mailutils
-	
-	
-	# percona
-	echo "Installing Percona..."
-	silent percona-release setup ps80 
-    DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" percona-server-server percona-server-client
-	
-	# stop
-	if [ $(ps -ef | grep -E '(mysql|mariadb|percona)' | grep -v grep | wc -l) -gt 0 ]; then
-		service mysql stop
-	fi
-	
-	# change root password
-	ROOTPASSWORD=$(gen_rand_pass)
-	
-	# Stop MySQL service
-	sudo systemctl stop mysql
-
-	# Create the directory for the UNIX socket file, if it doesn't exist
-	sudo mkdir -p /var/run/mysqld
-	sudo chown mysql:mysql /var/run/mysqld
-
-	# Start MySQL with --skip-grant-tables and --skip-networking
-	sudo mysqld_safe --skip-grant-tables --skip-networking &
-
-	# Sleep for a few seconds to allow MySQL to start
-	sleep 5
-
-	# Change root password
-	mysql -u root -e "FLUSH PRIVILEGES; ALTER USER 'root'@'localhost' IDENTIFIED BY '$ROOTPASSWORD';"
-
-	# Find and kill mysqld_safe process
-	pkill mysql
-
-	# Start MySQL service
-	sudo systemctl start mysql
-
-	echo "MySQL root password has been changed to $ROOTPASSWORD"
-
-	# Save the new password
-	echo "Saving the new password to /etc/mysql/root.pass.log..."
-	echo "$ROOTPASSWORD" | tee /etc/mysql/root.pass.log
-	chmod 600 /etc/mysql/root.pass.log	
-
-}
-
-
-# This function generates and installs a self-signed SSL certificate for the server.
-# The generated certificate is valid for 820 days and is made for OpenLiteSpeed
-function setup_selfsigned_cert
-{
-    echo "Installing self signed ssl..."
-    SSL_COUNTRY="${SSL_COUNTRY:-US}"
-    SSL_STATE="${SSL_STATE:-New Jersey}"
-    SSL_LOCALITY="${SSL_LOCALITY:-Virtual}"
-    SSL_ORG="${SSL_ORG:-LiteSpeedCommunity}"
-    SSL_ORGUNIT="${SSL_ORGUNIT:-self}"
-    SSL_HOSTNAME="${SSL_HOSTNAME:-web}"
-    SSL_EMAIL="${SSL_EMAIL:-.}"
-    COMMNAME=$(hostname)
-	CSR=server.csr
-	KEY=server.key
-	CERT=server.crt    
-	echo -e "[req]\nprompt=no\ndistinguished_name=openlitespeed\n[openlitespeed]\ncommonName = ${COMMNAME}\ncountryName = ${SSL_COUNTRY}\nlocalityName = ${SSL_LOCALITY}\norganizationName = ${SSL_ORG}\norganizationalUnitName = ${SSL_ORGUNIT}\nstateOrProvinceName = ${SSL_STATE}\nemailAddress = ${SSL_EMAIL}\nname = openlitespeed\ninitials = CP\ndnQualifier = openlitespeed\n[server_exts]\nextendedKeyUsage=1.3.6.1.5.5.7.3.1" > $CSR
-    openssl req -x509 -config $CSR -extensions 'server_exts' -nodes -days 820 -newkey rsa:2048 -keyout ${KEY} -out ${CERT} >/dev/null 2>&1
-    rm -f $CSR
-    mv ${KEY}  /usr/local/lsws/conf/$KEY
-    mv ${CERT} /usr/local/lsws/conf/$CERT
-    chmod 0600 /usr/local/lsws/conf/$KEY
-    chmod 0600 /usr/local/lsws/conf/$CERT
-}
-
-
-# This function downloads and updates configuration files for sshd, PHP, OpenLiteSpeed, MySQL, Redis, and Postfix.
-function setup_configs
-{
-	
-	# download sshd_config
-	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/sshd/sshd_config > /tmp/sshd_config
-	cat /tmp/sshd_config | grep -q "ListenAddress" && cp /tmp/sshd_config /etc/ssh/sshd_config && echo "sshd_config updated." || echo "Error downloading sshd_config ..."
-	rm /tmp/sshd_config
-	service sshd restart	
-	
-	
-	# download ols	
+	# download ols config
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/ols/httpd_config.conf > /tmp/httpd_config.conf
 	cat /tmp/httpd_config.conf | grep -q "autoLoadHtaccess" && cp /tmp/httpd_config.conf /usr/local/lsws/conf/httpd_config.conf && echo "httpd_config.conf updated." || echo "Error downloading httpd_config.conf ..."
 	rm /tmp/httpd_config.conf
 	chown -R lsadm:lsadm /usr/local/lsws/conf/
 	systemctl restart lshttpd
 	
+	# create self signed ssl
+	echo "Installing self signed ssl..."
+	SSL_COUNTRY="${SSL_COUNTRY:-US}"
+	SSL_STATE="${SSL_STATE:-New Jersey}"
+	SSL_LOCALITY="${SSL_LOCALITY:-Virtual}"
+	SSL_ORG="${SSL_ORG:-LiteSpeedCommunity}"
+	SSL_ORGUNIT="${SSL_ORGUNIT:-self}"
+	SSL_HOSTNAME="${SSL_HOSTNAME:-web}"
+	SSL_EMAIL="${SSL_EMAIL:-.}"
+	COMMNAME=$(hostname)
+	CSR=server.csr
+	KEY=server.key
+	CERT=server.crt		
+	echo -e "[req]\nprompt=no\ndistinguished_name=openlitespeed\n[openlitespeed]\ncommonName = ${COMMNAME}\ncountryName = ${SSL_COUNTRY}\nlocalityName = ${SSL_LOCALITY}\norganizationName = ${SSL_ORG}\norganizationalUnitName = ${SSL_ORGUNIT}\nstateOrProvinceName = ${SSL_STATE}\nemailAddress = ${SSL_EMAIL}\nname = openlitespeed\ninitials = CP\ndnQualifier = openlitespeed\n[server_exts]\nextendedKeyUsage=1.3.6.1.5.5.7.3.1" > $CSR
+	openssl req -x509 -config $CSR -extensions 'server_exts' -nodes -days 820 -newkey rsa:2048 -keyout ${KEY} -out ${CERT} >/dev/null 2>&1
+	rm -f $CSR
+	mv ${KEY}	/usr/local/lsws/conf/$KEY
+	mv ${CERT} /usr/local/lsws/conf/$CERT
+	chmod 0600 /usr/local/lsws/conf/$KEY
+	chmod 0600 /usr/local/lsws/conf/$CERT
 	
-	# download my.cnf
-	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/sql/my.cnf > /tmp/my.cnf
-	cat /tmp/my.cnf | grep -q "mysqld" && cp /tmp/my.cnf /etc/mysql/my.cnf && echo "my.cnf updated." || echo "Error downloading my.cnf ..."
-	rm /tmp/my.cnf
-	MYSQL_MEM=$(calculate_memory_configs "MYSQL_MEM")
-	MYSQL_POOL_COUNT=$(calculate_memory_configs "MYSQL_POOL_COUNT")
-	MYSQL_LOG_SIZE=$(calculate_memory_configs "MYSQL_LOG_SIZE")	
-	sed -i "s/^innodb_buffer_pool_instances.*$/innodb_buffer_pool_instances   = $MYSQL_POOL_COUNT/" /etc/mysql/my.cnf
-	sed -i "s/^innodb_buffer_pool_size.*$/innodb_buffer_pool_size        = ${MYSQL_MEM}M/" /etc/mysql/my.cnf
-	sed -i "s/^innodb_log_file_size.*$/innodb_log_file_size           = ${MYSQL_LOG_SIZE}M/" /etc/mysql/my.cnf
-	systemctl restart mysql
+}
+
+
+# PHP FPM and its extensions for different PHP versions (7.4, 8.0, 8.1, and 8.2).
+function install_php() {
 	
+	# packages
+	all_packages=""
+	for version in 7.4 8.0 8.1 8.2; do
+		available_packages=""
+		for package in php${version}-fpm php${version}-cli php${version}-bcmath php${version}-common php${version}-curl php${version}-gd php${version}-gmp php${version}-imap php${version}-intl php${version}-mbstring php${version}-mysql php${version}-pgsql php${version}-soap php${version}-tidy php${version}-xml php${version}-xmlrpc php${version}-zip php${version}-opcache php${version}-xsl php${version}-imagick php${version}-redis php${version}-memcached; do
+			if apt-cache show $package > /dev/null 2>&1; then
+			available_packages="$available_packages $package"
+			fi
+		done
+		if [[ ! -z $available_packages ]]; then
+			all_packages="$all_packages $available_packages"
+		fi
+	done
+	if [[ ! -z $all_packages ]]; then
+		DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" $all_packages
+	else
+		echo "No packages available for any PHP version."
+	fi
 	
+	# configure
 	# Download php.ini file
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/php/php.ini > /tmp/php.ini
 	if cat /tmp/php.ini | grep -q "max_input_vars"; then find /etc/php -type f -iname php.ini -exec cp /tmp/php.ini {} \; && echo "php.ini files updated."; else echo "Error downloading php.ini ..."; fi
@@ -406,11 +297,11 @@ function setup_configs
 	
 	# cli adjustments
 	find /etc/php -type f -path "*cli/*" -iname php.ini | while read file; do
-        sed -i "s/^max_input_time.*$/max_input_time = 7200/" "$file"
+				sed -i "s/^max_input_time.*$/max_input_time = 7200/" "$file"
 		sed -i "s/^max_execution_time.*$/max_execution_time = 7200/" "$file"
 		sed -i "s/^memory_limit.*$/memory_limit = 4096M/" "$file"
 		sed -i "s/^opcache\.enable.*$/opcache.enable=0/" "$file"		
-    done
+		done
 		
 	# Download php-fpm.conf
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/php/php-fpm.conf > /tmp/php-fpm.conf
@@ -427,11 +318,85 @@ function setup_configs
 	
 	# restart if other pools exist
 	find /etc/php/ -type f -path "*/pool.d/*" -name "*.conf" | while read file; do
-        version=$(echo "$file" | awk -F'/' '{print $4}')
+				version=$(echo "$file" | awk -F'/' '{print $4}')
 		systemctl restart php${version}-fpm
-    done	
+		done
 	
-	# redis
+}
+
+
+# WP-CLI, a command-line tool for managing WordPress installations.
+function install_wp_cli() {
+	if ! command -v wp &> /dev/null; then INSTALLED_VERSION="0.0.0"; else INSTALLED_VERSION=$(wp --version --allow-root | awk '{print $2}'); fi
+	LATEST_VERSION=$(curl -s https://api.github.com/repos/wp-cli/wp-cli/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")' | sed 's/^v//')
+	if [ "$INSTALLED_VERSION" != "$LATEST_VERSION" ]; then
+		silent curl -o wp-cli.phar https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+		chmod +x wp-cli.phar
+		mv wp-cli.phar /usr/local/bin/wp
+		[ ! -f /usr/bin/wp ] && sudo ln -s /usr/local/bin/wp /usr/bin/wp
+		echo "Updated wp from version $INSTALLED_VERSION to $LATEST_VERSION"
+	fi
+}
+
+
+# Percona Server, a high-performance alternative to MySQL, for database management.
+function install_percona() {
+	
+	# Install Percona
+	silent percona-release setup ps80 
+	DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" percona-server-server percona-server-client
+	
+	# download my.cnf
+	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/sql/my.cnf > /tmp/my.cnf
+	cat /tmp/my.cnf | grep -q "mysqld" && cp /tmp/my.cnf /etc/mysql/my.cnf && echo "my.cnf updated." || echo "Error downloading my.cnf ..."
+	rm /tmp/my.cnf
+	MYSQL_MEM=$(calculate_memory_configs "MYSQL_MEM")
+	MYSQL_POOL_COUNT=$(calculate_memory_configs "MYSQL_POOL_COUNT")
+	MYSQL_LOG_SIZE=$(calculate_memory_configs "MYSQL_LOG_SIZE")	
+	sed -i "s/^innodb_buffer_pool_instances.*$/innodb_buffer_pool_instances	 = $MYSQL_POOL_COUNT/" /etc/mysql/my.cnf
+	sed -i "s/^innodb_buffer_pool_size.*$/innodb_buffer_pool_size				= ${MYSQL_MEM}M/" /etc/mysql/my.cnf
+	sed -i "s/^innodb_log_file_size.*$/innodb_log_file_size					 = ${MYSQL_LOG_SIZE}M/" /etc/mysql/my.cnf
+	systemctl restart mysql
+
+	# Stop MySQL service
+	sudo systemctl stop mysql
+
+	# Create the directory for the UNIX socket file, if it doesn't exist
+	sudo mkdir -p /var/run/mysqld
+	sudo chown mysql:mysql /var/run/mysqld
+
+	# Start MySQL with --skip-grant-tables and --skip-networking
+	sudo mysqld_safe --skip-grant-tables --skip-networking &
+
+	# Sleep for a few seconds to allow MySQL to start
+	sleep 5
+
+	# Change root password
+	ROOTPASSWORD=$(gen_rand_pass)
+	mysql -u root -e "FLUSH PRIVILEGES; ALTER USER 'root'@'localhost' IDENTIFIED BY '$ROOTPASSWORD';"
+
+	# Find and kill mysqld_safe process
+	pkill mysql
+
+	# Start MySQL service
+	sudo systemctl start mysql
+
+	echo "MySQL root password has been changed to $ROOTPASSWORD"
+
+	# Save the new password
+	echo "Saving the new password to /etc/mysql/root.pass.log..."
+	echo "$ROOTPASSWORD" | tee /etc/mysql/root.pass.log
+	chmod 600 /etc/mysql/root.pass.log
+}
+
+
+# Redis, an open-source mail transfer agent (MTA) for routing and delivering email.
+function install_redis() {
+	
+	# install
+	DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" redis-server
+	
+	# redis config
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/redis/redis.conf > /tmp/redis.conf
 	cat /tmp/redis.conf | grep -q "maxmemory" && cp /tmp/redis.conf /etc/redis/redis.conf && echo "redis.conf updated." || echo "Error downloading redis.conf ..."
 	rm /tmp/redis.conf
@@ -439,6 +404,16 @@ function setup_configs
 	sed -i "s/^maxmemory 128mb.*$/maxmemory ${REDIS_MEM}mb/" /etc/redis/redis.conf
 	service redis-server restart
 	
+}
+
+
+# Postfix, an open-source mail transfer agent (MTA) for routing and delivering email.
+function install_postfix() {
+
+	# install
+	debconf-set-selections <<< "postfix postfix/mailname string localhost"
+	debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"
+	DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" ssl-cert postfix mailutils
 	
 	# download postfix	
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/postfix/main.cf > /tmp/main.cf
@@ -449,19 +424,50 @@ function setup_configs
 	
 }
 
+# END FUNCTIONS
 
 
-# install
-update_system
-setup_repositories
-setup_firewall
-setup_basic
-setup_packages
-setup_selfsigned_cert
-setup_configs
+# Run selected functions in order
+for FUNCTION_NAME in $(echo "$FUNCTION_NAMES" | tr ',' '\n' | uniq); do
+  case $FUNCTION_NAME in
+    "update_system")
+      update_system
+      ;;
+    "setup_sshd")
+      setup_sshd
+      ;;
+    "setup_repositories")
+      setup_repositories
+      ;;
+    "setup_firewall")
+      setup_firewall
+      ;;
+    "install_basic_packages")
+      install_basic_packages
+      ;;
+    "install_ols")
+      install_ols
+      ;;
+    "install_php")
+      install_php
+      ;;
+    "install_wp_cli")
+      install_wp_cli
+      ;;
+    "install_percona")
+      install_percona
+      ;;
+    "install_redis")
+      install_redis
+      ;;
+    "install_postfix")
+      install_postfix
+      ;;
+    *)
+      echo "Invalid function name: $FUNCTION_NAME"
+      exit 1
+      ;;
+  esac
+done
 
-# restart
-#systemctl restart lshttpd
-#systemctl restart mysql
-#for version in 7.4 8.0 8.1 8.2; do service php${version}-fpm restart; done
 echo "All done!"
