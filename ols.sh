@@ -125,10 +125,10 @@ calculate_memory_configs() {
 # This function updates the system and disables hints on pending kernel upgrades
 function update_system
 {
-		if [ -d /etc/needrestart/conf.d ]; then
-				echo 'List Restart services only'
-				echo -e "\$nrconf{restart} = 'l';\n\$nrconf{kernelhints} = 0;" > /etc/needrestart/conf.d/disable.conf
-		fi
+	if [ -d /etc/needrestart/conf.d ]; then
+		echo 'List Restart services only'
+		echo -e "\$nrconf{restart} = 'l';\n\$nrconf{kernelhints} = 0;" > /etc/needrestart/conf.d/disable.conf
+	fi
 	
 	DEBIAN_FRONTEND=noninteractive silent apt update
 	DEBIAN_FRONTEND=noninteractive silent apt upgrade -y
@@ -141,6 +141,7 @@ function setup_sshd
 {
 	
 	# download sshd_config
+	echo "Updating sshd_config..."
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/sshd/sshd_config > /tmp/sshd_config
 	cat /tmp/sshd_config | grep -q "ListenAddress" && cp /tmp/sshd_config /etc/ssh/sshd_config && echo "sshd_config updated." || echo "Error downloading sshd_config ..."
 	rm /tmp/sshd_config
@@ -152,10 +153,10 @@ function setup_sshd
 # This function sets up the necessary repositories for Percona, OpenLiteSpeed and PHP
 function setup_repositories
 {
-		# percona
-	echo "Adding Percona repo..."
-		silent curl -sO https://repo.percona.com/apt/percona-release_latest.generic_all.deb
-		silent apt-get -y -f install gnupg2 lsb-release ./percona-release_latest.generic_all.deb
+	# percona
+	echo "Adding Percona repositories..."
+	silent curl -sO https://repo.percona.com/apt/percona-release_latest.generic_all.deb
+	silent apt-get -y -f install gnupg2 lsb-release ./percona-release_latest.generic_all.deb
 	
 	# ols
 	echo "Adding OLS repositories..."
@@ -163,14 +164,14 @@ function setup_repositories
 	
 	# Add ondrej/php PPA for PHP packages, if not added already
 	echo "Adding PHP repositories..."
-		if ! grep ^ /etc/apt/sources.list /etc/apt/sources.list.d/* | grep -q "ondrej/php"; then
-				echo "Adding ondrej/php PPA for PHP packages..."
-				silent add-apt-repository -y ppa:ondrej/php
-		fi
+	if ! grep ^ /etc/apt/sources.list /etc/apt/sources.list.d/* | grep -q "ondrej/php"; then
+		echo "Adding ondrej/php PPA for PHP packages..."
+		silent add-apt-repository -y ppa:ondrej/php
+	fi
 
-		# update
-		DEBIAN_FRONTEND=noninteractive silent apt update
-		DEBIAN_FRONTEND=noninteractive silent apt upgrade -y >/dev/null 2>&1
+	# update
+	DEBIAN_FRONTEND=noninteractive silent apt update
+	DEBIAN_FRONTEND=noninteractive silent apt upgrade -y >/dev/null 2>&1
 }
 
 
