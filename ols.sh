@@ -337,9 +337,9 @@ function setup_configs
 	MYSQL_MEM=$(calculate_memory_configs "MYSQL_MEM")
 	MYSQL_POOL_COUNT=$(calculate_memory_configs "MYSQL_POOL_COUNT")
 	MYSQL_LOG_SIZE=$(calculate_memory_configs "MYSQL_LOG_SIZE")	
-	sed -i "s/^innodb_buffer_pool_instances.*$/innodb_buffer_pool_instances $MYSQL_POOL_COUNT/" /etc/mysql/my.cnf
-	sed -i "s/^innodb_buffer_pool_size.*$/innodb_buffer_pool_size ${MYSQL_MEM}M/" /etc/mysql/my.cnf
-	sed -i "s/^innodb_log_file_size.*$/innodb_log_file_size $MYSQL_LOG_SIZE/" /etc/mysql/my.cnf
+	sed -i "s/^innodb_buffer_pool_instances.*$/innodb_buffer_pool_instances   = $MYSQL_POOL_COUNT/" /etc/mysql/my.cnf
+	sed -i "s/^innodb_buffer_pool_size.*$/innodb_buffer_pool_size       = ${MYSQL_MEM}M/" /etc/mysql/my.cnf
+	sed -i "s/^innodb_log_file_size.*$/innodb_log_file_size           = ${MYSQL_LOG_SIZE}M/" /etc/mysql/my.cnf
 	systemctl restart mysql
 	
 	
