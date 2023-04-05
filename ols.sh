@@ -374,7 +374,6 @@ function setup_configs
 	
 	# Download php.ini file
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols1clk/master/configs/php/php.ini > /tmp/php.ini
-	cat /tmp/php.ini | grep -q "max_input_vars"; then find /etc/php -type f -iname php.ini -exec cp /tmp/php.ini {} \; && echo "php.ini files updated."; else echo "Error downloading php.ini ..."; fi
 	if cat /tmp/php.ini | grep -q "max_input_vars"; then find /etc/php -type f -iname php.ini -exec cp /tmp/php.ini {} \; && echo "php.ini files updated."; else echo "Error downloading php.ini ..."; fi
 	rm /tmp/php.ini
 	for version in 7.4 8.0 8.1 8.2; do systemctl restart php${version}-fpm; done
