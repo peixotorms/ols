@@ -301,7 +301,7 @@ function setup_packages
 
 	# wp cli
 	echo "Installing wp-cli..."
-	INSTALLED_VERSION=$(wp --version | awk '{print $2}'); if [ -z "$INSTALLED_VERSION" ]; then INSTALLED_VERSION="0.0.0"; fi
+	if ! command -v wp &> /dev/null; then INSTALLED_VERSION="0.0.0"; else INSTALLED_VERSION=$(wp --version | awk '{print $2}'); fi
 	LATEST_VERSION=$(curl -s https://api.github.com/repos/wp-cli/wp-cli/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")')
 	if [ "$INSTALLED_VERSION" != "$LATEST_VERSION" ]; then
 	  curl -o wp-cli.phar https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
