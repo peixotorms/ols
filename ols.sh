@@ -132,7 +132,7 @@ function setup_repositories
     # percona
 	echo "Adding percona repo..."
     curl -sO https://repo.percona.com/apt/percona-release_latest.generic_all.deb
-    silent ${APT} -y -f install gnupg2 lsb-release ./percona-release_latest.generic_all.deb
+    silent apt-get -y -f install gnupg2 lsb-release ./percona-release_latest.generic_all.deb
 	
 	# ols
 	echo "Adding ols repo..."
@@ -143,7 +143,6 @@ function setup_repositories
     if ! grep ^ /etc/apt/sources.list /etc/apt/sources.list.d/* | grep -q "ondrej/php"; then
         echo "Adding ondrej/php PPA for PHP packages..."
         add-apt-repository -y ppa:ondrej/php > /dev/null 2>&1
-        apt-get update -qq 
     else
         echo "ondrej/php PPA for PHP packages already exists, skipping..."
     fi
@@ -291,7 +290,7 @@ function setup_packages
 	if [[ ! -z $all_packages ]]; then
 	  echo "The following packages are available for all PHP versions: $all_packages"
 	  echo "Installing all available packages..."
-	  DEBIAN_FRONTEND=noninteractive apt install -y -o Dpkg::Options::="--force-confdef" $all_packages
+	  silent DEBIAN_FRONTEND=noninteractive apt install -y -o Dpkg::Options::="--force-confdef" $all_packages
 	else
 	  echo "No packages available for any PHP version."
 	fi
