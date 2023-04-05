@@ -370,7 +370,7 @@ function setup_configs
 	find /etc/php/ -type f -path "*/pool.d/*" -name "www.conf" -delete
 	
 	# restart if other pools exist
-	find find /etc/php/ -type f -path "*/pool.d/*" -name "*.conf" | while read file; do
+	find /etc/php/ -type f -path "*/pool.d/*" -name "*.conf" | while read file; do
         version=$(echo "$file" | awk -F'/' '{print $4}')
 		systemctl restart php${version}-fpm
     done	
