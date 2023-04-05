@@ -268,7 +268,7 @@ function setup_packages
 
 	# ols
 	echo "Installing OLS..."
-	DEBIAN_FRONTEND=noninteractive apt install -y -o Dpkg::Options::="--force-confdef" openlitespeed lsphp80 lsphp80-common lsphp80-gd lsphp80-process lsphp80-mbstring lsphp80-mysqlnd lsphp80-xml lsphp80-pdo lsphp80-imap lsphp80-curl lsphp80-imagick lsphp80-intl lsphp80-memcached lsphp80-opcache lsphp80-redis
+	DEBIAN_FRONTEND=noninteractive apt install -y -o Dpkg::Options::="--force-confdef" openlitespeed lsphp80 lsphp80-common lsphp80-curl
 
 
 	# php
@@ -301,13 +301,13 @@ function setup_packages
 
 	# wp cli
 	echo "Installing wp-cli..."
-	if ! command -v wp &> /dev/null; then INSTALLED_VERSION="0.0.0"; else INSTALLED_VERSION=$(wp --version | awk '{print $2}'); fi
+	if ! command -v wp &> /dev/null; then INSTALLED_VERSION="0.0.0"; else INSTALLED_VERSION=$(wp --version --allow-root | awk '{print $2}'); fi
 	LATEST_VERSION=$(curl -s https://api.github.com/repos/wp-cli/wp-cli/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")')
 	if [ "$INSTALLED_VERSION" != "$LATEST_VERSION" ]; then
 	  curl -o wp-cli.phar https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
 	  chmod +x wp-cli.phar
-	  sudo mv wp-cli.phar /usr/local/bin/wp  
-	  sudo ln -s /usr/local/bin/wp /usr/bin/wp
+	  mv wp-cli.phar /usr/local/bin/wp	  
+	  [ ! -f /usr/bin/wp ] && sudo ln -s /usr/local/bin/wp /usr/bin/wp
 	  echo "Updated wp from version $INSTALLED_VERSION to $LATEST_VERSION"
 	else
 	  echo "wp is already up-to-date at version $INSTALLED_VERSION"
