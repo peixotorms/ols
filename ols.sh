@@ -6,6 +6,7 @@
 #    Based on: LiteSpeed 1-Click Install OLS                                 #
 ##############################################################################
 
+VERBOSE=1
 
 # This function executes the given command and suppresses its output if the VERBOSE variable is not set to '1'. 
 # It can be useful when running commands that may produce a lot of output or when you only want to see the output in verbose mode. 
@@ -377,8 +378,7 @@ function setup_configs
 	find find /etc/php/ -type f -path "*/pool.d/*" -name "*.conf" | while read file; do
         version=$(echo "$file" | awk -F'/' '{print $4}')
 		systemctl restart php${version}-fpm
-    done
-	
+    done	
 	
 	# redis
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/redis/redis.conf > /tmp/redis.conf
