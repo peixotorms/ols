@@ -118,7 +118,7 @@ function update_system
 # Restart services (l)ist only, (i)nteractive or (a)utomatically. 
 \$nrconf{restart} = 'l'; 
 # Disable hints on pending kernel upgrades. 
-\$nrconf{kernelhints} = 0;         
+\$nrconf{kernelhints} = 0;
 END
     fi
 	
@@ -141,11 +141,11 @@ function setup_repositories
 	# Add ondrej/php PPA for PHP packages, if not added already
 	echo "Adding php repo..."
     if ! grep ^ /etc/apt/sources.list /etc/apt/sources.list.d/* | grep -q "ondrej/php"; then
-        print_info "Adding ondrej/php PPA for PHP packages..."
+        echo "Adding ondrej/php PPA for PHP packages..."
         add-apt-repository -y ppa:ondrej/php > /dev/null 2>&1
         apt-get update -qq 
     else
-        print_info "ondrej/php PPA for PHP packages already exists, skipping..."
+        echo "ondrej/php PPA for PHP packages already exists, skipping..."
     fi
 
     # update
@@ -273,16 +273,30 @@ function setup_packages
 
 	# php
 	echo "Installing PHP FPM..."
+	echo "Collecting available packages for all PHP versions..."
+	all_packages=""
 	for version in 7.4 8.0 8.1 8.2; do
+	  available_packages=""
 	  for package in php${version}-fpm php${version}-cli php${version}-bcmath php${version}-common php${version}-curl php${version}-gd php${version}-gmp php${version}-imap php${version}-intl php${version}-mbstring php${version}-mysql php${version}-pgsql php${version}-soap php${version}-tidy php${version}-xml php${version}-xmlrpc php${version}-zip php${version}-opcache php${version}-xsl php${version}-imagick php${version}-redis php${version}-memcached; do
 		if apt-cache show $package > /dev/null 2>&1; then
-		  echo "$package exists, installing..."
-		  DEBIAN_FRONTEND=noninteractive apt install -y -o Dpkg::Options::="--force-confdef" $package
+		  available_packages="$available_packages $package"
 		else
 		  echo "$package does not exist, skipping..."
 		fi
 	  done
+	  if [[ ! -z $available_packages ]]; then
+		all_packages="$all_packages $available_packages"
+	  fi
 	done
+
+	if [[ ! -z $all_packages ]]; then
+	  echo "The following packages are available for all PHP versions: $all_packages"
+	  echo "Installing all available packages..."
+	  DEBIAN_FRONTEND=noninteractive apt install -y -o Dpkg::Options::="--force-confdef" $all_packages
+	else
+	  echo "No packages available for any PHP version."
+	fi
+
 
 
 	# wp cli
