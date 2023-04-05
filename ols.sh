@@ -224,8 +224,7 @@ function setup_basic
 	  # Check if swap is enabled
 	  if grep -q "swapfile" /proc/swaps; then
 		# Check the current swap size
-		swap_size=$(swapon --bytes --show=SIZE --noheadings)
-		swap_size_gb=$(echo $swap_size | awk '{ foo = $1 / 1024 / 1024 / 1024; print foo }')
+		swap_size_gb=$(free --giga | awk '/Swap/ {print $2}')
 		
 		# If the swap size is not 2GB
 		if [ $swap_size_gb -ne 2 ]; then
@@ -415,7 +414,7 @@ function setup_configs
 	service redis-server restart
 	
 	# download postfix	
-	curl -skL https://raw.githubusercontent.com/peixotorms/ols1clk/master/configs/postfix/main.cf > /tmp/main.cf
+	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/postfix/main.cf > /tmp/main.cf
 	cat /tmp/main.cf | grep -q "smtpd_banner" && cp /tmp/main.cf /etc/postfix/main.cf && echo "main.cf updated." || echo "Error downloading main.cf ..."
 	rm /tmp/main.cf
 	echo 'postmaster: /dev/null\nroot: /dev/null' | sudo tee /etc/aliases > /dev/null
