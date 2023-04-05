@@ -7,101 +7,69 @@
 ##############################################################################
 
 
-# run commands silently
+# This function executes the given command and suppresses its output if the VERBOSE variable is not set to '1'. 
+# It can be useful when running commands that may produce a lot of output or when you only want to see the output in verbose mode. 
+# Usage: silent <command>
 function silent { if [ "${VERBOSE}" = '1' ]; then "$@"; else "$@" >/dev/null 2>&1; fi; }
 
 
+# This function calculates memory configurations for various components based on the available system memory and CPU cores
+calculate_memory_configs() {
 
-# calculate limits
-function calculate_memory() {
-    # Detect the total amount of RAM in MB
-    local TOTAL_RAM=$(($(awk '/MemTotal/ {print $2}' /proc/meminfo)/1024))
-
-    # Subtract 256 MB from the total RAM to create a numeric RAM variable in MB
-    local RAM=$(($TOTAL_RAM - 256))
-
-    # Check if RAM is less than or equal to 200 MB
-    if [ $RAM -le 200 ]
-    then
-        # Output a warning message and quit if RAM is less than or equal to 200 MB
-        echo "Error: Not enough memory for the script to run."
-        exit 1
-    else
-        # Count all CPU cores available
+	local OPTION=$1
+	local TOTAL_RAM=$(($(awk '/MemTotal/ {print $2}' /proc/meminfo)/1024))
+	local RAM=$(($TOTAL_RAM - 256))
+	local REDIS_MEM=$(($RAM/4))
+	[ $REDIS_MEM -gt 4096 ] && REDIS_MEM=4096
+	local MYSQL_MEM=$(($RAM/2))
+	local PHP_MEM=$(($RAM - $REDIS_MEM - $MYSQL_MEM))
+	
+	case $OPTION in
+    "REDIS_MEM")
+        echo $REDIS_MEM
+        ;;
+    "MYSQL_MEM")
+        echo $MYSQL_MEM
+        ;;
+    "PHP_MEM")
+        echo $PHP_MEM
+        ;;
+    "MYSQL_POOL_COUNT")
         local CPU_CORES=$(nproc)
-
-        # Calculate the amount of RAM to be allocated for REDIS_MEM
-        local REDIS_MEM=$(($RAM/4))
-        if [ $REDIS_MEM -gt 4096 ]
-        then
-            REDIS_MEM=4096
-        fi
-
-        # Ensure that REDIS_MEM is an integer type
-        REDIS_MEM=$(($REDIS_MEM/1))
-
-        # Calculate the amount of RAM to be allocated for MYSQL_MEM
-        local MYSQL_MEM=$(($RAM/2))
-
-        # Ensure that MYSQL_MEM is an integer type
-        MYSQL_MEM=$(($MYSQL_MEM/1))
-
-        # Calculate the remaining amount of RAM to be allocated for PHP_MEM
-        local PHP_MEM=$(($RAM-$REDIS_MEM-$MYSQL_MEM))
-
-        # Ensure that PHP_MEM is an integer type
-        PHP_MEM=$(($PHP_MEM/1))
-
-        # Calculate MYSQL_POOL_COUNT
         local MYSQL_POOL_COUNT=$(($MYSQL_MEM/1024))
         local MYSQL_MAX_POOL_COUNT=$(($CPU_CORES*4/5))
-        if [ $MYSQL_POOL_COUNT -gt $MYSQL_MAX_POOL_COUNT ]
-        then
-            MYSQL_POOL_COUNT=$MYSQL_MAX_POOL_COUNT
-        fi
-        if [ $MYSQL_POOL_COUNT -lt 1 ]
-        then
-            MYSQL_POOL_COUNT=1
-        fi
-
-        # Calculate PHP_POOL_COUNT
+        [ $MYSQL_POOL_COUNT -gt $MYSQL_MAX_POOL_COUNT ] && MYSQL_POOL_COUNT=$MYSQL_MAX_POOL_COUNT
+        [ $MYSQL_POOL_COUNT -lt 1 ] && MYSQL_POOL_COUNT=1
+        echo $MYSQL_POOL_COUNT
+        ;;
+    "PHP_POOL_COUNT")
+        local CPU_CORES=$(nproc)
         local PHP_POOL_COUNT=$(($PHP_MEM/48))
         local MAX_PHP_POOL_COUNT=$(($CPU_CORES*2))
-        if [ $PHP_POOL_COUNT -gt $MAX_PHP_POOL_COUNT ]
-        then
-            PHP_POOL_COUNT=$MAX_PHP_POOL_COUNT
-        fi
-        if [ $PHP_POOL_COUNT -lt 1 ]
-        then
-            PHP_POOL_COUNT=1
-        fi
-
-        # Calculate MYSQL_LOG_SIZE
+        [ $PHP_POOL_COUNT -gt $MAX_PHP_POOL_COUNT ] && PHP_POOL_COUNT=$MAX_PHP_POOL_COUNT
+        [ $PHP_POOL_COUNT -lt 1 ] && PHP_POOL_COUNT=1
+        echo $PHP_POOL_COUNT
+        ;;
+    "MYSQL_LOG_SIZE")
         local MYSQL_LOG_SIZE=$(($MYSQL_MEM/4))
-        if [ $MYSQL_LOG_SIZE -gt 2048 ]
-        then
-            MYSQL_LOG_SIZE=2048
-        fi
-        if [ $MYSQL_LOG_SIZE -lt 32 ]
-        then
-            MYSQL_LOG_SIZE=32
-        fi
-
-        # Export the values of the six variables
-        declare -x CPU_CORES=$CPU_CORES
-		declare -x REDIS_MEM=$REDIS_MEM
-		declare -x MYSQL_MEM=$MYSQL_MEM
-		declare -x PHP_MEM=$PHP_MEM
-		declare -x MYSQL_POOL_COUNT=$MYSQL_POOL_COUNT
-		declare -x PHP_POOL_COUNT=$PHP_POOL_COUNT
-		declare -x MYSQL_LOG_SIZE=$MYSQL_LOG_SIZE
-
-	fi
+        [ $MYSQL_LOG_SIZE -gt 2048 ] && MYSQL_LOG_SIZE=2048
+        [ $MYSQL_LOG_SIZE -lt 32 ] && MYSQL_LOG_SIZE=32
+        echo $MYSQL_LOG_SIZE
+        ;;
+	esac
+	
+	# usage
+	#REDIS_MEM=$(calculate_memory_configs "REDIS_MEM")
+	#MYSQL_MEM=$(calculate_memory_configs "MYSQL_MEM")
+	#PHP_MEM=$(calculate_memory_configs "PHP_MEM")
+	#MYSQL_POOL_COUNT=$(calculate_memory_configs "MYSQL_POOL_COUNT")
+	#PHP_POOL_COUNT=$(calculate_memory_configs "PHP_POOL_COUNT")
+	#MYSQL_LOG_SIZE=$(calculate_memory_configs "MYSQL_LOG_SIZE")
+	
 }
 
 
-
-# initial run
+# This function updates the system and disables hints on pending kernel upgrades
 function update_system
 {
     if [ -d /etc/needrestart/conf.d ]; then
@@ -120,7 +88,8 @@ END
 }
 
 
-# install percona
+
+# This function sets up the necessary repositories for Percona, OpenLiteSpeed and PHP
 function setup_repositories
 {
     # percona
@@ -145,7 +114,7 @@ function setup_repositories
 }
 
 
-# function to setup firewall
+# This function sets up and configures the firewall using ufw (Uncomplicated Firewall).
 function setup_firewall
 {
 
@@ -181,7 +150,13 @@ function setup_firewall
 }
 
 
-# function to check the basic server configs
+# This function performs a variety of basic server setup tasks, including:
+# 1. Reconfiguring timezone and locale settings.
+# 2. Setting the default text editor to nano.
+# 3. Adding 'localhost' entry to /etc/hosts if it doesn't exist.
+# 4. Updating /etc/security/limits.conf with nofile limits.
+# 5. Creating or resizing the swapfile to a permanent 2GB size.
+# 6. Ensuring idempotency for /etc/security/limits.conf and /etc/fstab by removing comments and empty lines.
 function setup_basic
 {
     # Basic settings
@@ -247,7 +222,13 @@ function setup_basic
 }
 
 
-# install packages
+# This function installs a variety of necessary packages for the server, including:
+# 1. Basic packages: certbot, pv, pigz, curl, wget, zip, memcached, and redis-server.
+# 2. OpenLiteSpeed web server and its PHP 8.0 packages.
+# 3. PHP FPM and its extensions for different PHP versions (7.4, 8.0, 8.1, and 8.2).
+# 4. WP-CLI, a command-line tool for managing WordPress installations.
+# 5. Postfix, an open-source mail transfer agent (MTA) for routing and delivering email.
+# 6. Percona Server, a high-performance alternative to MySQL, for database management.
 function setup_packages
 {
 
@@ -282,7 +263,6 @@ function setup_packages
 	fi
 
 
-
 	# wp cli
 	echo "Installing wp-cli..."
 	if ! command -v wp &> /dev/null; then INSTALLED_VERSION="0.0.0"; else INSTALLED_VERSION=$(wp --version --allow-root | awk '{print $2}'); fi
@@ -309,10 +289,11 @@ function setup_packages
 }
 
 
-# create self signed ssl for ols
+# This function generates and installs a self-signed SSL certificate for the server.
+# The generated certificate is valid for 820 days and is made for OpenLiteSpeed
 function setup_selfsigned_cert
 {
-   echo "Installing self signed ssl..."
+    echo "Installing self signed ssl..."
     SSL_COUNTRY="${SSL_COUNTRY:-US}"
     SSL_STATE="${SSL_STATE:-New Jersey}"
     SSL_LOCALITY="${SSL_LOCALITY:-Virtual}"
@@ -321,33 +302,12 @@ function setup_selfsigned_cert
     SSL_HOSTNAME="${SSL_HOSTNAME:-web}"
     SSL_EMAIL="${SSL_EMAIL:-.}"
     COMMNAME=$(hostname)
-	
 	CSR=server.csr
 	KEY=server.key
-	CERT=server.crt
-	
-    
-    cat << EOF > $CSR
-[req]
-prompt=no
-distinguished_name=openlitespeed
-[openlitespeed]
-commonName = ${COMMNAME}
-countryName = ${SSL_COUNTRY}
-localityName = ${SSL_LOCALITY}
-organizationName = ${SSL_ORG}
-organizationalUnitName = ${SSL_ORGUNIT}
-stateOrProvinceName = ${SSL_STATE}
-emailAddress = ${SSL_EMAIL}
-name = openlitespeed
-initials = CP
-dnQualifier = openlitespeed
-[server_exts]
-extendedKeyUsage=1.3.6.1.5.5.7.3.1
-EOF
+	CERT=server.crt    
+	echo -e "[req]\nprompt=no\ndistinguished_name=openlitespeed\n[openlitespeed]\ncommonName = ${COMMNAME}\ncountryName = ${SSL_COUNTRY}\nlocalityName = ${SSL_LOCALITY}\norganizationName = ${SSL_ORG}\norganizationalUnitName = ${SSL_ORGUNIT}\nstateOrProvinceName = ${SSL_STATE}\nemailAddress = ${SSL_EMAIL}\nname = openlitespeed\ninitials = CP\ndnQualifier = openlitespeed\n[server_exts]\nextendedKeyUsage=1.3.6.1.5.5.7.3.1" > $CSR
     openssl req -x509 -config $CSR -extensions 'server_exts' -nodes -days 820 -newkey rsa:2048 -keyout ${KEY} -out ${CERT} >/dev/null 2>&1
     rm -f $CSR
-    
     mv ${KEY}  /usr/local/lsws/conf/$KEY
     mv ${CERT} /usr/local/lsws/conf/$CERT
     chmod 0600 /usr/local/lsws/conf/$KEY
@@ -355,7 +315,7 @@ EOF
 }
 
 
-# download configs
+# The function downloads and updates configuration files for sshd, PHP, OpenLiteSpeed, MySQL, Redis, and Postfix.
 function setup_configs
 {
 	
@@ -387,14 +347,6 @@ function setup_configs
 	sed -i "s/^innodb_log_file_size.*$/innodb_log_file_size $MYSQL_LOG_SIZE/" /etc/mysql/my.cnf
 	systemctl restart mysql
 	
-	echo "CPU_CORES: $CPU_CORES"
-echo "REDIS_MEM: $REDIS_MEM"
-echo "MYSQL_MEM: $MYSQL_MEM"
-echo "PHP_MEM: $PHP_MEM"
-echo "MYSQL_POOL_COUNT: $MYSQL_POOL_COUNT"
-echo "PHP_POOL_COUNT: $PHP_POOL_COUNT"
-echo "MYSQL_LOG_SIZE: $MYSQL_LOG_SIZE"
-	
 	# redis
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/redis/redis.conf > /tmp/redis.conf
 	cat /tmp/redis.conf | grep -q "maxmemory" && cp /tmp/redis.conf /etc/redis/redis.conf && echo "redis.conf updated." || echo "Error downloading redis.conf ..."
@@ -414,7 +366,6 @@ echo "MYSQL_LOG_SIZE: $MYSQL_LOG_SIZE"
 
 # install
 update_system
-calculate_memory
 setup_repositories
 setup_firewall
 setup_basic
