@@ -262,11 +262,11 @@ function setup_packages
 
 	# basic
 	echo "Installing basic packages..."
-	DEBIAN_FRONTEND=noninteractive apt install -y -o Dpkg::Options::="--force-confdef" certbot pv pigz curl wget zip memcached redis-server
+	silent DEBIAN_FRONTEND=noninteractive apt install -y -o Dpkg::Options::="--force-confdef" certbot pv pigz curl wget zip memcached redis-server
 
 	# ols
 	echo "Installing OLS..."
-	DEBIAN_FRONTEND=noninteractive apt install -y -o Dpkg::Options::="--force-confdef" openlitespeed lsphp80 lsphp80-common lsphp80-curl
+	silent DEBIAN_FRONTEND=noninteractive apt install -y -o Dpkg::Options::="--force-confdef" openlitespeed lsphp80 lsphp80-common lsphp80-curl
 
 
 	# php
