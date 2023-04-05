@@ -160,7 +160,7 @@ function setup_repositories
 	
 	# ols
 	echo "Adding OLS repositories..."
-	silent wget -q -O - https://repo.litespeed.sh | sudo bash
+	wget -q -O - https://repo.litespeed.sh | bash
 	
 	# Add ondrej/php PPA for PHP packages, if not added already
 	echo "Adding PHP repositories..."
@@ -178,7 +178,9 @@ function setup_repositories
 # This function sets up and configures the firewall using ufw (Uncomplicated Firewall).
 function setup_firewall
 {
-
+	# start
+	echo "Updating firewall policy..."
+	
 	# reinstall and reset firewall
 	silent iptables --flush
 	silent iptables --delete-chain
@@ -219,6 +221,9 @@ function install_basic_packages() {
 
 # OpenLiteSpeed web server and its PHP 8.0 packages.
 function install_ols() {
+
+	# start
+	echo "Installing OpenLiteSpeed..."
 
 	# Install OLS
 	DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" openlitespeed lsphp80 lsphp80-common lsphp80-curl
@@ -271,6 +276,9 @@ function install_ols() {
 
 # PHP FPM and its extensions for different PHP versions (7.4, 8.0, 8.1, and 8.2).
 function install_php() {
+
+	# start
+	echo "Installing PHP..."
 	
 	# packages
 	all_packages=""
@@ -329,6 +337,10 @@ function install_php() {
 
 # WP-CLI, a command-line tool for managing WordPress installations.
 function install_wp_cli() {
+
+	# start
+	echo "Installing WP-CLI..."
+	
 	if ! command -v wp &> /dev/null; then INSTALLED_VERSION="0.0.0"; else INSTALLED_VERSION=$(wp --version --allow-root | awk '{print $2}'); fi
 	LATEST_VERSION=$(curl -s https://api.github.com/repos/wp-cli/wp-cli/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")' | sed 's/^v//')
 	if [ "$INSTALLED_VERSION" != "$LATEST_VERSION" ]; then
@@ -338,11 +350,15 @@ function install_wp_cli() {
 		[ ! -f /usr/bin/wp ] && sudo ln -s /usr/local/bin/wp /usr/bin/wp
 		echo "Updated wp from version $INSTALLED_VERSION to $LATEST_VERSION"
 	fi
+	
 }
 
 
 # Percona Server, a high-performance alternative to MySQL, for database management.
 function install_percona() {
+	
+	# start
+	echo "Installing Percona Server..."
 	
 	# Install Percona
 	silent percona-release setup ps80 
@@ -387,13 +403,16 @@ function install_percona() {
 
 	# Save the new password
 	echo "Saving the new password to /etc/mysql/root.pass.log..."
-	echo "$ROOTPASSWORD" | tee /etc/mysql/root.pass.log
+	echo -n "$ROOTPASSWORD" > /etc/mysql/root.pass.log
 	chmod 600 /etc/mysql/root.pass.log
 }
 
 
 # Redis, an open-source mail transfer agent (MTA) for routing and delivering email.
 function install_redis() {
+	
+	# start
+	echo "Installing Redis..."
 	
 	# install
 	DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" redis-server
@@ -411,6 +430,9 @@ function install_redis() {
 
 # Postfix, an open-source mail transfer agent (MTA) for routing and delivering email.
 function install_postfix() {
+
+	# start
+	echo "Installing Postfix..."
 
 	# install
 	debconf-set-selections <<< "postfix postfix/mailname string localhost"
