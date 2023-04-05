@@ -75,12 +75,7 @@ function update_system
 {
     if [ -d /etc/needrestart/conf.d ]; then
         echo 'List Restart services only'
-        cat >> /etc/needrestart/conf.d/disable.conf <<END
-# Restart services (l)ist only, (i)nteractive or (a)utomatically. 
-\$nrconf{restart} = 'l'; 
-# Disable hints on pending kernel upgrades. 
-\$nrconf{kernelhints} = 0;
-END
+        echo -e "\$nrconf{restart} = 'l';\n\$nrconf{kernelhints} = 0;" > /etc/needrestart/conf.d/disable.conf
     fi
 	
 	DEBIAN_FRONTEND=noninteractive silent apt update
