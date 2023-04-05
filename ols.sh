@@ -263,15 +263,12 @@ function setup_packages
 
 	# php
 	echo "Installing PHP FPM..."
-	echo "Collecting available packages for all PHP versions..."
 	all_packages=""
 	for version in 7.4 8.0 8.1 8.2; do
 	  available_packages=""
 	  for package in php${version}-fpm php${version}-cli php${version}-bcmath php${version}-common php${version}-curl php${version}-gd php${version}-gmp php${version}-imap php${version}-intl php${version}-mbstring php${version}-mysql php${version}-pgsql php${version}-soap php${version}-tidy php${version}-xml php${version}-xmlrpc php${version}-zip php${version}-opcache php${version}-xsl php${version}-imagick php${version}-redis php${version}-memcached; do
 		if apt-cache show $package > /dev/null 2>&1; then
 		  available_packages="$available_packages $package"
-		else
-		  echo "$package does not exist, skipping..."
 		fi
 	  done
 	  if [[ ! -z $available_packages ]]; then
@@ -280,7 +277,6 @@ function setup_packages
 	done
 
 	if [[ ! -z $all_packages ]]; then
-	  echo "Installing all available packages..."
 	  silent DEBIAN_FRONTEND=noninteractive apt install -y -o Dpkg::Options::="--force-confdef" $all_packages
 	else
 	  echo "No packages available for any PHP version."
