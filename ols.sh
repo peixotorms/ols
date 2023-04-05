@@ -222,18 +222,19 @@ function install_ols() {
 
 	# Install OLS
 	DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" openlitespeed lsphp80 lsphp80-common lsphp80-curl
-
+	
 	# Set admin credentials
-	ADMINUSER="admin"
-	ADMINPASSWORD=$(gen_rand_pass)
-	ENCRYPT_PASS=`"/usr/local/lsws/admin/fcgi-bin/admin_php" -q "/usr/local/lsws/admin/misc/htpasswd.php" $ADMINPASSWORD`
-
 	if [ $? = 0 ] ; then
-		echo "${ADMINUSER}:$ENCRYPT_PASS" > "/usr/local/lsws/admin/conf/htpasswd"
+		ADMINUSER="admin"
+		ADMINPASSWORD=$(gen_rand_pass)
+		ENCRYPT_PASS=`"/usr/local/lsws/admin/fcgi-bin/admin_php" -q "/usr/local/lsws/admin/misc/htpasswd.php" $ADMINPASSWORD`
 		if [ $? = 0 ] ; then
-			echo $ADMINPASSWORD > /usr/local/lsws/password.user.${ADMINUSER}
-		else
-			echo "OpenLiteSpeed WebAdmin password not changed."
+			echo "${ADMINUSER}:$ENCRYPT_PASS" > "/usr/local/lsws/admin/conf/htpasswd"
+			if [ $? = 0 ] ; then
+				echo $ADMINPASSWORD > /usr/local/lsws/password.user.${ADMINUSER}
+			else
+				echo "OpenLiteSpeed WebAdmin password not changed."
+			fi
 		fi
 	fi
 	
