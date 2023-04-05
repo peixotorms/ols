@@ -116,6 +116,7 @@ END
 	
 	silent DEBIAN_FRONTEND=noninteractive apt update
 	silent DEBIAN_FRONTEND=noninteractive apt upgrade -y
+	silent DEBIAN_FRONTEND=noninteractive apt autoremove -y
 }
 
 
@@ -302,9 +303,7 @@ function setup_packages
 	echo "Installing Postfix..."
 	debconf-set-selections <<< "postfix postfix/mailname string localhost"
 	debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"
-	apt-get install -y -o Dpkg::Options::="--force-confdef" ssl-cert
-	apt-get install -y -o Dpkg::Options::="--force-confdef" postfix
-	apt-get install -y -o Dpkg::Options::="--force-confdef" mailutils
+	silent DEBIAN_FRONTEND=noninteractive apt install -y -o Dpkg::Options::="--force-confdef"  ssl-cert postfix mailutils
 	
 	# percona
 	echo "Installing Percona..."
