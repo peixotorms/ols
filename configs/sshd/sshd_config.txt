@@ -1,0 +1,30 @@
+
+# ssh
+ListenAddress 0.0.0.0
+Port 22
+MaxStartups 5
+MaxAuthTries 10
+AllowGroups root sudo sftp
+ClientAliveInterval 60
+ClientAliveCountMax 240
+UseDNS no
+LoginGraceTime 30
+PermitRootLogin yes
+PasswordAuthentication yes
+PermitEmptyPasswords no
+ChallengeResponseAuthentication no
+UsePAM yes
+X11Forwarding yes
+PrintMotd no
+AcceptEnv LANG LC_*
+Subsystem sftp /usr/lib/openssh/sftp-server
+
+# allow outdate clients
+# PubkeyAcceptedKeyTypes +ssh-rsa
+
+# sftp only rules
+Match Group sftp
+ChrootDirectory %h
+ForceCommand internal-sftp
+AllowTcpForwarding no
+
