@@ -381,26 +381,26 @@ function setup_configs
 {
 	
 	# download sshd_config
-	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/shd/sshd_config.txt > /tmp/sshd_config.txt
-	cat /tmp/sshd_config.txt | grep -q "ListenAddress" && cp /tmp/sshd_config.txt /etc/ssh/sshd_config && echo "sshd_config updated." || echo "Error downloading sshd_config ..."
-	rm /tmp/sshd_config.txt
+	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/sshd/sshd_config > /tmp/sshd_config
+	cat /tmp/sshd_config | grep -q "ListenAddress" && cp /tmp/sshd_config /etc/ssh/sshd_config && echo "sshd_config updated." || echo "Error downloading sshd_config ..."
+	rm /tmp/sshd_config
 	service sshd restart
 	
 	# Download php.ini file
-	curl -skL https://raw.githubusercontent.com/peixotorms/ols1clk/master/configs/php/php.ini > /tmp/php.ini
+	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/php/php.ini > /tmp/php.ini
 	if cat /tmp/php.ini | grep -q "max_input_vars"; then find /etc/php -type f -iname php.ini -exec cp /tmp/php.ini {} \; && echo "php.ini files updated."; else echo "Error downloading php.ini ..."; fi
 	rm /tmp/php.ini
 	for version in 7.4 8.0 8.1 8.2; do systemctl restart php${version}-fpm; done
 
 	# download ols	
-	curl -skL https://raw.githubusercontent.com/peixotorms/ols1clk/master/configs/ols/httpd_config.conf > /tmp/httpd_config.conf
+	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/ols/httpd_config.conf > /tmp/httpd_config.conf
 	cat /tmp/httpd_config.conf | grep -q "autoLoadHtaccess" && cp /tmp/httpd_config.conf /usr/local/lsws/conf/httpd_config.conf && echo "httpd_config.conf updated." || echo "Error downloading httpd_config.conf ..."
 	rm /tmp/httpd_config.conf
 	chown -R lsadm:lsadm /usr/local/lsws/conf/
 	systemctl restart lshttpd
 	
 	# download my.cnf
-	curl -skL https://raw.githubusercontent.com/peixotorms/ols1clk/master/configs/sql/my.cnf > /tmp/my.cnf
+	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/sql/my.cnf > /tmp/my.cnf
 	cat /tmp/my.cnf | grep -q "mysqld" && cp /tmp/my.cnf /etc/mysql/my.cnf && echo "my.cnf updated." || echo "Error downloading my.cnf ..."
 	rm /tmp/my.cnf
 	sed -i "s/^innodb_buffer_pool_instances.*$/innodb_buffer_pool_instances $PHP_POOL_COUNT/" /etc/mysql/my.cnf
