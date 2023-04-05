@@ -177,7 +177,7 @@ function setup_firewall
 
 	# save and enable
 	echo "y" | silent ufw enable
-	ufw status verbose
+	# ufw status verbose
 
 }
 
