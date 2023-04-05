@@ -88,13 +88,13 @@ function calculate_memory() {
         fi
 
         # Export the values of the six variables
-        export CPU_CORES=$CPU_CORES
-        export REDIS_MEM=$REDIS_MEM
-        export MYSQL_MEM=$MYSQL_MEM
-        export PHP_MEM=$PHP_MEM
-        export MYSQL_POOL_COUNT=$MYSQL_POOL_COUNT
-        export PHP_POOL_COUNT=$PHP_POOL_COUNT
-        export MYSQL_LOG_SIZE=$MYSQL_LOG_SIZE
+        declare -x CPU_CORES=$CPU_CORES
+		declare -x REDIS_MEM=$REDIS_MEM
+		declare -x MYSQL_MEM=$MYSQL_MEM
+		declare -x PHP_MEM=$PHP_MEM
+		declare -x MYSQL_POOL_COUNT=$MYSQL_POOL_COUNT
+		declare -x PHP_POOL_COUNT=$PHP_POOL_COUNT
+		declare -x MYSQL_LOG_SIZE=$MYSQL_LOG_SIZE
 
 	fi
 }
