@@ -293,8 +293,6 @@ function setup_packages
 	  mv wp-cli.phar /usr/local/bin/wp	  
 	  [ ! -f /usr/bin/wp ] && sudo ln -s /usr/local/bin/wp /usr/bin/wp
 	  echo "Updated wp from version $INSTALLED_VERSION to $LATEST_VERSION"
-	else
-	  echo "wp is already up-to-date at version $INSTALLED_VERSION"
 	fi
 	
 	# postfix
