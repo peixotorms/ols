@@ -374,36 +374,40 @@ function install_percona() {
 	sed -i "s/^innodb_buffer_pool_size.*$/innodb_buffer_pool_size				= ${MYSQL_MEM}M/" /etc/mysql/my.cnf
 	sed -i "s/^innodb_log_file_size.*$/innodb_log_file_size					 = ${MYSQL_LOG_SIZE}M/" /etc/mysql/my.cnf
 	systemctl restart mysql
+	
+	:<<COMMENT
+		# Stop MySQL service
+		sudo systemctl stop mysql
 
-	# Stop MySQL service
-	sudo systemctl stop mysql
+		# Create the directory for the UNIX socket file, if it doesn't exist
+		sudo mkdir -p /var/run/mysqld
+		sudo chown mysql:mysql /var/run/mysqld
 
-	# Create the directory for the UNIX socket file, if it doesn't exist
-	sudo mkdir -p /var/run/mysqld
-	sudo chown mysql:mysql /var/run/mysqld
+		# Start MySQL with --skip-grant-tables and --skip-networking
+		sudo mysqld_safe --skip-grant-tables --skip-networking &
 
-	# Start MySQL with --skip-grant-tables and --skip-networking
-	sudo mysqld_safe --skip-grant-tables --skip-networking &
+		# Sleep for a few seconds to allow MySQL to start
+		sleep 5
 
-	# Sleep for a few seconds to allow MySQL to start
-	sleep 5
+		# Change root password
+		ROOTPASSWORD=$(gen_rand_pass)
+		mysql -u root -e "FLUSH PRIVILEGES; UPDATE mysql.user SET plugin='caching_sha2_password' WHERE user='root';"
+		mysql -u root -e "FLUSH PRIVILEGES; ALTER USER 'root'@'localhost' IDENTIFIED BY '$ROOTPASSWORD';"
 
-	# Change root password
-	ROOTPASSWORD=$(gen_rand_pass)
-	mysql -u root -e "FLUSH PRIVILEGES; ALTER USER 'root'@'localhost' IDENTIFIED BY '$ROOTPASSWORD';"
+		# Find and kill mysqld_safe process
+		pkill mysql
 
-	# Find and kill mysqld_safe process
-	pkill mysql
+		# Start MySQL service
+		sudo systemctl start mysql
 
-	# Start MySQL service
-	sudo systemctl start mysql
+		echo "MySQL root password has been changed to $ROOTPASSWORD"
 
-	echo "MySQL root password has been changed to $ROOTPASSWORD"
-
-	# Save the new password
-	echo "Saving the new password to /etc/mysql/root.pass.log..."
-	echo -n "$ROOTPASSWORD" > /etc/mysql/root.pass.log
-	chmod 600 /etc/mysql/root.pass.log
+		# Save the new password
+		echo "Saving the new password to /etc/mysql/root.pass.log..."
+		echo -n "$ROOTPASSWORD" > /etc/mysql/root.pass.log
+		chmod 600 /etc/mysql/root.pass.log
+	COMMENT
+	
 }
 
 
