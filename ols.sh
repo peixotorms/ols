@@ -159,8 +159,8 @@ function setup_firewall
 {
 
 	# reinstall and reset firewall
-	iptables --flush
-	iptables --delete-chain
+	silent iptables --flush
+	silent iptables --delete-chain
 	   
 	# Check if ufw is already installed, and only reinstall if not
 	if ! command -v ufw &> /dev/null; then
@@ -169,19 +169,19 @@ function setup_firewall
 	fi
 
 	# default policy
-	ufw default deny incoming
-	ufw default allow outgoing
-	ufw default allow routed
+	silent ufw default deny incoming
+	silent ufw default allow outgoing
+	silent ufw default allow routed
 
 	# open or block ports: 
-	ufw allow 22/tcp     # ssh default
-	ufw allow 999/tcp    # ssh custom
-	ufw allow 123/udp    # ntp
-	ufw allow 51820/udp  # wg
-	ufw allow 80/tcp     # http
-	ufw allow 443/tcp    # https
-	ufw allow 443/udp    # http3
-	ufw allow 7080/tcp   # ols
+	silent ufw allow 22/tcp     # ssh default
+	silent ufw allow 999/tcp    # ssh custom
+	silent ufw allow 123/udp    # ntp
+	silent ufw allow 51820/udp  # wg
+	silent ufw allow 80/tcp     # http
+	silent ufw allow 443/tcp    # https
+	silent ufw allow 443/udp    # http3
+	silent ufw allow 7080/tcp   # ols
 
 	# save and enable
 	echo "y" | ufw enable
