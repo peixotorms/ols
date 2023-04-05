@@ -122,7 +122,8 @@ function update_system
 END
     fi
 	
-	DEBIAN_FRONTEND=noninteractive apt update && DEBIAN_FRONTEND=noninteractive apt upgrade -y >/dev/null 2>&1
+	silent DEBIAN_FRONTEND=noninteractive apt update
+	silent DEBIAN_FRONTEND=noninteractive apt upgrade -y
 }
 
 
@@ -142,7 +143,7 @@ function setup_repositories
 	echo "Adding php repo..."
     if ! grep ^ /etc/apt/sources.list /etc/apt/sources.list.d/* | grep -q "ondrej/php"; then
         echo "Adding ondrej/php PPA for PHP packages..."
-        add-apt-repository -y ppa:ondrej/php > /dev/null 2>&1
+        silent add-apt-repository -y ppa:ondrej/php
     else
         echo "ondrej/php PPA for PHP packages already exists, skipping..."
     fi
@@ -163,7 +164,7 @@ function setup_firewall
 	   
 	# Check if ufw is already installed, and only reinstall if not
 	if ! command -v ufw &> /dev/null; then
-		apt install -y ufw
+		silent DEBIAN_FRONTEND=noninteractive apt install -y ufw
 		echo "y" | ufw reset
 	fi
 
