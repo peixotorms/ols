@@ -309,15 +309,29 @@ function setup_packages
 	# change root password
 	ROOTPASSWORD=$(gen_rand_pass)
 	
-	# Start MySQL with skip-grant-tables
-	mysqld_safe --skip-grant-tables &
+	# Stop MySQL service
+	sudo systemctl stop mysql
 
-	# Update the root password
-	service mysql stop && mysqld_safe --skip-grant-tables & && mysql -u root -e "USE mysql; UPDATE user SET authentication_string=PASSWORD('$ROOTPASSWORD'), plugin='mysql_native_password' WHERE User='root'; FLUSH PRIVILEGES;" && service mysql stop && service mysql start
-		
-	# Stop and start MySQL
+	# Create the directory for the UNIX socket file, if it doesn't exist
+	sudo mkdir -p /var/run/mysqld
+	sudo chown mysql:mysql /var/run/mysqld
+
+	# Start MySQL with --skip-grant-tables and --skip-networking
+	sudo mysqld_safe --skip-grant-tables --skip-networking &
+
+	# Sleep for a few seconds to allow MySQL to start
+	sleep 5
+
+	# Change root password
+	mysql -u root -e "FLUSH PRIVILEGES; ALTER USER 'root'@'localhost' IDENTIFIED BY '$ROOTPASSWORD';"
+
+	# Find and kill mysqld_safe process
 	pkill mysql
-	service mysql start
+
+	# Start MySQL service
+	sudo systemctl start mysql
+
+	echo "MySQL root password has been changed to $ROOTPASSWORD"
 
 	# Save the new password
 	echo "Saving the new password to /etc/mysql/root.pass.log..."
