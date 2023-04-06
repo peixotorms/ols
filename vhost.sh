@@ -358,7 +358,7 @@ install_wp() {
 		wp option update permalink_structure '/%postname%/' --path="${DOCHM}" --allow-root --quiet
 		
 		# download htaccess
-		curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/wp/htaccess > /tmp/htaccess
+		curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/wp/htaccess > /tmp/htaccess.txt
 		cat /tmp/htaccess.txt | grep -q "WordPress" && cp /tmp/htaccess.txt ${DOCHM}/.htaccess && print_colored green "Success: .htaccess updated." || print_colored red "Error downloading .htaccess ..."
 		rm /tmp/htaccess
 		
@@ -400,7 +400,7 @@ create_letsencrypt_ssl() {
 		if [[ "${response}" == "OK" ]]; then
 			print_colored yellow "${domain} found"
 		else
-			print_colored red "${domain} error"
+			print_colored red "Failed to open: http://${domain}/ssl-test.txt?nocache=$(date +%s)"
 			all_successful=false
 			failed_domains+=("$domain")
 		fi
