@@ -71,17 +71,29 @@ while true; do
 			db_port="3306"
 			wp_install="yes"
 			dev_mode="yes"
-			aliases=()
+			aliases=""
 			
             ;;
         --aliases)
-            IFS=',' read -ra aliases <<< "${2:-}"; shift 2
-            for alias in "${aliases[@]}"; do
-                if ! validate_domain "$alias"; then
-                    print_colored red "Invalid alias domain: $alias"; exit 1
-                fi
-            done
-            ;;
+			# Check if the input string is a comma-separated list of valid domain names.
+			if [[ "${2:-}" =~ ^([^,]+,)*[^,]+$ ]]; then
+				# The input string is valid, so assign it to the aliases variable.
+				aliases="${2}"; shift 2
+				# Split the comma-separated string into an array
+				IFS=',' read -ra alias_list <<< "$aliases"
+				# Strip leading and trailing whitespace from each alias domain
+				alias_list=( "${alias_list[@]// /}" )
+				# Check each alias domain using the validate_domain function
+				for alias in "${alias_list[@]}"; do
+					if ! validate_domain "$alias"; then
+						print_colored red "Invalid alias domain: $alias"; exit 1
+					fi
+				done
+			else
+				# The input string is invalid, so print an error message and exit.
+				print_colored red "Invalid aliases: ${2:-}"; exit 1
+			fi
+			;;
         --ssl)
             case "${2,,}" in
                 yes|no)
