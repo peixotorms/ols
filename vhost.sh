@@ -36,7 +36,7 @@ while true; do
 			printf "%-4s%-11s%-49s\n" "" "--wp_user (optional)" "WordPress username. Default is generated from domain name"
 			printf "%-4s%-11s%-49s\n" "" "--wp_pass (optional)" "WordPress password. Default is random"
 			printf "%-4s%-11s%-49s\n" "" "--dev_mode (optional)" "Enable or disable developer mode. Default is 'yes'"
-			printf "%-4s%-11s%-49s\n" "" "-h, --help" "Show this help message"
+			printf "%-4s%-11s%-49s\n" "" "--help, -h" "Show this help message"
 			echo ""
 			printf "Examples:\n"
 			printf "%-4s%-11s%-49s\n" "" "bash $(basename -- "$0") --domain example.com --ssl no --php 7.4"
