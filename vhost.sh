@@ -219,7 +219,7 @@ fi
 
 
 printf "%-15s %s\n" "Domain:" "$domain"
-printf "%-15s %s\n" "Aliases:" "${alias_list[*]}"
+printf "%-15s %s\n" "Aliases:" "$aliases"
 printf "%-15s %s\n" "SSL:" "$ssl"
 printf "%-15s %s\n" "PHP version:" "$php"
 printf "%-15s %s\n" "Path:" "$path"
