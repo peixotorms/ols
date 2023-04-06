@@ -10,7 +10,7 @@ To run the script, you can use the following command:
 
 Or run with options:
 
-```bash <( curl -k -s https://raw.githubusercontent.com/peixotorms/ols/main/ols.s ) -h```
+```bash <( curl -k -s https://raw.githubusercontent.com/peixotorms/ols/main/ols.sh ) -h```
 
 ## Usage
 
