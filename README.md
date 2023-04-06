@@ -16,11 +16,13 @@ Or run with options:
 
 The script accepts the following options:
 
-```-f <function_names> : Runs a comma-separated list of function names; update_system, setup_sshd, setup_repositories, setup_firewall, install_basic_packages, install_ols, install_php, install_wp_cli, install_percona, install_redis, install_postfix
+```
+-f <function_names> : Runs a comma-separated list of function names; update_system, setup_sshd, setup_repositories, setup_firewall, install_basic_packages, install_ols, install_php, install_wp_cli, install_percona, install_redis, install_postfix
 -u <ols_user> : Sets the OpenLiteSpeed user
 -p <ols_pass> : Sets the OpenLiteSpeed user's password
 -v : Enables verbose mode
--h : Displays the help message```
+-h : Displays the help message
+```
 
 ## What it does
 
