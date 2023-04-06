@@ -42,6 +42,7 @@ while true; do
 			printf "%-4s%-11s%-49s\n" "" "bash $(basename -- "$0") --domain example.com --ssl no --php 7.4"
 			printf "%-4s%-11s%-49s\n" "" "bash $(basename -- "$0") --domain example.com --aliases example.net,example.org"
 			echo ""
+			exit 0
             ;;
         --domain)
             domain="${2}"; shift 2
