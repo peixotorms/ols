@@ -1,8 +1,8 @@
 #!/bin/bash
 
-#################################
-#		Common functions        #
-#################################
+################################################
+# Common functions, to be included on others
+################################################
 
 
 # This function executes the given command and suppresses its output if the VERBOSE variable is not set to '1'. 
