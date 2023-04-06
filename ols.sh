@@ -71,7 +71,7 @@ while getopts ":f:vh" opt; do
 			if [ -n "$OPTARG" ]; then
 				OLS_USER="$OPTARG"
 			else
-				echo "Error: OLS_USER cannot be empty." >&2
+				print_colored red "Error: OLS_USER cannot be empty." >&2
 				exit 1
 			fi
 			;;
@@ -79,7 +79,7 @@ while getopts ":f:vh" opt; do
 			if [ -n "$OPTARG" ]; then
 				OLS_PASS="$OPTARG"
 			else
-				echo "Error: OLS_PASS cannot be empty." >&2
+				print_colored red "Error: OLS_PASS cannot be empty." >&2
 				exit 1
 			fi
 			;;
@@ -91,12 +91,12 @@ while getopts ":f:vh" opt; do
 			exit 0
 			;;
 		\? ) # Invalid option
-			echo "Invalid option: -$OPTARG" >&2
+			print_colored red "Invalid option: -$OPTARG" >&2
 			print_usage
 			exit 1
 			;;
 		: ) # Option requires an argument
-			echo "Option -$OPTARG requires an argument." >&2
+			print_colored red "Option -$OPTARG requires an argument." >&2
 			print_usage
 			exit 1
 			;;
@@ -118,7 +118,7 @@ function setup_sshd
 	# download sshd_config
 	echo -n "Updating sshd_config... "
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/sshd/sshd_config > /tmp/sshd_config
-	cat /tmp/sshd_config | grep -q "ListenAddress" && cp /tmp/sshd_config /etc/ssh/sshd_config && echo "sshd_config updated." || echo "Error downloading sshd_config ..."
+	cat /tmp/sshd_config | grep -q "ListenAddress" && cp /tmp/sshd_config /etc/ssh/sshd_config && print_colored green "Success: sshd_config updated." || print_colored red "Error downloading sshd_config ..."
 	rm /tmp/sshd_config
 	service sshd restart
 	
@@ -216,7 +216,7 @@ function install_ols() {
 	
 	# download ols config
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/ols/httpd_config.conf > /tmp/httpd_config.conf
-	cat /tmp/httpd_config.conf | grep -q "autoLoadHtaccess" && cp /tmp/httpd_config.conf /usr/local/lsws/conf/httpd_config.conf && echo "httpd_config.conf updated." || echo "Error downloading httpd_config.conf ..."
+	cat /tmp/httpd_config.conf | grep -q "autoLoadHtaccess" && cp /tmp/httpd_config.conf /usr/local/lsws/conf/httpd_config.conf && print_colored green "Success: httpd_config.conf updated." || print_colored red "Error downloading httpd_config.conf ..."
 	rm /tmp/httpd_config.conf
 	chown -R lsadm:lsadm /usr/local/lsws/conf/
 	systemctl restart lshttpd
@@ -267,13 +267,13 @@ function install_php() {
 	if [[ ! -z $all_packages ]]; then
 		DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" $all_packages
 	else
-		echo "No packages available for any PHP version."
+		print_colored red "Error: No packages available for any PHP version."
 	fi
 	
 	# configure
 	# Download php.ini file
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/php/php.ini > /tmp/php.ini
-	if cat /tmp/php.ini | grep -q "max_input_vars"; then find /etc/php -type f -iname php.ini -exec cp /tmp/php.ini {} \; && echo "php.ini files updated."; else echo "Error downloading php.ini ..."; fi
+	if cat /tmp/php.ini | grep -q "max_input_vars"; then find /etc/php -type f -iname php.ini -exec cp /tmp/php.ini {} \; && print_colored green "Success: php.ini files updated."; else print_colored red "Error downloading php.ini ..."; fi
 	rm /tmp/php.ini
 	
 	# cli adjustments
@@ -286,7 +286,7 @@ function install_php() {
 		
 	# Download php-fpm.conf
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/php/php-fpm.conf > /tmp/php-fpm.conf
-	if cat /tmp/php-fpm.conf | grep -q "error_log"; then find /etc/php -type f -iname php-fpm.conf -exec cp /tmp/php-fpm.conf {} \; && echo "php-fpm.conf file updated."; else echo "Error downloading php-fpm.conf ..."; fi
+	if cat /tmp/php-fpm.conf | grep -q "error_log"; then find /etc/php -type f -iname php-fpm.conf -exec cp /tmp/php-fpm.conf {} \; && print_colored green "Success: php-fpm.conf file updated."; else print_colored red "Error downloading php-fpm.conf ..."; fi
 	rm /tmp/php-fpm.conf
 	find /etc/php -type f -iname php-fpm.conf | while read file; do
 		version=$(echo "$file" | awk -F'/' '{print $4}')
@@ -319,7 +319,7 @@ function install_wp_cli() {
 		chmod +x wp-cli.phar
 		mv wp-cli.phar /usr/local/bin/wp
 		[ ! -f /usr/bin/wp ] && sudo ln -s /usr/local/bin/wp /usr/bin/wp
-		echo "Updated wp from version $INSTALLED_VERSION to $LATEST_VERSION"
+		echo "Updated wp to $LATEST_VERSION"
 	fi
 	
 }
@@ -337,7 +337,7 @@ function install_percona() {
 	
 	# download my.cnf
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/sql/my.cnf > /tmp/my.cnf
-	cat /tmp/my.cnf | grep -q "mysqld" && cp /tmp/my.cnf /etc/mysql/my.cnf && echo "my.cnf updated." || echo "Error downloading my.cnf ..."
+	cat /tmp/my.cnf | grep -q "mysqld" && cp /tmp/my.cnf /etc/mysql/my.cnf && print_colored green "Success: my.cnf updated." || print_colored red "Error downloading my.cnf ..."
 	rm /tmp/my.cnf
 	MYSQL_MEM=$(calculate_memory_configs "MYSQL_MEM")
 	MYSQL_POOL_COUNT=$(calculate_memory_configs "MYSQL_POOL_COUNT")
@@ -392,7 +392,7 @@ function install_redis() {
 	
 	# redis config
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/redis/redis.conf > /tmp/redis.conf
-	cat /tmp/redis.conf | grep -q "maxmemory" && cp /tmp/redis.conf /etc/redis/redis.conf && echo "redis.conf updated." || echo "Error downloading redis.conf ..."
+	cat /tmp/redis.conf | grep -q "maxmemory" && cp /tmp/redis.conf /etc/redis/redis.conf && print_colored green "Success: redis.conf updated." || print_colored red "Error downloading redis.conf ..."
 	rm /tmp/redis.conf
 	REDIS_MEM=$(calculate_memory_configs "REDIS_MEM")
 	sed -i "s/^maxmemory 128mb.*$/maxmemory ${REDIS_MEM}mb/" /etc/redis/redis.conf
@@ -414,7 +414,7 @@ function install_postfix() {
 	
 	# download postfix	
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/postfix/main.cf > /tmp/main.cf
-	cat /tmp/main.cf | grep -q "smtpd_banner" && cp /tmp/main.cf /etc/postfix/main.cf && echo "main.cf updated." || echo "Error downloading main.cf ..."
+	cat /tmp/main.cf | grep -q "smtpd_banner" && cp /tmp/main.cf /etc/postfix/main.cf && print_colored green "Success: main.cf updated." || print_colored red "Error downloading main.cf ..."
 	rm /tmp/main.cf
 	echo 'postmaster: /dev/null\nroot: /dev/null' | sudo tee /etc/aliases > /dev/null
 	systemctl restart postfix
@@ -423,6 +423,9 @@ function install_postfix() {
 
 # END FUNCTIONS
 
+
+# run
+print_colored cyan "Starting install..."
 
 # Run selected functions in order
 for FUNCTION_NAME in $(echo "$FUNCTION_NAMES" | tr ',' '\n' | uniq); do
@@ -461,10 +464,10 @@ for FUNCTION_NAME in $(echo "$FUNCTION_NAMES" | tr ',' '\n' | uniq); do
 			install_postfix
 			;;
 		*)
-			echo "Invalid function name: $FUNCTION_NAME"
+			print_colored red "Invalid function name: $FUNCTION_NAME"
 			exit 1
 			;;
 	esac
 done
 
-echo "All done!"
+print_colored green "All done!"
