@@ -18,17 +18,10 @@ The script accepts the following options:
     Run a comma-separated list of function names. 
     Default: update_system, setup_sshd, setup_repositories, setup_firewall, install_basic_packages, install_ols, install_php, install_wp_cli, install_percona, install_redis, install_postfix
 
---user, -u
-    Customize OpenLiteSpeed username.
-
---pass, -p
-    Customize OpenLiteSpeed password.
-
---verbose, -v
-    Enable verbose mode.
-
---help, -h
-    Show usage instructions and exit.
+--user, -u  (optional)      Customize OpenLiteSpeed username.
+--pass, -p  (optional)      Customize OpenLiteSpeed password.
+--verbose, -v  (optional)   Enable verbose mode.
+--help, -h                  Show this help message
 
 ```
 
@@ -58,7 +51,7 @@ The script accepts the following options:
 --wp_user (optional)        WordPress username. Default is generated from domain name
 --wp_pass (optional)        WordPress password. Default is a random 32 char pass
 --dev_mode (optional)       Enable or disable developer mode. Default is 'yes'
--h, --help                  Show this help message
+--help, -h                  Show this help message
 
 ```
 
