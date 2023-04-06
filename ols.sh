@@ -37,7 +37,7 @@ while [[ $# -gt 0 ]]; do
             shift
             shift
             ;;
-        --user | -u ) # Set OLS_USER
+        --ols_user ) # Set OLS_USER
             if [ -n "$2" ]; then
                 OLS_USER="$2"
             else
@@ -47,7 +47,7 @@ while [[ $# -gt 0 ]]; do
             shift
             shift
             ;;
-        --pass | -p ) # Set OLS_PASS
+        --ols_pass ) # Set OLS_PASS
             if [ -n "$2" ]; then
                 OLS_PASS="$2"
             else
