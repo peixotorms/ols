@@ -312,36 +312,13 @@ vhost_create_database() {
 		fi
 	fi
 	
-	# check if user exists
-	if mysql -se "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE User='${db_user}' AND Host='${db_host}');"; then
-		
-		# update grants and password
-		print_colored cyan "User ${db_user} already exists for host ${db_host}"
-		mysql -e "ALTER USER '${db_user}'@'${db_host}' IDENTIFIED BY '${db_pass}';"
-		if [ ${?} = 0 ]; then
-			mysql -e "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, CREATE TEMPORARY TABLES, REFERENCES, TRIGGER, LOCK TABLES, SHOW VIEW ON ${db_user}.* TO '${db_user}'@'${db_host}';"
-			mysql -e "FLUSH PRIVILEGES;"
-			print_colored green "User ${db_user} password and priviledges updated."
-			save_db_credentials
-		else
-			print_colored red "Failed to update user ${db_user} with new password."
-		fi
-		
-	else
-		
-		# create user
-		mysql -e "CREATE USER IF NOT EXISTS '${db_user}'@'${db_host}' IDENTIFIED BY '${db_pass}';"
-		if [ ${?} = 0 ]; then
-			mysql -e "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, CREATE TEMPORARY TABLES, REFERENCES, TRIGGER, LOCK TABLES, SHOW VIEW ON ${db_user}.* TO '${db_user}'@'${db_host}';"
-			mysql -e "ALTER USER '${db_user}'@'${db_host}' IDENTIFIED BY '${db_pass}';"
-			mysql -e "FLUSH PRIVILEGES;"
-			print_colored green "User ${db_user} created."
-			save_db_credentials
-		else
-			print_colored red "User ${db_user} creation failed."
-		fi
-		
-	fi
+	# update or create user
+	mysql -e "CREATE USER IF NOT EXISTS '${db_user}'@'${db_host}' IDENTIFIED BY '${db_pass}';"
+	mysql -e "ALTER USER '${db_user}'@'${db_host}' IDENTIFIED BY '${db_pass}';"
+	mysql -e "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, CREATE TEMPORARY TABLES, REFERENCES, TRIGGER, LOCK TABLES, SHOW VIEW ON ${db_user}.* TO '${db_user}'@'${db_host}';"
+	mysql -e "FLUSH PRIVILEGES;"
+	save_db_credentials
+	print_colored green "User ${db_user} password and priviledges created/updated."
 	
 }
 
