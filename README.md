@@ -43,11 +43,6 @@ To add a domain, you can use the following command:
 The script accepts the following options:
 
 ```
-## Install Usage
-
-The script accepts the following options:
-
-```
 --help, -h
     Show usage instructions and exit.
 
