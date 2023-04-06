@@ -11,7 +11,33 @@ function silent { if [ "${VERBOSE}" = '1' ]; then "$@"; else "$@" >/dev/null 2>&
 
 
 # This function creates a 32-character password with three special characters in a random position
-gen_rand_pass() { random_string=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 32); for i in {1..3}; do pos=$((RANDOM % 24 + 5)); special_char=('-' '_' ','); random_string="${random_string:0:$(($pos-1))}${special_char[RANDOM % 3]}${random_string:$pos}"; done; echo "$random_string"; }; 
+gen_rand_pass() {
+    random_string=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 32)
+    for i in {1..3}; do
+        pos=$((RANDOM % 24 + 5))
+        special_char=('-' '_' ',')
+        random_string="${random_string:0:$(($pos-1))}${special_char[RANDOM % 3]}${random_string:$pos}"
+    done
+    echo "$random_string"
+}
+
+
+# This function can be used to print text in a specified color using ANSI escape codes. 
+# It takes a color as its first argument (red, green, yellow, blue, magenta, cyan, or default), followed by the text that you want to print
+print_colored() {
+    local color=$1
+    shift
+    case "$color" in
+        red) color_code=31;;
+        green) color_code=32;;
+        yellow) color_code=33;;
+        blue) color_code=34;;
+        magenta) color_code=35;;
+        cyan) color_code=36;;
+        *) color_code=0;;
+    esac
+    printf "\033[${color_code}m%s\033[0m\n" "$@"
+}
 
 
 # This function calculates memory configurations for various components based on the available system memory and CPU cores
