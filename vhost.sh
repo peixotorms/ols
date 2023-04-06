@@ -435,8 +435,14 @@ create_letsencrypt_ssl() {
 }
 
 
-
 # END FUNCTIONS
+
+
+# run
+vhost_create_user
+vhost_create_database
+install_wp
+create_letsencrypt_ssl
 
 
 # finish
