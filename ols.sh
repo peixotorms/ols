@@ -1,19 +1,26 @@
 #!/bin/bash
 
 ##############################################################################
-#		Open LiteSpeed + PHP FPM + PerconaDB + Redis + Postfix               #
+#		OpenLiteSpeed + PHP FPM + PerconaDB + Redis + Postfix               #
 #		Author: Raul Peixoto, WP Raiser										 #
 ##############################################################################
 
+# defaults
+OLS_USER="admin"
+OLS_PASS=""
+VERBOSE=0
+FUNCTION_NAMES="update_system,setup_sshd,setup_repositories,setup_firewall,install_basic_packages,install_ols,install_php,install_wp_cli,install_percona,install_redis,install_postfix"
 
 # Function to print usage instructions
 function print_usage() {
 	echo ""
 	printf "    "
 	echo "Usage: bash [-f <function_names>] [-v] [-h]"
+	
 	echo ""
 	printf "    "
 	echo "Options:"
+	
 	echo ""
 	printf "        "
 	echo "-f          Run a comma-separated list of function names:"
@@ -25,13 +32,24 @@ function print_usage() {
 	
 	echo ""
 	printf "        "
+	echo "-u          Customize OpenLiteSpeed username"
+	
+	echo ""
+	printf "        "
+	echo "-p          Customize OpenLiteSpeed password"
+		
+	echo ""
+	printf "        "
 	echo "-v          Enable verbose mode"
+	
 	echo ""
 	printf "        "
 	echo "-h          Show this help message"
+	
 	echo ""
 	printf "    "
 	echo "Examples:"
+	
 	echo ""
 	printf "        "
 	echo "./ols.sh | bash -s -f install_ols,install_php"
@@ -40,15 +58,28 @@ function print_usage() {
 	echo ""
 }
 
-# Default variables
-FUNCTION_NAMES="update_system,setup_sshd,setup_repositories,setup_firewall,install_basic_packages,install_ols,install_php,install_wp_cli,install_percona,install_redis,install_postfix"
-VERBOSE=0
 
 # Parse command-line arguments
 while getopts ":f:vh" opt; do
 	case ${opt} in
 		f ) # Run specific function(s)
 			FUNCTION_NAMES=$(echo "$OPTARG" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | uniq | tr '\n' ',')
+			;;
+		u ) # Set OLS_USER
+			if [ -n "$OPTARG" ]; then
+				OLS_USER="$OPTARG"
+			else
+				echo "Error: OLS_USER cannot be empty." >&2
+				exit 1
+			fi
+			;;
+		p ) # Set OLS_PASS
+			if [ -n "$OPTARG" ]; then
+				OLS_PASS="$OPTARG"
+			else
+				echo "Error: OLS_PASS cannot be empty." >&2
+				exit 1
+			fi
 			;;
 		v ) # Enable verbose mode
 			VERBOSE=1
@@ -214,12 +245,12 @@ function setup_firewall
 
 	# open or block ports: 
 	silent ufw allow 22/tcp		 # ssh default
-	silent ufw allow 999/tcp		# ssh custom
-	silent ufw allow 123/udp		# ntp
-	silent ufw allow 51820/udp	# wg
+	silent ufw allow 999/tcp     # ssh custom
+	silent ufw allow 123/udp	 # ntp
+	silent ufw allow 51820/udp	 # wg
 	silent ufw allow 80/tcp		 # http
-	silent ufw allow 443/tcp		# https
-	silent ufw allow 443/udp		# http3
+	silent ufw allow 443/tcp	 # https
+	silent ufw allow 443/udp	 # http3
 	silent ufw allow 7080/tcp	 # ols
 
 	# save and enable
@@ -246,13 +277,12 @@ function install_ols() {
 	
 	# Set admin credentials
 	if [ $? = 0 ] ; then
-		ADMINUSER="admin"
-		ADMINPASSWORD=$(gen_rand_pass)
-		ENCRYPT_PASS=`"/usr/local/lsws/admin/fcgi-bin/admin_php" -q "/usr/local/lsws/admin/misc/htpasswd.php" $ADMINPASSWORD`
+		[ -z "$OLS_PASS" ] && OLS_PASS=$(gen_rand_pass)
+		ENCRYPT_PASS=`"/usr/local/lsws/admin/fcgi-bin/admin_php" -q "/usr/local/lsws/admin/misc/htpasswd.php" $OLS_PASS`
 		if [ $? = 0 ] ; then
-			echo "${ADMINUSER}:$ENCRYPT_PASS" > "/usr/local/lsws/admin/conf/htpasswd"
+			echo "${OLS_USER}:$ENCRYPT_PASS" > "/usr/local/lsws/admin/conf/htpasswd"
 			if [ $? = 0 ] ; then
-				echo $ADMINPASSWORD > /usr/local/lsws/password.user.${ADMINUSER}
+				echo $OLS_PASS > /usr/local/lsws/password.user
 			fi
 		fi
 	fi
