@@ -21,14 +21,14 @@ while [[ $# -gt 0 ]]; do
             for FUNC_NAME in "${FUNC_NAMES[@]}"; do
                 printf "%-15s%-48s\n" "" "$FUNC_NAME"
             done
-            printf "%-4s%-11s%-49s\n" "" "-u | --user" "Customize OpenLiteSpeed username"
-            printf "%-4s%-11s%-49s\n" "" "-p | --pass" "Customize OpenLiteSpeed password"
-            printf "%-4s%-11s%-49s\n" "" "-v | --verbose" "Enable verbose mode"
-            printf "%-4s%-11s%-49s\n" "" "-h | --help" "Show this help message"
+            printf "%-4s%-11s%-49s\n" "" "--user" "Customize OpenLiteSpeed username"
+            printf "%-4s%-11s%-49s\n" "" "--pass" "Customize OpenLiteSpeed password"
+            printf "%-4s%-11s%-49s\n" "" "--verbose | -v" "Enable verbose mode"
+            printf "%-4s%-11s%-49s\n" "" "--help | -h" "Show this help message"
             echo ""
             printf "Examples:\n"
-            printf "%-4s%-11s%-49s\n" "" "bash ols.sh -f install_ols,install_php"
-            printf "%-4s%-11s%-49s\n" "" "bash ols.sh -f install_ols,install_php -u myusername -p mypassword"
+            printf "%-4s%-11s%-49s\n" "" "bash server.sh -f install_ols,install_php"
+            printf "%-4s%-11s%-49s\n" "" "bash server.sh -f install_ols,install_php -u myusername -p mypassword"
             echo ""
             exit 0
             ;;
