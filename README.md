@@ -7,7 +7,7 @@ The shell script performs various functions such as calculating memory configura
 
 To run the script, you can use the following command:
 
-```bash <( curl -k -s https://raw.githubusercontent.com/peixotorms/ols/main/ols.sh ) -h```
+```bash <( curl -k -s https://raw.githubusercontent.com/peixotorms/ols/main/server.sh ) -h```
 
 ## Install Usage
 
@@ -24,6 +24,14 @@ The script accepts the following options:
 --help, -h                  Show this help message
 
 ```
+
+## Examples:
+```
+bash server.sh --help
+bash server.sh --verbose
+bash server.sh --ols_user "myusername" --ols_pass "mypassword"
+```
+
 
 ## Virtual Hosts
 
@@ -57,8 +65,10 @@ The script accepts the following options:
 
 ## Examples:
 ```
-bash vhost.sh --domain example.com --ssl no --php 7.4
-bash vhost.sh --domain example.com --aliases example.net,example.org
+bash vhost.sh --help
+bash vhost.sh --domain example.com
+bash vhost.sh --domain example.com --ssl no --php 7.4 --wp_install no
+bash vhost.sh --domain "example.com" --aliases "example.net,example.org"
 ```
 
 ## License
