@@ -249,19 +249,7 @@ vhost_create_user() {
 
 	# create sftp group if not available
 	if ! getent group sftp &>/dev/null; then groupadd sftp; fi
-
-	# create sftp user
-	echo "Creating user $sftp_user ..."
-	if ! id -u "${sftp_user}" &>/dev/null; then
-		useradd -m -d "${path}" -s /usr/sbin/nologin -p "$(openssl passwd -1 "${sftp_pass}")" "${sftp_user}"
-		usermod -aG sftp "${sftp_user}"
-		echo "User: ${sftp_user}" > "${path}/logs/user.sftp.log"
-		echo "Pass: ${sftp_pass}" >> "${path}/logs/user.sftp.log"
-		print_colored green "Created ${sftp_user} with pass ${sftp_pass} for $path"
-	else
-		print_colored cyan "User ${sftp_user} already exists"
-	fi
-
+	
 	# creating site structure
 	echo "Updating site structure and permissions..."
 	print_colored green "Using $path with owner ${sftp_user}"
@@ -275,6 +263,23 @@ vhost_create_user() {
 	chmod -R 0755 "${path}"
 	chown root:root "${path}"
 	chmod 750 "${path}"
+
+	# create sftp user
+	echo "Creating user $sftp_user ..."
+	if ! id -u "${sftp_user}" &>/dev/null; then
+		useradd -m -d "${path}" -s /usr/sbin/nologin -p "$(openssl passwd -1 "${sftp_pass}")" "${sftp_user}"
+		usermod -aG sftp "${sftp_user}"
+		echo "User: ${sftp_user}" > "${path}/logs/user.sftp.log"
+		echo "Pass: ${sftp_pass}" >> "${path}/logs/user.sftp.log"
+		print_colored green "Created ${sftp_user} with pass ${sftp_pass} for $path"
+	else
+		print_colored cyan "User ${sftp_user} already exists, updating..."
+		usermod -d "${path}" -s /usr/sbin/nologin "${sftp_user}"
+		echo "${sftp_user}:${sftp_pass}" | chpasswd
+		echo "User: ${sftp_user}" >> "${path}/logs/user.sftp.log"
+		echo "Pass: ${sftp_pass}" >> "${path}/logs/user.sftp.log"
+		print_colored green "Updated ${sftp_user} with pass ${sftp_pass} for $path"
+	fi	
 
 }
 
