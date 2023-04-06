@@ -110,4 +110,26 @@ function update_system
 }
 
 
+# This function validates if a given domain name is valid
+validate_domain() { 
+	local domain_regex="^([A-Za-z0-9]+(-[A-Za-z0-9]+)*\.)+[A-Za-z]{2,}$"; [[ $1 =~ $domain_regex || $1 == "localhost" ]]; 
+}
 
+
+# This function validates if a given PHP version is allowed
+validate_php_version() {
+    local allowed_versions=("7.4" "8.0" "8.1" "8.2")
+    for version in "${allowed_versions[@]}"; do
+        [[ $1 == $version ]] && return 0
+    done
+    return 1
+}
+
+# This function generates a valid user name based on the given parameter
+generate_user_name() {
+    local user_name=$(echo "$1" | tr -dc '[:alnum:]' | tr '[:upper:]' '[:lower:]')
+    if [[ ${#user_name} -lt 3 || ${user_name:0:1} =~ [0-9] ]]; then
+        user_name="user_${user_name}"
+    fi
+    echo "${user_name:0:32}"
+}

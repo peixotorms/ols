@@ -16,48 +16,23 @@ FUNCTION_NAMES="update_system,setup_sshd,setup_repositories,setup_firewall,insta
 # Function to print usage instructions
 function print_usage() {
 	echo ""
-	printf "    "
-	echo "Usage: bash [-f <function_names>] [-v] [-h]"
-	
-	echo ""
-	printf "    "
-	echo "Options:"
-	
-	echo ""
-	printf "        "
-	echo "-f          Run a comma-separated list of function names:"
-	printf "                        "
-	IFS=',' read -ra FUNC_NAMES <<< "update_system,setup_sshd,setup_repositories,setup_firewall,install_basic_packages,install_ols,install_php,install_wp_cli,install_percona,install_redis,install_postfix"
-	for FUNC_NAME in "${FUNC_NAMES[@]}"; do
-		printf "%s\n                        " "$FUNC_NAME"
-	done
-	
-	echo ""
-	printf "        "
-	echo "-u          Customize OpenLiteSpeed username"
-	
-	echo ""
-	printf "        "
-	echo "-p          Customize OpenLiteSpeed password"
-		
-	echo ""
-	printf "        "
-	echo "-v          Enable verbose mode"
-	
-	echo ""
-	printf "        "
-	echo "-h          Show this help message"
-	
-	echo ""
-	printf "    "
-	echo "Examples:"
-	
-	echo ""
-	printf "        "
-	echo "./ols.sh | bash -s -f install_ols,install_php"
-	printf "        "
-	echo "./ols.sh -f install_ols,install_php"
-	echo ""
+    printf "Usage: bash [-f <function_names>] [-v] [-h]\n"
+    echo ""
+    printf "Options:\n"
+    printf "%-4s%-11s%-49s\n" "" "-f" "Run a comma-separated list of function names:"
+    IFS=',' read -ra FUNC_NAMES <<< "update_system,setup_sshd,setup_repositories,setup_firewall,install_basic_packages,install_ols,install_php,install_wp_cli,install_percona,install_redis,install_postfix"
+    for FUNC_NAME in "${FUNC_NAMES[@]}"; do
+        printf "%-15s%-48s\n" "" "$FUNC_NAME"
+    done
+    printf "%-4s%-11s%-49s\n" "" "-u" "Customize OpenLiteSpeed username"
+    printf "%-4s%-11s%-49s\n" "" "-p" "Customize OpenLiteSpeed password"
+    printf "%-4s%-11s%-49s\n" "" "-v" "Enable verbose mode"
+    printf "%-4s%-11s%-49s\n" "" "-h" "Show this help message"
+    echo ""
+    printf "Examples:\n"
+    printf "%-4s%-11s%-49s\n" "" "./ols.sh | bash -s -f install_ols,install_php"
+    printf "%-4s%-11s%-49s\n" "" "./ols.sh -f install_ols,install_php"
+    echo ""
 }
 
 

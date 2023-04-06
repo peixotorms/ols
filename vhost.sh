@@ -12,27 +12,6 @@ source <(curl -sSf https://raw.githubusercontent.com/peixotorms/ols/main/inc/com
 
 #!/bin/bash
 
-validate_domain() { 
-	local domain_regex="^([A-Za-z0-9]+(-[A-Za-z0-9]+)*\.)+[A-Za-z]{2,}$"; [[ $1 =~ $domain_regex || $1 == "localhost" ]]; 
-}
-
-
-validate_php_version() {
-    local allowed_versions=("7.4" "8.0" "8.1" "8.2")
-    for version in "${allowed_versions[@]}"; do
-        [[ $1 == $version ]] && return 0
-    done
-    return 1
-}
-
-generate_user_name() {
-    local user_name=$(echo "$1" | tr -dc '[:alnum:]' | tr '[:upper:]' '[:lower:]')
-    if [[ ${#user_name} -lt 3 || ${user_name:0:1} =~ [0-9] ]]; then
-        user_name="user_${user_name}"
-    fi
-    echo "${user_name:0:32}"
-}
-
 
 TEMP=$(getopt -o '' --long domain:,aliases:,ssl:,php:,path:,sftp_user:,sftp_pass:,db_host:,db_port:,db_user:,db_pass:,wp_install:,wp_user:,wp_pass:,dev_mode: -n "$(basename -- "$0")" -- "$@")
 eval set -- "$TEMP"
