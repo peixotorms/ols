@@ -221,8 +221,9 @@ if [[ -z "$domain" ]]; then
 fi
 
 
-# Add your script logic below to process the options
 
+# run
+print_colored cyan "Starting install..."
 
 printf "%-15s %s\n" "Domain:" "$domain"
 printf "%-15s %s\n" "Aliases:" "$aliases"
@@ -240,3 +241,115 @@ printf "%-15s %s\n" "WP user:" "$wp_user"
 printf "%-15s %s\n" "WP password:" "$wp_pass"
 printf "%-15s %s\n" "Dev mode:" "$dev_mode"
 
+
+# START FUNCTIONS
+
+# Creates an SFTP user and sets directory permissions for a virtual host.
+function vhost_create_user() {
+
+	# create sftp group if not available
+	if ! getent group sftp &>/dev/null; then groupadd sftp; fi
+
+	# create sftp user
+	echo "Creating user $sftp_user ..."
+	if ! id -u "${sftp_user}" &>/dev/null; then
+		useradd -m -d "${path}" -s /usr/sbin/nologin -p "$(openssl passwd -1 "${sftp_pass}")" "${sftp_user}"
+		usermod -aG sftp "${sftp_user}"
+		echo "User: ${sftp_user}" > "${path}/logs/user.sftp.log"
+		echo "Pass: ${sftp_pass}" >> "${path}/logs/user.sftp.log"
+		print_colored green "Created ${sftp_user} with pass ${sftp_pass} for $path"
+	else
+		print_colored cyan "User ${sftp_user} already exists"
+	fi
+
+	# creating site structure
+	echo "Updating site structure and permissions..."
+	print_colored green "Using $path with owner ${sftp_user}"
+	create_folder "${path}"
+	create_folder "${path}/backups"
+	create_folder "${path}/logs"
+	create_folder "${path}/www"
+
+	# permissions
+	chown -R "${sftp_user}":"${sftp_user}" "${path}"
+	chmod -R 0755 "${path}"
+	chown root:root "${path}"
+	chmod 750 "${path}"
+
+}
+
+
+# save the new database credentials
+function save_db_credentials() {
+    # Create the log file and write the database details to it
+    echo "Database: ${db_user}" > "${path}/logs/user.mysql.log"
+    echo "Username: ${db_user}" >> "${path}/logs/user.mysql.log"
+    echo "Password: ${db_pass}" >> "${path}/logs/user.mysql.log"
+    echo "Host: ${db_host}" >> "${path}/logs/user.mysql.log"
+    echo "Port: ${db_port}" >> "${path}/logs/user.mysql.log"
+}
+
+
+# Creates a database and unique user for the virtual host
+function vhost_create_database() {
+
+	echo "Creating database and user..."
+	
+	# check if database exists
+    if mysql -e "USE ${db_user};" &>/dev/null; then
+        print_colored cyan "Database ${db_user} already exists."
+    else
+		mysql -e "CREATE DATABASE IF NOT EXISTS ${db_user};"
+		if [ ${?} = 0 ]; then
+			print_colored green "Database ${db_user} created."
+		else
+			print_colored red "Database ${db_user} creation failed."
+		fi
+	fi
+	
+	# check if user exists
+	if mysql -se "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE User='${db_user}' AND Host='${db_host}');"; then
+		
+		# update grants and password
+		print_colored cyan "User ${db_user} already exists for host ${db_host}"
+		mysql -e "ALTER USER '${db_user}'@'${db_host}' IDENTIFIED BY '${db_pass}';"
+		if [ ${?} = 0 ]; then
+			mysql -e "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, CREATE TEMPORARY TABLES, REFERENCES, TRIGGER, LOCK TABLES, SHOW VIEW ON ${db_user}.* TO '${db_user}'@'${db_host}';"
+			mysql -e "FLUSH PRIVILEGES;"
+			print_colored green "User ${db_user} password and priviledges updated."
+			save_db_credentials
+		else
+			print_colored red "Failed to update user ${db_user} with new password."
+		fi
+		
+	else
+		
+		# create user
+		mysql -e "CREATE USER IF NOT EXISTS '${db_user}'@'${db_host}' IDENTIFIED BY '${db_pass}';"
+		if [ ${?} = 0 ]; then
+			mysql -e "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, CREATE TEMPORARY TABLES, REFERENCES, TRIGGER, LOCK TABLES, SHOW VIEW ON ${db_user}.* TO '${db_user}'@'${db_host}';"
+			mysql -e "ALTER USER '${db_user}'@'${db_host}' IDENTIFIED BY '${db_pass}';"
+			mysql -e "FLUSH PRIVILEGES;"
+			print_colored green "User ${db_user} created."
+			save_db_credentials
+		else
+			print_colored red "User ${db_user} creation failed."
+		fi
+		
+	fi
+	
+}
+
+
+
+
+
+
+
+
+
+# END FUNCTIONS
+
+
+# finish
+print_colored green "All done!"

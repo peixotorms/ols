@@ -434,4 +434,5 @@ for FUNCTION_NAME in $(echo "$FUNCTION_NAMES" | tr ',' '\n' | uniq); do
 	esac
 done
 
+# finish
 print_colored green "All done!"

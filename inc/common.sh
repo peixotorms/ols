@@ -133,3 +133,8 @@ generate_user_name() {
     fi
     echo "${user_name:0:32}"
 }
+
+# Create folder if it doesn't exist
+function create_folder { [[ ! -d "$1" ]] && mkdir -p "$1"; }
+
+
