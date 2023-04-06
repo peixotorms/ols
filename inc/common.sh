@@ -7,11 +7,11 @@
 
 # This function executes the given command and suppresses its output if the VERBOSE variable is not set to '1'. 
 # Usage: silent <command>
-silent { if [ "${VERBOSE}" = '1' ]; then "$@"; else "$@" >/dev/null 2>&1; fi; }
+function silent { if [ "${VERBOSE}" = '1' ]; then "$@"; else "$@" >/dev/null 2>&1; fi; }
 
 
 # This function creates a 32-character password with three special characters in a random position
-gen_rand_pass() {
+function gen_rand_pass() {
     random_string=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 32)
     for i in {1..3}; do
         pos=$((RANDOM % 24 + 5))
@@ -24,7 +24,7 @@ gen_rand_pass() {
 
 # This function can be used to print text in a specified color using ANSI escape codes. 
 # It takes a color as its first argument (red, green, yellow, blue, magenta, cyan, or default), followed by the text that you want to print
-print_colored() {
+function print_colored() {
     local color=$1
     shift
     case "$color" in
@@ -41,7 +41,7 @@ print_colored() {
 
 
 # This function calculates memory configurations for various components based on the available system memory and CPU cores
-calculate_memory_configs() {
+function calculate_memory_configs() {
 
 	local OPTION=$1
 	local TOTAL_RAM=$(($(awk '/MemTotal/ {print $2}' /proc/meminfo)/1024))
@@ -97,7 +97,7 @@ calculate_memory_configs() {
 
 
 # This function updates the system and disables hints on pending kernel upgrades
-update_system
+function update_system
 {
 	if [ -d /etc/needrestart/conf.d ]; then
 		echo 'Disabling pending kernel upgrade notice...'
@@ -111,13 +111,13 @@ update_system
 
 
 # This function validates if a given domain name is valid
-validate_domain() { 
+function validate_domain() { 
 	local domain_regex="^([A-Za-z0-9]+(-[A-Za-z0-9]+)*\.)+[A-Za-z]{2,}$"; [[ $1 =~ $domain_regex || $1 == "localhost" ]]; 
 }
 
 
 # This function validates if a given PHP version is allowed
-validate_php_version() {
+function validate_php_version() {
     local allowed_versions=("7.4" "8.0" "8.1" "8.2")
     for version in "${allowed_versions[@]}"; do
         [[ $1 == $version ]] && return 0
@@ -126,7 +126,7 @@ validate_php_version() {
 }
 
 # This function generates a valid user name based on the given parameter
-generate_user_name() {
+function generate_user_name() {
     local user_name=$(echo "$1" | tr -dc '[:alnum:]' | tr '[:upper:]' '[:lower:]')
     if [[ ${#user_name} -lt 3 || ${user_name:0:1} =~ [0-9] ]]; then
         user_name="user_${user_name}"
@@ -135,7 +135,6 @@ generate_user_name() {
 }
 
 # Create folder if it doesn't exist
-create_folder { [[ ! -d "$1" ]] && mkdir -p "$1"; }
+function create_folder { [[ ! -d "$1" ]] && mkdir -p "$1"; }
 
-# This function creates a file if it doesn't exist
-create_file() { [ ! -f "${1}" ] && touch "${1}"; }
+
