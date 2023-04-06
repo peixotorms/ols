@@ -10,62 +10,62 @@
 # defaults
 # Parse command-line arguments
 while [[ $# -gt 0 ]]; do
-	case $1 in
-		-h | --help ) # Print usage instructions
-			echo ""
-			printf "Usage: bash [--functions <function_names>] [--user <username>] [--pass <password>] [--verbose] [--help]\n"
-			echo ""
-			printf "Options:\n"
-			printf "%-4s%-11s%-49s\n" "" "--functions" "Run a comma-separated list of function names:"
-			IFS=',' read -ra FUNC_NAMES <<< "update_system,setup_sshd,setup_repositories,setup_firewall,install_basic_packages,install_ols,install_php,install_wp_cli,install_percona,install_redis,install_postfix"
-			for FUNC_NAME in "${FUNC_NAMES[@]}"; do
-				printf "%-15s%-48s\n" "" "$FUNC_NAME"
-			done
-			printf "%-4s%-11s%-49s\n" "" "--user" "Customize OpenLiteSpeed username"
-			printf "%-4s%-11s%-49s\n" "" "--pass" "Customize OpenLiteSpeed password"
-			printf "%-4s%-11s%-49s\n" "" "--verbose" "Enable verbose mode"
-			printf "%-4s%-11s%-49s\n" "" "--help" "Show this help message"
-			echo ""
-			printf "Examples:\n"
-			printf "%-4s%-11s%-49s\n" "" "bash ols.sh --functions install_ols,install_php"
-			printf "%-4s%-11s%-49s\n" "" "bash ols.sh --functions install_ols,install_php --user myusername --pass mypassword"
-			echo ""
-			exit 0
-			;;
-		-f | --functions ) # Run specific function(s)
-			FUNCTION_NAMES=$(echo "$2" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | uniq | tr '\n' ',')
-			shift
-			shift
-			;;
-		-u | --user ) # Set OLS_USER
-			if [ -n "$2" ]; then
-				OLS_USER="$2"
-			else
-				echo "Error: OLS_USER cannot be empty." >&2
-				exit 1
-			fi
-			shift
-			shift
-			;;
-		-p | --pass ) # Set OLS_PASS
-			if [ -n "$2" ]; then
-				OLS_PASS="$2"
-			else
-				echo "Error: OLS_PASS cannot be empty." >&2
-				exit 1
-			fi
-			shift
-			shift
-			;;
-		-v | --verbose ) # Enable verbose mode
-			VERBOSE=1
-			shift
-			;;
-		* ) # Invalid option
-			echo "Invalid option: $1" >&2
-			exit 1
-			;;
-	esac
+    case $1 in
+        -h | --help ) # Print usage instructions
+            echo ""
+            printf "Usage: bash [--functions <function_names>] [--user <username>] [--pass <password>] [--verbose] [--help]\n"
+            echo ""
+            printf "Options:\n"
+            printf "%-4s%-11s%-49s\n" "" "--functions" "Run a comma-separated list of function names:"
+            IFS=',' read -ra FUNC_NAMES <<< "update_system,setup_sshd,setup_repositories,setup_firewall,install_basic_packages,install_ols,install_php,install_wp_cli,install_percona,install_redis,install_postfix"
+            for FUNC_NAME in "${FUNC_NAMES[@]}"; do
+                printf "%-15s%-48s\n" "" "$FUNC_NAME"
+            done
+            printf "%-4s%-11s%-49s\n" "" "--user" "Customize OpenLiteSpeed username"
+            printf "%-4s%-11s%-49s\n" "" "--pass" "Customize OpenLiteSpeed password"
+            printf "%-4s%-11s%-49s\n" "" "--verbose" "Enable verbose mode"
+            printf "%-4s%-11s%-49s\n" "" "-h, --help" "Show this help message"
+            echo ""
+            printf "Examples:\n"
+            printf "%-4s%-11s%-49s\n" "" "bash ols.sh --functions install_ols,install_php"
+            printf "%-4s%-11s%-49s\n" "" "bash ols.sh --functions install_ols,install_php --user myusername --pass mypassword"
+            echo ""
+            exit 0
+            ;;
+        --functions | -f ) # Run specific function(s)
+            FUNCTION_NAMES=$(echo "$2" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | uniq | tr '\n' ',')
+            shift
+            shift
+            ;;
+        --user | -u ) # Set OLS_USER
+            if [ -n "$2" ]; then
+                OLS_USER="$2"
+            else
+                echo "Error: OLS_USER cannot be empty." >&2
+                exit 1
+            fi
+            shift
+            shift
+            ;;
+        --pass | -p ) # Set OLS_PASS
+            if [ -n "$2" ]; then
+                OLS_PASS="$2"
+            else
+                echo "Error: OLS_PASS cannot be empty." >&2
+                exit 1
+            fi
+            shift
+            shift
+            ;;
+        --verbose | -v ) # Enable verbose mode
+            VERBOSE=1
+            shift
+            ;;
+        * ) # Invalid option
+            echo "Invalid option: $1" >&2
+            exit 1
+            ;;
+    esac
 done
 
 
