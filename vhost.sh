@@ -89,6 +89,12 @@ while true; do
 						print_colored red "Invalid alias domain: $alias"; exit 1
 					fi
 				done
+				# Ensure that $domain is not in the alias_list array
+				if [[ " ${alias_list[@]} " =~ " $domain " ]]; then
+					print_colored red "Domain name cannot be an alias: $domain"; exit 1
+				fi
+				# Overwrite the aliases variable with the imploded alias_list, separated with comma
+				aliases="$(IFS=','; echo "${alias_list[*]}")"
 			else
 				# The input string is invalid, so print an error message and exit.
 				print_colored red "Invalid aliases: ${2:-}"; exit 1
