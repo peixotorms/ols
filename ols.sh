@@ -1,7 +1,9 @@
 #!/bin/bash
 
 ##############################################################################
-#		OpenLiteSpeed + PHP FPM + PerconaDB + Redis + Postfix               #
+#		OpenLiteSpeed, LetsEncrypt                                           #
+#       PHP-FPM (7.4,8.0,8.1,8.2) with OPCACHE, WP-CLI                       #
+#       Percona Server 8.0 for MySQL, Postfix and Redis                      #
 #		Author: Raul Peixoto, WP Raiser										 #
 ##############################################################################
 
@@ -208,7 +210,7 @@ function setup_repositories
 	
 	# ols
 	echo "Adding OLS repositories..."
-	wget -q -O - https://repo.litespeed.sh | bash
+	wget -q -O - https://repo.litespeed.sh | silent bash
 	
 	# Add ondrej/php PPA for PHP packages, if not added already
 	echo "Adding PHP repositories..."
