@@ -116,7 +116,7 @@ function setup_sshd
 {
 	
 	# download sshd_config
-	echo -n "Updating sshd_config... "
+	echo "Updating sshd_config... "
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/sshd/sshd_config > /tmp/sshd_config
 	cat /tmp/sshd_config | grep -q "ListenAddress" && cp /tmp/sshd_config /etc/ssh/sshd_config && print_colored green "Success: sshd_config updated." || print_colored red "Error downloading sshd_config ..."
 	rm /tmp/sshd_config
@@ -349,14 +349,14 @@ function install_percona() {
 	
 	
 	# Stop MySQL service
-	sudo systemctl stop mysql
+	systemctl stop mysql
 	
 	# Create the directory for the UNIX socket file, if it doesn't exist
-	sudo mkdir -p /var/run/mysqld
-	sudo chown mysql:mysql /var/run/mysqld
+	mkdir -p /var/run/mysqld
+	chown mysql:mysql /var/run/mysqld
 	
 	# Start MySQL with --skip-grant-tables and --skip-networking
-	sudo mysqld_safe --skip-grant-tables --skip-networking &
+	silent mysqld_safe --skip-grant-tables --skip-networking &
 	
 	# Sleep for a few seconds to allow MySQL to start
 	sleep 5
