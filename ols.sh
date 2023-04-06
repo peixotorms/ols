@@ -8,70 +8,65 @@
 ##############################################################################
 
 # defaults
-OLS_USER="admin"
-OLS_PASS=""
-VERBOSE=0
-FUNCTION_NAMES="update_system,setup_sshd,setup_repositories,setup_firewall,install_basic_packages,install_ols,install_php,install_wp_cli,install_percona,install_redis,install_postfix"
-
 # Parse command-line arguments
-while getopts ":f:vh" opt; do
-	case ${opt} in
-		f ) # Run specific function(s)
-			FUNCTION_NAMES=$(echo "$OPTARG" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | uniq | tr '\n' ',')
-			;;
-		u ) # Set OLS_USER
-			if [ -n "$OPTARG" ]; then
-				OLS_USER="$OPTARG"
-			else
-				print_colored red "Error: OLS_USER cannot be empty." >&2
-				exit 1
-			fi
-			;;
-		p ) # Set OLS_PASS
-			if [ -n "$OPTARG" ]; then
-				OLS_PASS="$OPTARG"
-			else
-				print_colored red "Error: OLS_PASS cannot be empty." >&2
-				exit 1
-			fi
-			;;
-		v ) # Enable verbose mode
-			VERBOSE=1
-			;;
-		h ) # Print usage instructions
+while [[ $# -gt 0 ]]; do
+	case $1 in
+		-h | --help ) # Print usage instructions
 			echo ""
-			printf "Usage: bash [-f <function_names>] [-v] [-h]\n"
+			printf "Usage: bash [--functions <function_names>] [--user <username>] [--pass <password>] [--verbose] [--help]\n"
 			echo ""
 			printf "Options:\n"
-			printf "%-4s%-11s%-49s\n" "" "-f" "Run a comma-separated list of function names:"
+			printf "%-4s%-11s%-49s\n" "" "--functions" "Run a comma-separated list of function names:"
 			IFS=',' read -ra FUNC_NAMES <<< "update_system,setup_sshd,setup_repositories,setup_firewall,install_basic_packages,install_ols,install_php,install_wp_cli,install_percona,install_redis,install_postfix"
 			for FUNC_NAME in "${FUNC_NAMES[@]}"; do
 				printf "%-15s%-48s\n" "" "$FUNC_NAME"
 			done
-			printf "%-4s%-11s%-49s\n" "" "-u" "Customize OpenLiteSpeed username"
-			printf "%-4s%-11s%-49s\n" "" "-p" "Customize OpenLiteSpeed password"
-			printf "%-4s%-11s%-49s\n" "" "-v" "Enable verbose mode"
-			printf "%-4s%-11s%-49s\n" "" "-h" "Show this help message"
+			printf "%-4s%-11s%-49s\n" "" "--user" "Customize OpenLiteSpeed username"
+			printf "%-4s%-11s%-49s\n" "" "--pass" "Customize OpenLiteSpeed password"
+			printf "%-4s%-11s%-49s\n" "" "--verbose" "Enable verbose mode"
+			printf "%-4s%-11s%-49s\n" "" "--help" "Show this help message"
 			echo ""
 			printf "Examples:\n"
-			printf "%-4s%-11s%-49s\n" "" "./ols.sh | bash -s -f install_ols,install_php"
-			printf "%-4s%-11s%-49s\n" "" "./ols.sh -f install_ols,install_php"
+			printf "%-4s%-11s%-49s\n" "" "bash ols.sh --functions install_ols,install_php"
+			printf "%-4s%-11s%-49s\n" "" "bash ols.sh --functions install_ols,install_php --user myusername --pass mypassword"
 			echo ""
 			exit 0
 			;;
-		\? ) # Invalid option
-			print_colored red "Invalid option: -$OPTARG" >&2
-			print_usage
-			exit 1
+		-f | --functions ) # Run specific function(s)
+			FUNCTION_NAMES=$(echo "$2" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | uniq | tr '\n' ',')
+			shift
+			shift
 			;;
-		: ) # Option requires an argument
-			print_colored red "Option -$OPTARG requires an argument." >&2
-			print_usage
+		-u | --user ) # Set OLS_USER
+			if [ -n "$2" ]; then
+				OLS_USER="$2"
+			else
+				echo "Error: OLS_USER cannot be empty." >&2
+				exit 1
+			fi
+			shift
+			shift
+			;;
+		-p | --pass ) # Set OLS_PASS
+			if [ -n "$2" ]; then
+				OLS_PASS="$2"
+			else
+				echo "Error: OLS_PASS cannot be empty." >&2
+				exit 1
+			fi
+			shift
+			shift
+			;;
+		-v | --verbose ) # Enable verbose mode
+			VERBOSE=1
+			shift
+			;;
+		* ) # Invalid option
+			echo "Invalid option: $1" >&2
 			exit 1
 			;;
 	esac
 done
-
 
 
 # START FUNCTIONS

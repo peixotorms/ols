@@ -10,15 +10,39 @@
 # import common functions
 source <(curl -sSf https://raw.githubusercontent.com/peixotorms/ols/main/inc/common.sh)
 
-#!/bin/bash
-
-
-TEMP=$(getopt -o '' --long domain:,aliases:,ssl:,php:,path:,sftp_user:,sftp_pass:,db_host:,db_port:,db_user:,db_pass:,wp_install:,wp_user:,wp_pass:,dev_mode: -n "$(basename -- "$0")" -- "$@")
-eval set -- "$TEMP"
 
 # Parse command-line arguments
+TEMP=$(getopt -o 'h' --long help,domain:,aliases:,ssl:,php:,path:,sftp_user:,sftp_pass:,db_host:,db_port:,db_user:,db_pass:,wp_install:,wp_user:,wp_pass:,dev_mode: -n "$(basename -- "$0")" -- "$@")
+eval set -- "$TEMP"
 while true; do
     case "$1" in
+        -h|--help)
+			echo ""
+			printf "Usage: bash $(basename -- "$0") --domain <domain_name> [OPTIONS]\n"
+			echo ""
+			printf "Options:\n"
+			printf "%-4s%-11s%-49s\n" "" "--domain (required)" "Domain name to set up"
+			printf "%-4s%-11s%-49s\n" "" "--aliases (optional)" "Comma-separated list of domain aliases"
+			printf "%-4s%-11s%-49s\n" "" "--ssl (optional)" "Enable or disable SSL. Default is 'yes'"
+			printf "%-4s%-11s%-49s\n" "" "--php (optional)" "PHP version to install. Must be 7.4, 8.0, 8.1, or 8.2. Default is '8.0'"
+			printf "%-4s%-11s%-49s\n" "" "--path (optional)" "Path to install website. Default is '/home/sites/<domain_name>'"
+			printf "%-4s%-11s%-49s\n" "" "--sftp_user (optional)" "SFTP username. Default is generated from domain name"
+			printf "%-4s%-11s%-49s\n" "" "--sftp_pass (optional)" "SFTP password. Default is random"
+			printf "%-4s%-11s%-49s\n" "" "--db_host (optional)" "Database host. Default is 'localhost'"
+			printf "%-4s%-11s%-49s\n" "" "--db_port (optional)" "Database port. Default is '3306'"
+			printf "%-4s%-11s%-49s\n" "" "--db_user (optional)" "Database username. Default is generated from domain name"
+			printf "%-4s%-11s%-49s\n" "" "--db_pass (optional)" "Database password. Default is random"
+			printf "%-4s%-11s%-49s\n" "" "--wp_install (optional)" "Install WordPress or not. Default is 'yes'"
+			printf "%-4s%-11s%-49s\n" "" "--wp_user (optional)" "WordPress username. Default is generated from domain name"
+			printf "%-4s%-11s%-49s\n" "" "--wp_pass (optional)" "WordPress password. Default is random"
+			printf "%-4s%-11s%-49s\n" "" "--dev_mode (optional)" "Enable or disable developer mode. Default is 'yes'"
+			printf "%-4s%-11s%-49s\n" "" "-h, --help" "Show this help message"
+			echo ""
+			printf "Examples:\n"
+			printf "%-4s%-11s%-49s\n" "" "bash $(basename -- "$0") --domain example.com --ssl no --php 7.4"
+			printf "%-4s%-11s%-49s\n" "" "bash $(basename -- "$0") --domain example.com --aliases example.net,example.org"
+			echo ""
+            ;;
         --domain)
             domain="${2}"; shift 2
             if ! validate_domain "$domain"; then
@@ -156,33 +180,6 @@ while true; do
 				*)
 					print_colored red "Invalid dev mode value: $2. Must be 'yes' or 'no'."; exit 1
 			esac
-			;;
-		--help)
-			echo ""
-			printf "Usage: bash $(basename -- "$0") --domain <domain_name> [OPTIONS]\n"
-			echo ""
-			printf "Options:\n"
-			printf "%-4s%-11s%-49s\n" "" "--domain (required)" "Domain name to set up"
-			printf "%-4s%-11s%-49s\n" "" "--aliases (optional)" "Comma-separated list of domain aliases"
-			printf "%-4s%-11s%-49s\n" "" "--ssl (optional)" "Enable or disable SSL. Default is 'yes'"
-			printf "%-4s%-11s%-49s\n" "" "--php (optional)" "PHP version to install. Must be 7.4, 8.0, 8.1, or 8.2. Default is '8.0'"
-			printf "%-4s%-11s%-49s\n" "" "--path (optional)" "Path to install website. Default is '/home/sites/<domain_name>'"
-			printf "%-4s%-11s%-49s\n" "" "--sftp_user (optional)" "SFTP username. Default is generated from domain name"
-			printf "%-4s%-11s%-49s\n" "" "--sftp_pass (optional)" "SFTP password. Default is random"
-			printf "%-4s%-11s%-49s\n" "" "--db_host (optional)" "Database host. Default is 'localhost'"
-			printf "%-4s%-11s%-49s\n" "" "--db_port (optional)" "Database port. Default is '3306'"
-			printf "%-4s%-11s%-49s\n" "" "--db_user (optional)" "Database username. Default is generated from domain name"
-			printf "%-4s%-11s%-49s\n" "" "--db_pass (optional)" "Database password. Default is random"
-			printf "%-4s%-11s%-49s\n" "" "--wp_install (optional)" "Install WordPress or not. Default is 'yes'"
-			printf "%-4s%-11s%-49s\n" "" "--wp_user (optional)" "WordPress username. Default is generated from domain name"
-			printf "%-4s%-11s%-49s\n" "" "--wp_pass (optional)" "WordPress password. Default is random"
-			printf "%-4s%-11s%-49s\n" "" "--dev_mode (optional)" "Enable or disable developer mode. Default is 'yes'"
-			printf "%-4s%-11s%-49s\n" "" "-h, --help" "Show this help message"
-			echo ""
-			printf "Examples:\n"
-			printf "%-4s%-11s%-49s\n" "" "bash $(basename -- "$0") --domain example.com --ssl no --php 7.4"
-			printf "%-4s%-11s%-49s\n" "" "bash $(basename -- "$0") --domain example.com --aliases example.net,example.org"
-			echo ""
 			;;
         --)
             shift
