@@ -19,10 +19,10 @@ The script accepts the following options:
     Default: update_system, setup_sshd, setup_repositories, setup_firewall, install_basic_packages, install_ols, install_php, install_wp_cli, install_percona, install_redis, install_postfix
 
 --user, -u
-    Customize OpenLiteSpeed username. Default: admin.
+    Customize OpenLiteSpeed username.
 
 --pass, -p
-    Customize OpenLiteSpeed password. Default: empty.
+    Customize OpenLiteSpeed password.
 
 --verbose, -v
     Enable verbose mode.
@@ -36,7 +36,7 @@ The script accepts the following options:
 
 To add a domain, you can use the following command:
 
-```bash <( curl -k -s https://raw.githubusercontent.com/peixotorms/ols/main/ols.sh ) -h```
+```bash <( curl -k -s https://raw.githubusercontent.com/peixotorms/ols/main/vhost.sh ) -h```
 
 ## Vitual Hosts Usage
 
