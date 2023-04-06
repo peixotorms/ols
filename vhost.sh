@@ -111,14 +111,14 @@ while true; do
             fi
             ;;
         --sftp_pass)
-            sftp_pass="${2:-$(gen_rand_pass)}"
-            if [[ "$sftp_pass" =~ [^a-zA-Z0-9;+=@] ]]; then
-                echo "Invalid SFTP password format. Only alphanumeric characters and these special characters are allowed: ;,+=@"; exit 1
-            elif [[ "${#sftp_pass}" -lt 8 ]] || [[ "${#sftp_pass}" -gt 32 ]]; then
-                echo "Invalid SFTP password length. Must be between 8 and 32 characters."; exit 1
-            fi
-            shift 2
-            ;;
+			sftp_pass="${2:-$(gen_rand_pass)}"
+			if [[ "$sftp_pass" =~ [^a-zA-Z0-9,+=@\-_!] ]]; then
+				echo "Invalid SFTP password format. Only alphanumeric characters and these special characters are allowed: ,+=@-_!"; exit 1
+			elif [[ "${#sftp_pass}" -lt 8 ]] || [[ "${#sftp_pass}" -gt 32 ]]; then
+				echo "Invalid SFTP password length. Must be between 8 and 32 characters."; exit 1
+			fi
+			shift 2
+			;;
         --db_host)
             db_host="${2:-localhost}"; shift 2
             ;;
@@ -135,8 +135,8 @@ while true; do
             ;;
         --db_pass)
             db_pass="${2:-$(gen_rand_pass)}"
-            if [[ "$db_pass" =~ [^a-zA-Z0-9;+=@] ]]; then
-                echo "Invalid database password format. Only alphanumeric characters and these special characters are allowed: ;,+=@"; exit 1
+            if [[ "$db_pass" =~ [^a-zA-Z0-9,+=@\-_!] ]]; then
+                echo "Invalid database password format. Only alphanumeric characters and these special characters are allowed: ,+=@-_!"; exit 1
             elif [[ "${#db_pass}" -lt 8 ]] || [[ "${#db_pass}" -gt 32 ]]; then
                 echo "Invalid database password length. Must be between 8 and 32 characters."; exit 1
             fi
@@ -162,8 +162,8 @@ while true; do
             ;;
         --wp_pass)
             wp_pass="${2:-$(gen_rand_pass)}"
-            if [[ "$wp_pass" =~ [^a-zA-Z0-9;+=@] ]]; then
-                echo "Invalid WordPress password format. Only alphanumeric characters and these special characters are allowed: ;,+=@"; exit 1
+            if [[ "$wp_pass" =~ [^a-zA-Z0-9,+=@\-_!] ]]; then
+                echo "Invalid WordPress password format. Only alphanumeric characters and these special characters are allowed: ,+=@-_!"; exit 1
             elif [[ "${#wp_pass}" -lt 8 ]] || [[ "${#wp_pass}" -gt 32 ]]; then
                 echo "Invalid WordPress password length. Must be between 8 and 32 characters."; exit 1
             fi
