@@ -28,7 +28,7 @@ The script accepts the following options:
 ## Examples:
 ```
 bash server.sh --help
-bash server.sh --verbose
+bash server.sh --verbose --functions "update_system,setup_repositories,setup_firewall,install_wp_cli"
 bash server.sh --ols_user "myusername" --ols_pass "mypassword"
 ```
 
