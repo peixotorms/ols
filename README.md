@@ -43,8 +43,22 @@ To add a domain, you can use the following command:
 The script accepts the following options:
 
 ```
---help, -h
-    Show usage instructions and exit.
+--domain (required)         Domain name to set up
+--aliases (optional)        Comma-separated list of domain aliases
+--ssl (optional)            Enable or disable SSL. Default is 'yes'
+--php (optional)            PHP version to install. Must be 7.4, 8.0, 8.1, or 8.2. Default is '8.0'
+--path (optional)           Path to install website. Default is '/home/sites/<domain_name>'
+--sftp_user (optional)      SFTP username. Default is generated from domain name
+--sftp_pass (optional)      SFTP password. Default is a random 32 char pass
+--db_host (optional)        Database host. Default is 'localhost'
+--db_port (optional)        Database port. Default is '3306'
+--db_user (optional)        Database username. Default is generated from domain name
+--db_pass (optional)        Database password. Default is a random 32 char pass
+--wp_install (optional)     Install WordPress or not. Default is 'yes'
+--wp_user (optional)        WordPress username. Default is generated from domain name
+--wp_pass (optional)        WordPress password. Default is a random 32 char pass
+--dev_mode (optional)       Enable or disable developer mode. Default is 'yes'
+-h, --help                  Show this help message
 
 ```
 
