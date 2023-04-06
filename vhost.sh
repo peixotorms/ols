@@ -245,7 +245,7 @@ printf "%-15s %s\n" "Dev mode:" "$dev_mode"
 # START FUNCTIONS
 
 # Creates an SFTP user and sets directory permissions for a virtual host.
-function vhost_create_user() {
+vhost_create_user() {
 
 	# create sftp group if not available
 	if ! getent group sftp &>/dev/null; then groupadd sftp; fi
@@ -280,7 +280,7 @@ function vhost_create_user() {
 
 
 # save the new database credentials
-function save_db_credentials() {
+save_db_credentials() {
     # Create the log file and write the database details to it
     echo "Database: ${db_user}" > "${path}/logs/user.mysql.log"
     echo "Username: ${db_user}" >> "${path}/logs/user.mysql.log"
@@ -291,7 +291,7 @@ function save_db_credentials() {
 
 
 # Creates a database and unique user for the virtual host
-function vhost_create_database() {
+vhost_create_database() {
 
 	echo "Creating database and user..."
 	
@@ -341,10 +341,98 @@ function vhost_create_database() {
 }
 
 
+# install a fresh wordpress site
+install_wp() {
+    
+   
+    export WP_CLI_CACHE_DIR=/tmp
+	DOCHM="${path}/www"
+	cd ${DOCHM}
+	
+	# check for existing wp-config.php file
+	if test -e "${DOCHM}/wp-config.php"; then
+		
+		# update credentials
+		print_colored cyan "wp-config.php file exists, updating..."
+		wp config set DB_HOST "${db_host}" --type=constant --allow-root
+		wp config set DB_NAME "${db_user}" --type=constant --allow-root
+		wp config set DB_USER "${db_user}" --type=constant --allow-root
+		wp config set DB_PASSWORD "${db_pass}" --type=constant --allow-root
+		
+	else
+		
+		# download and install
+		echo "Downloading wordpress..."
+		wp core download --path=${DOCHM} --allow-root --quiet
+		echo 'Configuring wp-config.php...'
+        wp core config --dbname="${db_user}" --dbuser="${db_user}" --dbpass="${db_pass}" --dbhost="${db_host}" --dbprefix="wp_" --path="${DOCHM}" --allow-root --quiet
+		echo 'Installing WordPress...'
+		wp core install --url="${domain}" --title="WordPress" --admin_user="${wp_user}" --admin_password="${wp_pass}" --admin_email="change-me@${domain}" --skip-email --path="${DOCHM}" --allow-root --quiet
+		echo 'Finalizing WordPress...'
+		wp site empty --yes --uploads --path="${DOCHM}" --allow-root --quiet
+		wp plugin delete $(wp plugin list --status=inactive --field=name --path="${DOCHM}" --allow-root --quiet) --path="${DOCHM}" --allow-root --quiet
+		wp theme delete $(wp theme list --status=inactive --field=name --path="${DOCHM}" --allow-root --quiet) --path="${DOCHM}" --allow-root --quiet
+		wp config shuffle-salts --path="${DOCHM}" --allow-root --quiet
+		wp option update permalink_structure '/%postname%/' --path="${DOCHM}" --allow-root --quiet
+		
+		# download htaccess
+		curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/wp/htaccess > /tmp/htaccess
+		cat /tmp/htaccess.txt | grep -q "WordPress" && cp /tmp/htaccess.txt ${DOCHM}/.htaccess && print_colored green "Success: .htaccess updated." || print_colored red "Error downloading .htaccess ..."
+		rm /tmp/htaccess
+		
+		# create control file for letsencrypt
+		echo "OK" > ${DOCHM}/ssl-test.txt
+		
+		# permissions
+		chown -R "${sftp_user}":"${sftp_user}" "${path}/www"
+		chmod -R 0755 "${path}/www"
+			
+		# save credentials
+		echo "WP User: ${wp_user}" > "${path}/logs/user.wp.log"
+		echo "WP Pass: ${wp_pass}" >> "${path}/logs/user.wp.log"
+		
+		# finish
+		print_colored cyan "WordPress is now installed on ${domain}"
+		
+	fi
+	    
+}
 
 
+# create a ssl certificate
+create_letsencrypt_ssl() {
+	
+	# merge domain and aliases
+	domains="${domain}${aliases:+,${aliases}}"
+	email="no-reply@${domain}"
+	
+	# Convert the comma-separated string to an array
+	IFS=',' read -ra domains_array <<< "$domains"
 
+	# Loop through the domains and make a curl request to the domain
+	all_successful=true
+	failed_domains=()
+	for domain in "${domains_array[@]}"; do
+		echo "Testing ${domain}..."
+		response=$(curl -sSL -H "Cache-Control: no-cache" -k "http://${domain}/ssl-test.txt?nocache=$(date +%s)")
+		if [[ "${response}" == "OK" ]]; then
+			print_colored yellow "${domain} found"
+		else
+			print_colored red "${domain} error"
+			all_successful=false
+			failed_domains+=("$domain")
+		fi
+	done
 
+	# Check if all domains were successful
+	if $all_successful; then
+		print_colored green "All domains were successful, creating ssl..."
+		certbot certonly --expand --agree-tos --non-interactive --keep-until-expiring --rsa-key-size 2048 -m "${email}" --webroot -w "${DOCHM}" -d "${domains}"
+	else
+		print_colored red "Failed domains: ${failed_domains[@]}"
+	fi
+
+}
 
 
 

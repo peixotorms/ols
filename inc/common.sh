@@ -7,7 +7,7 @@
 
 # This function executes the given command and suppresses its output if the VERBOSE variable is not set to '1'. 
 # Usage: silent <command>
-function silent { if [ "${VERBOSE}" = '1' ]; then "$@"; else "$@" >/dev/null 2>&1; fi; }
+silent { if [ "${VERBOSE}" = '1' ]; then "$@"; else "$@" >/dev/null 2>&1; fi; }
 
 
 # This function creates a 32-character password with three special characters in a random position
@@ -97,7 +97,7 @@ calculate_memory_configs() {
 
 
 # This function updates the system and disables hints on pending kernel upgrades
-function update_system
+update_system
 {
 	if [ -d /etc/needrestart/conf.d ]; then
 		echo 'Disabling pending kernel upgrade notice...'
@@ -135,6 +135,7 @@ generate_user_name() {
 }
 
 # Create folder if it doesn't exist
-function create_folder { [[ ! -d "$1" ]] && mkdir -p "$1"; }
+create_folder { [[ ! -d "$1" ]] && mkdir -p "$1"; }
 
-
+# This function creates a file if it doesn't exist
+create_file() { [ ! -f "${1}" ] && touch "${1}"; }
