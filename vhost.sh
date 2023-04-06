@@ -341,27 +341,6 @@ install_wp() {
 		wp config set DB_USER "${db_user}" --type=constant --allow-root
 		wp config set DB_PASSWORD "${db_pass}" --type=constant --allow-root
 		
-		# download htaccess
-		if [ ! -f "${DOCHM}/.htaccess" ]; then
-			curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/wp/htaccess > /tmp/htaccess.txt
-			cat /tmp/htaccess.txt | grep -q "WordPress" && cp /tmp/htaccess.txt ${DOCHM}/.htaccess && print_colored green "Success: .htaccess updated." || print_colored red "Error downloading .htaccess ..."
-			rm /tmp/htaccess
-		fi
-		
-		# create control file for letsencrypt
-		if [ ! -f "${DOCHM}/ssl-test.txt" ]; then
-			echo "Creating ${DOCHM}/ssl-test.txt"
-			echo "OK" > ${DOCHM}/ssl-test.txt
-		fi
-		
-		# permissions
-		chown -R "${sftp_user}":"${sftp_user}" "${path}/www"
-		chmod -R 0755 "${path}/www"
-			
-		# save credentials
-		echo "WP User: ${wp_user}" > "${path}/logs/user.wp.log"
-		echo "WP Pass: ${wp_pass}" >> "${path}/logs/user.wp.log"
-		
 		# finish
 		print_colored cyan "WordPress credentials are up to date on ${domain}"
 		
@@ -381,32 +360,31 @@ install_wp() {
 		wp config shuffle-salts --path="${DOCHM}" --allow-root --quiet
 		wp option update permalink_structure '/%postname%/' --path="${DOCHM}" --allow-root --quiet
 		
-		# download htaccess
-		if [ ! -f "${DOCHM}/.htaccess" ]; then
-			curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/wp/htaccess > /tmp/htaccess.txt
-			cat /tmp/htaccess.txt | grep -q "WordPress" && cp /tmp/htaccess.txt ${DOCHM}/.htaccess && print_colored green "Success: .htaccess updated." || print_colored red "Error downloading .htaccess ..."
-			rm /tmp/htaccess
-		fi
-		
-		# create control file for letsencrypt
-		if [ ! -f "${DOCHM}/ssl-test.txt" ]; then
-			echo "Creating ${DOCHM}/ssl-test.txt"
-			echo "OK" > ${DOCHM}/ssl-test.txt
-		fi
-		
-		# permissions
-		chown -R "${sftp_user}":"${sftp_user}" "${path}/www"
-		chmod -R 0755 "${path}/www"
-			
-		# save credentials
-		echo "WP User: ${wp_user}" > "${path}/logs/user.wp.log"
-		echo "WP Pass: ${wp_pass}" >> "${path}/logs/user.wp.log"
-		
 		# finish
 		print_colored cyan "WordPress is now installed on ${domain}"
 		
 	fi
-	    
+		
+	# download htaccess
+	if [ ! -f "${DOCHM}/.htaccess" ]; then
+		curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/wp/htaccess > /tmp/htaccess.txt
+		cat /tmp/htaccess.txt | grep -q "WordPress" && cp /tmp/htaccess.txt ${DOCHM}/.htaccess && print_colored green "Success: .htaccess updated." || print_colored red "Error downloading .htaccess ..."
+		rm /tmp/htaccess
+	fi
+		
+	# create control file for letsencrypt
+	if [ ! -f "${DOCHM}/ssl-test.txt" ]; then
+		echo "OK" > ${DOCHM}/ssl-test.txt
+	fi
+		
+	# permissions
+	chown -R "${sftp_user}":"${sftp_user}" "${path}/www"
+	chmod -R 0755 "${path}/www"
+			
+	# save credentials
+	echo "WP User: ${wp_user}" > "${path}/logs/user.wp.log"
+	echo "WP Pass: ${wp_pass}" >> "${path}/logs/user.wp.log"
+		    
 }
 
 
@@ -446,6 +424,18 @@ create_letsencrypt_ssl() {
 }
 
 
+# create ols virtual host and listener
+create_ols_vhost() {
+
+	
+	
+	
+	
+	
+	systemctl restart lsws
+}
+
+
 # END FUNCTIONS
 
 
@@ -453,7 +443,9 @@ create_letsencrypt_ssl() {
 vhost_create_user
 vhost_create_database
 install_wp
+create_ols_vhost
 create_letsencrypt_ssl
+echo "missing ols configs"
 
 
 # finish
