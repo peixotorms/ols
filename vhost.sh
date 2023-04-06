@@ -363,6 +363,7 @@ install_wp() {
 		rm /tmp/htaccess
 		
 		# create control file for letsencrypt
+		echo "Creating ${DOCHM}/ssl-test.txt"
 		echo "OK" > ${DOCHM}/ssl-test.txt
 		
 		# permissions
