@@ -13,29 +13,6 @@ OLS_PASS=""
 VERBOSE=0
 FUNCTION_NAMES="update_system,setup_sshd,setup_repositories,setup_firewall,install_basic_packages,install_ols,install_php,install_wp_cli,install_percona,install_redis,install_postfix"
 
-# Function to print usage instructions
-function print_usage() {
-	echo ""
-    printf "Usage: bash [-f <function_names>] [-v] [-h]\n"
-    echo ""
-    printf "Options:\n"
-    printf "%-4s%-11s%-49s\n" "" "-f" "Run a comma-separated list of function names:"
-    IFS=',' read -ra FUNC_NAMES <<< "update_system,setup_sshd,setup_repositories,setup_firewall,install_basic_packages,install_ols,install_php,install_wp_cli,install_percona,install_redis,install_postfix"
-    for FUNC_NAME in "${FUNC_NAMES[@]}"; do
-        printf "%-15s%-48s\n" "" "$FUNC_NAME"
-    done
-    printf "%-4s%-11s%-49s\n" "" "-u" "Customize OpenLiteSpeed username"
-    printf "%-4s%-11s%-49s\n" "" "-p" "Customize OpenLiteSpeed password"
-    printf "%-4s%-11s%-49s\n" "" "-v" "Enable verbose mode"
-    printf "%-4s%-11s%-49s\n" "" "-h" "Show this help message"
-    echo ""
-    printf "Examples:\n"
-    printf "%-4s%-11s%-49s\n" "" "./ols.sh | bash -s -f install_ols,install_php"
-    printf "%-4s%-11s%-49s\n" "" "./ols.sh -f install_ols,install_php"
-    echo ""
-}
-
-
 # Parse command-line arguments
 while getopts ":f:vh" opt; do
 	case ${opt} in
@@ -62,7 +39,24 @@ while getopts ":f:vh" opt; do
 			VERBOSE=1
 			;;
 		h ) # Print usage instructions
-			print_usage
+			echo ""
+			printf "Usage: bash [-f <function_names>] [-v] [-h]\n"
+			echo ""
+			printf "Options:\n"
+			printf "%-4s%-11s%-49s\n" "" "-f" "Run a comma-separated list of function names:"
+			IFS=',' read -ra FUNC_NAMES <<< "update_system,setup_sshd,setup_repositories,setup_firewall,install_basic_packages,install_ols,install_php,install_wp_cli,install_percona,install_redis,install_postfix"
+			for FUNC_NAME in "${FUNC_NAMES[@]}"; do
+				printf "%-15s%-48s\n" "" "$FUNC_NAME"
+			done
+			printf "%-4s%-11s%-49s\n" "" "-u" "Customize OpenLiteSpeed username"
+			printf "%-4s%-11s%-49s\n" "" "-p" "Customize OpenLiteSpeed password"
+			printf "%-4s%-11s%-49s\n" "" "-v" "Enable verbose mode"
+			printf "%-4s%-11s%-49s\n" "" "-h" "Show this help message"
+			echo ""
+			printf "Examples:\n"
+			printf "%-4s%-11s%-49s\n" "" "./ols.sh | bash -s -f install_ols,install_php"
+			printf "%-4s%-11s%-49s\n" "" "./ols.sh -f install_ols,install_php"
+			echo ""
 			exit 0
 			;;
 		\? ) # Invalid option
