@@ -10,4 +10,4 @@
 # defaults
 
 # import common functions
-source https://raw.githubusercontent.com/peixotorms/ols/main/inc/common.sh
+source <(curl -sSf https://raw.githubusercontent.com/peixotorms/ols/main/inc/common.sh)

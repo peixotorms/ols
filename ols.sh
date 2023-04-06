@@ -108,7 +108,7 @@ done
 # START FUNCTIONS
 
 # import common functions
-source https://raw.githubusercontent.com/peixotorms/ols/main/inc/common.sh
+source <(curl -sSf https://raw.githubusercontent.com/peixotorms/ols/main/inc/common.sh)
 
 
 # This function downloads and updates configuration files for sshd
