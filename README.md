@@ -32,7 +32,7 @@ The script accepts the following options:
 -u <ols_user> : Sets the OpenLiteSpeed user
 -p <ols_pass> : Sets the OpenLiteSpeed user's password
 -v : Enables verbose mode
--h : Displays the help message
+-h : Displays the help message 
 ```
 
 ## What it does
