@@ -62,6 +62,12 @@ The script accepts the following options:
 
 ```
 
+## Examples:
+```
+bash vhost.sh --domain example.com --ssl no --php 7.4
+bash vhost.sh --domain example.com --aliases example.net,example.org
+```
+
 ## License
 
 The script is licensed under the MIT License.
