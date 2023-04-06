@@ -13,22 +13,22 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         -h | --help ) # Print usage instructions
             echo ""
-            printf "Usage: bash [--functions <function_names>] [--user <username>] [--pass <password>] [--verbose] [--help]\n"
+            printf "Usage: bash [--functions <function_names>] [-u | --user <username>] [-p | --pass <password>] [-v | --verbose] [-h | --help]\n"
             echo ""
             printf "Options:\n"
-            printf "%-4s%-11s%-49s\n" "" "--functions" "Run a comma-separated list of function names:"
+            printf "%-4s%-11s%-49s\n" "" "-f | --functions" "Run a comma-separated list of function names:"
             IFS=',' read -ra FUNC_NAMES <<< "update_system,setup_sshd,setup_repositories,setup_firewall,install_basic_packages,install_ols,install_php,install_wp_cli,install_percona,install_redis,install_postfix"
             for FUNC_NAME in "${FUNC_NAMES[@]}"; do
                 printf "%-15s%-48s\n" "" "$FUNC_NAME"
             done
-            printf "%-4s%-11s%-49s\n" "" "--user" "Customize OpenLiteSpeed username"
-            printf "%-4s%-11s%-49s\n" "" "--pass" "Customize OpenLiteSpeed password"
-            printf "%-4s%-11s%-49s\n" "" "--verbose" "Enable verbose mode"
-            printf "%-4s%-11s%-49s\n" "" "-h, --help" "Show this help message"
+            printf "%-4s%-11s%-49s\n" "" "-u | --user" "Customize OpenLiteSpeed username"
+            printf "%-4s%-11s%-49s\n" "" "-p | --pass" "Customize OpenLiteSpeed password"
+            printf "%-4s%-11s%-49s\n" "" "-v | --verbose" "Enable verbose mode"
+            printf "%-4s%-11s%-49s\n" "" "-h | --help" "Show this help message"
             echo ""
             printf "Examples:\n"
-            printf "%-4s%-11s%-49s\n" "" "bash ols.sh --functions install_ols,install_php"
-            printf "%-4s%-11s%-49s\n" "" "bash ols.sh --functions install_ols,install_php --user myusername --pass mypassword"
+            printf "%-4s%-11s%-49s\n" "" "bash ols.sh -f install_ols,install_php"
+            printf "%-4s%-11s%-49s\n" "" "bash ols.sh -f install_ols,install_php -u myusername -p mypassword"
             echo ""
             exit 0
             ;;
