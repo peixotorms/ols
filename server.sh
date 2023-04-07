@@ -15,7 +15,7 @@ SSH_PORT="22"
 OLS_PORT="7080"
 OLS_USER="admin"
 OLS_PASS=$(gen_rand_pass)
-FUNC_NAMES="update_system, setup_sshd, setup_repositories, setup_firewall, install_basic_packages, install_ols, install_php, install_wp_cli, install_percona, install_redis, install_postfix"
+FUNC_NAMES="update_system, setup_repositories, setup_firewall, install_basic_packages, install_ols, install_php, install_wp_cli, install_percona, install_redis, install_postfix, setup_sshd"
 
 # Parse command-line arguments
 while [[ $# -gt 0 ]]; do
@@ -532,4 +532,4 @@ if [ "$CONFIRM_SETUP" != "0" ] ; then
 fi 
 
 # finish
-print_colored green "All done!"
+print_colored cyan "Installation complete!"
