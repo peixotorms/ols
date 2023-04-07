@@ -91,7 +91,7 @@ while [[ $# -gt 0 ]]; do
 			if [[ "$2" =~ [0-9] ]] && [[ "$2" =~ [a-zA-Z] ]] && [[ "$2" =~ [,+=\-_!@] ]] && [[ ${#2} -ge 8 ]] && [[ ${#2} -le 32 ]] && [[ ! "$2" =~ [[:space:]] ]]; then
 				OLS_PASS="$2"
 			else
-				print_colored red "Error:" "OLS_PASS must be between 8-32 alphanumeric chars include at least one of the following symbols: ,+=-_!@ and no spaces"
+				print_colored red "Error:" "OLS_PASS must be between 8-32 chars and include at least a digit, a letter and one of the following symbols: ,+=-_!@"
 				exit 1
 			fi
 			shift
@@ -491,10 +491,9 @@ function before_install_display
 # END FUNCTIONS
 
 
-# run
+# display summary and ask permission
+echo ""
 print_colored green "Starting install..."
-
-# display and ask permission
 before_install_display
 
 # confirmation request
@@ -505,7 +504,7 @@ if [ "$answer" = "N" ] || [ "$answer" = "n" ] ; then
     print_colored red "Aborting installation!"
     exit 0
 else
-	CONFIRM_SETUP="0"
+	CONFIRM_SETUP="1"
 	echo ""
 fi
 	
