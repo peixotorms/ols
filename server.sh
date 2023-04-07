@@ -50,27 +50,27 @@ while [[ $# -gt 0 ]]; do
             if [[ "$2" =~ ^[[:alnum:]]{8,32}$ ]]; then
                 OLS_USER="$2"
             else
-                print_colored red "Error: The specified OLS_USER is invalid." "User must be between 8-32 alphanumeric chars."
+                print_colored red "The OLS_USER specified is invalid and must be between 8-32 alphanumeric characters."
                 exit 1
             fi
             shift
             shift
             ;;
-        --ols_pass ) # Set OLS_PASS
-            if [[ "$2" =~ ^[[:alnum:],+=\-_!@]{8,32}$ ]]; then
-                OLS_PASS="$2"
-            else
-                print_colored red "Error: The specified OLS_PASS is invalid." "Password must be 8-32 chars, alphanumeric, and may include ,+=-_!@"
-                exit 1
-            fi
-            shift
-            shift
-            ;;
+       --ols_pass ) # Set OLS_PASS
+			if [[ "$2" =~ ^(?=.*[[:alnum:]])(?=.*[ ,+=\-_!@]).{8,32}$ ]]; then
+				OLS_PASS="$2"
+			else
+				print_colored red "OLS_PASS must be 8-32 alphanumeric chars include at least one of the following symbols: ,+=-_!@"
+				exit 1
+			fi
+			shift
+			shift
+			;;
 		--ols_port ) # Set OLS_PORT
             if [[ "$2" =~ ^[0-9]+$ ]] && [ "$2" -ge 1 ] && [ "$2" -le 65535 ]; then
                 OLS_PORT="$2"
             else
-                print_colored yellow "Warning:" "Invalid port specified: $2" "Using default port number 7080 instead."
+                print_colored yellow "Warning: Invalid port $2. Using default port 7080."
             fi
             shift
             shift
