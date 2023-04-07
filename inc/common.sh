@@ -112,13 +112,6 @@ function calculate_memory_configs() {
 				[ $PHP_POOL_COUNT -lt 1 ] && PHP_POOL_COUNT=1
 				echo $PHP_POOL_COUNT
 				;;
-		"LSPHP_POOL_COUNT")
-				local LSPHP_POOL_COUNT=$(($PHP_MEM/48))
-				local MAX_LSPHP_POOL_COUNT=$(($CPU_CORES*3))
-				[ $LSPHP_POOL_COUNT -gt $MAX_LSPHP_POOL_COUNT ] && PHP_POOL_COUNT=$MAX_LSPHP_POOL_COUNT
-				[ $LSPHP_POOL_COUNT -lt 1 ] && LSPHP_POOL_COUNT=1
-				echo $LSPHP_POOL_COUNT
-				;;
 		"PHP_BACKLOG")
 				local PHP_BACKLOG=$(($CPU_CORES*4))
 				echo $PHP_BACKLOG
@@ -142,7 +135,6 @@ function calculate_memory_configs() {
 	#MYSQL_LOG_SIZE=$(calculate_memory_configs "MYSQL_LOG_SIZE")
 	#PHP_MEM=$(calculate_memory_configs "PHP_MEM")
 	#PHP_POOL_COUNT=$(calculate_memory_configs "PHP_POOL_COUNT")
-	#LSPHP_POOL_COUNT=$(calculate_memory_configs "LSPHP_POOL_COUNT")
 	#PHP_BACKLOG=$(calculate_memory_configs "PHP_BACKLOG")
 	
 }

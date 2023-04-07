@@ -272,15 +272,17 @@ function install_ols() {
 	rm /tmp/httpd_config.conf
 	
 	# set lsphp pool concurrency limit
-	LSPHP_POOL_COUNT=$(calculate_memory_configs "LSPHP_POOL_COUNT")
+	# allow 1 instance per cpu core + 3 connections per instance
+	# more instances avoid contention on CPU-bound sites (PHP), while maxConns is better for I/O-bound sites (mysql, disk)
+	CPU_CORES=$(calculate_memory_configs "CPU_CORES")
 	PHP_BACKLOG=$(calculate_memory_configs "PHP_BACKLOG")
-	sed -i "s/^.*maxConns.*$/  maxConns                ${LSPHP_POOL_COUNT}/g" /usr/local/lsws/conf/httpd_config.conf
-	sed -i "s/^.*PHP_LSAPI_CHILDREN.*$/  env                     PHP_LSAPI_CHILDREN=${LSPHP_POOL_COUNT}/g" /usr/local/lsws/conf/httpd_config.conf
-	sed -i "s/^.*backlog.*$/  backlog                 ${PHP_BACKLOG}/g" /usr/local/lsws/conf/httpd_config.conf
+	sed -i "s/^.*instances .*$/  instances               ${CPU_CORES}/g" /usr/local/lsws/conf/httpd_config.conf
+	sed -i "s/^.*maxConns .*$/  maxConns                3/g" /usr/local/lsws/conf/httpd_config.conf
+	sed -i "s/^.* PHP_LSAPI_CHILDREN.*$/  env                     PHP_LSAPI_CHILDREN=3/g" /usr/local/lsws/conf/httpd_config.conf
+	sed -i "s/^.*backlog .*$/  backlog                 ${PHP_BACKLOG}/g" /usr/local/lsws/conf/httpd_config.conf
 	
 	# permissions
 	chown -R lsadm:lsadm /usr/local/lsws/conf/
-	systemctl restart lshttpd
 	
 	# create self signed ssl
 	echo "Installing self signed ssl..."
@@ -302,6 +304,9 @@ function install_ols() {
 	mv ${CERT} /usr/local/lsws/conf/$CERT
 	chmod 0600 /usr/local/lsws/conf/$KEY
 	chmod 0600 /usr/local/lsws/conf/$CERT
+	
+	# restart
+	systemctl restart lshttpd
 	
 }
 
