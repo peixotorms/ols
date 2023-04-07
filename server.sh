@@ -186,8 +186,10 @@ function setup_firewall
 	# Check if ufw is already installed, and only reinstall if not
 	if ! command -v ufw &> /dev/null; then
 		DEBIAN_FRONTEND=noninteractive silent apt install -y ufw
-		echo "y" | silent ufw reset
 	fi
+	
+	# reset
+	echo "y" | ufw reset > /dev/null
 
 	# default policy
 	silent ufw default deny incoming
@@ -242,9 +244,9 @@ function install_ols() {
 	if [ ${OLS_PORT} != 7080 ]; then
         if [ -e /usr/local/lsws/admin/conf/admin_config.conf ]; then 
 			sed -i "s/7080/${OLS_PORT}/g" /usr/local/lsws/admin/conf/admin_config.conf
-			print_colored green "OLS port has changed to ${OLS_PORT}"
+			print_colored magenta "Warning:" "OLS port has changed to ${OLS_PORT}"
 		else
-			print_colored red "Error changing OLS port on /usr/local/lsws/admin/conf/admin_config.conf (not found)"
+			print_colored red "Error:" "/usr/local/lsws/admin/conf/admin_config.conf not found."
 		fi
     fi
 	
