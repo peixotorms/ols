@@ -18,8 +18,9 @@ The script accepts the following options:
     Run a comma-separated list of function names. 
     Default: update_system, setup_sshd, setup_repositories, setup_firewall, install_basic_packages, install_ols, install_php, install_wp_cli, install_percona, install_redis, install_postfix
 
---ols_user (optional)       Customize OpenLiteSpeed username.
---ols_pass (optional)       Customize OpenLiteSpeed password.
+--ols_user (optional)       Customize OpenLiteSpeed username: 8-32 chars, alphanumeric.
+--ols_pass (optional)       Customize OpenLiteSpeed password: 8-32 chars, alphanumeric and allowed the ,+=-_!@ chars.
+--ols_port (optional)       Customize OpenLiteSpeed port.
 --verbose, -v (optional)    Enable verbose mode.
 --help, -h                  Show this help message
 
