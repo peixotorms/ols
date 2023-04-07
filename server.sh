@@ -14,7 +14,7 @@ source <(curl -sSf https://raw.githubusercontent.com/peixotorms/ols/main/inc/com
 OLS_PORT="7080"
 OLS_USER="admin"
 OLS_PASS=$(gen_rand_pass)
-
+FUNC_NAMES="update_system, setup_sshd, setup_repositories, setup_firewall, install_basic_packages, install_ols, install_php, install_wp_cli, install_percona, install_redis, install_postfix"
 
 # Parse command-line arguments
 while [[ $# -gt 0 ]]; do
@@ -41,11 +41,29 @@ while [[ $# -gt 0 ]]; do
             echo ""
             exit 0
             ;;
-        --functions | -f ) # Run specific function(s)
-            FUNCTION_NAMES=$(echo "$2" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | uniq | tr '\n' ',')
-            shift
-            shift
-            ;;
+       --functions | -f )
+			# Get the function names from the --functions flag
+			REQUESTED_NAMES=$(echo "$2" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | uniq | tr '\n' ',')
+			
+			# Only filter and merge function names if --functions is not empty
+			if [[ -n "$REQUESTED_NAMES" ]]; then
+				# Remove any requested function names that are not part of the default list
+				NAMES=$(echo "$REQUESTED_NAMES" | tr ',' '\n' | grep -f <(echo "$FUNC_NAMES" | tr ',' '\n') | tr '\n' ',')
+				
+				# Remove any default function names that were not requested
+				DEFAULT_NAMES=$(echo "$FUNC_NAMES" | tr ',' '\n' | grep -f <(echo "$REQUESTED_NAMES" | tr ',' '\n') | tr '\n' ',')
+				
+				# Use the requested function names if any, otherwise use the default names
+				if [[ -n "$NAMES" ]]; then
+					FUNC_NAMES="$NAMES"
+				else
+					FUNC_NAMES="$DEFAULT_NAMES"
+				fi
+			fi
+			
+			shift
+			shift
+			;;
         --ols_user ) # Set OLS_USER
             if [[ "$2" =~ ^[[:alnum:]]{8,32}$ ]]; then
                 OLS_USER="$2"
@@ -57,10 +75,10 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
        --ols_pass ) # Set OLS_PASS
-			if [[ "$2" =~ ^(?=.*[[:alnum:]])(?=.*[ ,+=\-_!@]).{8,32}$ ]]; then
+			if [[ "$2" =~ [0-9] ]] && [[ "$2" =~ [a-zA-Z] ]] && [[ "$2" =~ [,+=\-_!@] ]] && [[ ${#2} -ge 8 ]] && [[ ${#2} -le 32 ]] && [[ ! "$2" =~ [[:space:]] ]]; then
 				OLS_PASS="$2"
 			else
-				print_colored red "Error:" "OLS_PASS must be between 8-32 alphanumeric chars include at least one of the following symbols: ,+=-_!@"
+				print_colored red "Error:" "OLS_PASS must be between 8-32 alphanumeric chars include at least one of the following symbols: ,+=-_!@ and no spaces"
 				exit 1
 			fi
 			shift
