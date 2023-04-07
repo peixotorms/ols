@@ -50,7 +50,7 @@ while [[ $# -gt 0 ]]; do
             if [[ "$2" =~ ^[[:alnum:]]{8,32}$ ]]; then
                 OLS_USER="$2"
             else
-                print_colored red "Error: The specified OLS_USER is invalid." "Password must be between 8-32 alphanumeric chars."
+                print_colored red "Error: The specified OLS_USER is invalid." "User must be between 8-32 alphanumeric chars."
                 exit 1
             fi
             shift
