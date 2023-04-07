@@ -35,7 +35,7 @@ function print_colored() {
         magenta) color_code=35;;
         cyan) color_code=36;;
         white) color_code=1;;
-        bold) color_code=1;;
+        bold) color_code=90;;
         *) color_code=0;;
     esac
     shift
