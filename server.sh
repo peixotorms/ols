@@ -11,6 +11,7 @@
 source <(curl -sSf https://raw.githubusercontent.com/peixotorms/ols/main/inc/common.sh)
 
 # defaults
+SSH_PORT="22"
 OLS_PORT="7080"
 OLS_USER="admin"
 OLS_PASS=$(gen_rand_pass)
@@ -91,7 +92,7 @@ while [[ $# -gt 0 ]]; do
 			if [[ "$2" =~ [0-9] ]] && [[ "$2" =~ [a-zA-Z] ]] && [[ "$2" =~ [,+=\-_!@] ]] && [[ ${#2} -ge 8 ]] && [[ ${#2} -le 32 ]] && [[ ! "$2" =~ [[:space:]] ]]; then
 				OLS_PASS="$2"
 			else
-				print_colored red "Error:" "OLS_PASS must be between 8-32 chars and include at least a digit, a letter and one of the following symbols: ,+=-_!@"
+				print_colored red "Error:" "--ols_pass must be between 8-32 chars and include at least a digit, a letter and one of the following symbols: ,+=-_!@"
 				exit 1
 			fi
 			shift
@@ -101,7 +102,17 @@ while [[ $# -gt 0 ]]; do
             if [[ "$2" =~ ^[0-9]+$ ]] && [ "$2" -ge 1 ] && [ "$2" -le 65535 ]; then
                 OLS_PORT="$2"
             else
-                print_colored red "Error:" "Invalid port $2."
+                print_colored red "Error:" "Invalid --ols_port $2."
+				exit 1
+            fi
+            shift
+            shift
+            ;;
+		--ssh_port ) # Set OLS_PORT
+            if [[ "$2" =~ ^[0-9]+$ ]] && [ "$2" -ge 1 ] && [ "$2" -le 65535 ]; then
+                SSH_PORT="$2"
+            else
+                print_colored red "Error:" "Invalid --ssh_port $2."
 				exit 1
             fi
             shift
@@ -130,6 +141,7 @@ function setup_sshd
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/sshd/sshd_config > /tmp/sshd_config
 	cat /tmp/sshd_config | grep -q "ListenAddress" && cp /tmp/sshd_config /etc/ssh/sshd_config && print_colored green "Success:" "sshd_config updated." || print_colored red "Error downloading sshd_config ..."
 	rm /tmp/sshd_config
+	sed -i "s/^Port 22.*$/Port ${SSH_PORT}/" /etc/ssh/sshd_config
 	service sshd restart
 	
 }
@@ -181,14 +193,13 @@ function setup_firewall
 	silent ufw default allow routed
 
 	# open or block ports: 
-	silent ufw allow 22/tcp		 # ssh default
-	silent ufw allow 999/tcp     # ssh custom
-	silent ufw allow 123/udp	 # ntp
-	silent ufw allow 51820/udp	 # wg
-	silent ufw allow 80/tcp		 # http
-	silent ufw allow 443/tcp	 # https
-	silent ufw allow 443/udp	 # http3
-	silent ufw allow 7080/tcp	 # ols
+	silent ufw allow ${SSH_PORT}/tcp     # ssh
+	silent ufw allow 123/udp	         # ntp
+	silent ufw allow 51820/udp	         # wireguard
+	silent ufw allow 80/tcp		         # http
+	silent ufw allow 443/tcp	         # https
+	silent ufw allow 443/udp	         # http3
+	silent ufw allow ${OLS_PORT}/tcp	 # ols
 
 	# save and enable
 	echo "y" | silent ufw enable
@@ -460,6 +471,7 @@ function before_install_display
 	print_chars 60 -
     print_colored cyan   "Server capabilities: "
     print_colored yellow "Public IP:           " "$IP"
+	print_colored yellow "SSH Port:            " "$SSH_PORT"
     print_colored yellow "CPU cores:           " "$CPU_CORES"
     print_colored yellow "RAM Size:            " "${TOTAL_RAM}M"
 	print_colored yellow "Disk Available:      " "$DISK_AVAILABLE"
