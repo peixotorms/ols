@@ -15,7 +15,7 @@ SSH_PORT="22"
 OLS_PORT="7080"
 OLS_USER="admin"
 OLS_PASS=$(gen_rand_pass)
-FUNC_NAMES="update_system, setup_repositories, setup_firewall, install_basic_packages, install_ols, install_php, install_wp_cli, install_percona, install_redis, install_postfix, setup_sshd"
+FUNC_NAMES="update_system, setup_sshd, setup_repositories, setup_firewall, install_basic_packages, install_ols, install_php, install_wp_cli, install_percona, install_redis, install_postfix"
 
 # Parse command-line arguments
 while [[ $# -gt 0 ]]; do
@@ -141,8 +141,10 @@ function setup_sshd
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/sshd/sshd_config > /tmp/sshd_config
 	cat /tmp/sshd_config | grep -q "ListenAddress" && cp /tmp/sshd_config /etc/ssh/sshd_config && print_colored green "Success:" "sshd_config updated." || print_colored red "Error downloading sshd_config ..."
 	rm /tmp/sshd_config
-	sed -i "s/^Port 22.*$/Port ${SSH_PORT}/" /etc/ssh/sshd_config
-	service sshd restart
+	if [[ "$SSH_PORT" != "22" ]]; then
+		sed -i "s/^Port 22.*$/Port ${SSH_PORT}/" /etc/ssh/sshd_config
+		print_colored magenta "Warning:" "SSH port is now set to $SSH_PORT."
+	fi
 	
 }
 
@@ -503,13 +505,16 @@ function before_install_display
 # END FUNCTIONS
 
 
+# runtime defaults
+CONFIRM_SETUP="0"
+RESTART_SSH="0"
+
 # display summary and ask permission
 echo ""
 print_colored green "Starting install..."
 before_install_display
 
 # confirmation request
-CONFIRM_SETUP="0"
 printf 'Are these settings correct? Type n to quit, otherwise will continue. [Y/n]  '
 read answer
 if [ "$answer" = "N" ] || [ "$answer" = "n" ] ; then
@@ -528,8 +533,23 @@ if [ "$CONFIRM_SETUP" != "0" ] ; then
 	for FUNCTION_NAME in $(echo "$FUNC_NAMES" | tr ',' '\n' | uniq); do
 		echo "Running function: $FUNCTION_NAME"
 		"$FUNCTION_NAME"
+		
+		# sshd restart?
+		if [[ "$FUNCTION_NAME" = "setup_sshd" && "$SSH_PORT" != "22" ]]; then
+			RESTART_SSH="1"
+		fi
+		
 	done
+fi 
+
+# restart sshd after port change, after everything else
+if [ "$RESTART_SSH" != "0" ] ; then
+	print_colored magenta "Warning:" "Remember to re-login again with the new $SSH_PORT port."
+	print_colored cyan "Installation complete!"
+	service sshd restart
+	exit 0
 fi 
 
 # finish
 print_colored cyan "Installation complete!"
+
