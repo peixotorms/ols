@@ -72,10 +72,14 @@ function calculate_memory_configs() {
 	[ $REDIS_MEM -gt 4096 ] && REDIS_MEM=4096
 	local MYSQL_MEM=$(($RAM/2))
 	local PHP_MEM=$(($RAM - $REDIS_MEM - $MYSQL_MEM))
+	local CPU_CORES=$(nproc)
 	
 	case $OPTION in
 		"REDIS_MEM")
 				echo $REDIS_MEM
+				;;
+		"CPU_CORES")
+				echo $CPU_CORES
 				;;
 		"MYSQL_MEM")
 				echo $MYSQL_MEM
@@ -84,7 +88,6 @@ function calculate_memory_configs() {
 				echo $PHP_MEM
 				;;
 		"MYSQL_POOL_COUNT")
-				local CPU_CORES=$(nproc)
 				local MYSQL_POOL_COUNT=$(($MYSQL_MEM/1024))
 				local MYSQL_MAX_POOL_COUNT=$(($CPU_CORES*4/5))
 				[ $MYSQL_POOL_COUNT -gt $MYSQL_MAX_POOL_COUNT ] && MYSQL_POOL_COUNT=$MYSQL_MAX_POOL_COUNT
@@ -92,7 +95,6 @@ function calculate_memory_configs() {
 				echo $MYSQL_POOL_COUNT
 				;;
 		"PHP_POOL_COUNT")
-				local CPU_CORES=$(nproc)
 				local PHP_POOL_COUNT=$(($PHP_MEM/48))
 				local MAX_PHP_POOL_COUNT=$(($CPU_CORES*2))
 				[ $PHP_POOL_COUNT -gt $MAX_PHP_POOL_COUNT ] && PHP_POOL_COUNT=$MAX_PHP_POOL_COUNT
@@ -108,6 +110,7 @@ function calculate_memory_configs() {
 	esac
 	
 	# usage
+	#CPU_CORES=$(calculate_memory_configs "CPU_CORES")
 	#REDIS_MEM=$(calculate_memory_configs "REDIS_MEM")
 	#MYSQL_MEM=$(calculate_memory_configs "MYSQL_MEM")
 	#PHP_MEM=$(calculate_memory_configs "PHP_MEM")

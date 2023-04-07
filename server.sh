@@ -128,7 +128,7 @@ function setup_sshd
 	# download sshd_config
 	echo "Updating sshd_config... "
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/sshd/sshd_config > /tmp/sshd_config
-	cat /tmp/sshd_config | grep -q "ListenAddress" && cp /tmp/sshd_config /etc/ssh/sshd_config && print_colored green "Success: sshd_config updated." || print_colored red "Error downloading sshd_config ..."
+	cat /tmp/sshd_config | grep -q "ListenAddress" && cp /tmp/sshd_config /etc/ssh/sshd_config && print_colored green "Success:" "sshd_config updated." || print_colored red "Error downloading sshd_config ..."
 	rm /tmp/sshd_config
 	service sshd restart
 	
@@ -237,7 +237,7 @@ function install_ols() {
 	
 	# download ols config
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/ols/httpd_config.conf > /tmp/httpd_config.conf
-	cat /tmp/httpd_config.conf | grep -q "autoLoadHtaccess" && cp /tmp/httpd_config.conf /usr/local/lsws/conf/httpd_config.conf && print_colored green "Success: httpd_config.conf updated." || print_colored red "Error downloading httpd_config.conf ..."
+	cat /tmp/httpd_config.conf | grep -q "autoLoadHtaccess" && cp /tmp/httpd_config.conf /usr/local/lsws/conf/httpd_config.conf && print_colored green "Success:" "httpd_config.conf updated." || print_colored red "Error downloading httpd_config.conf ..."
 	rm /tmp/httpd_config.conf
 	chown -R lsadm:lsadm /usr/local/lsws/conf/
 	systemctl restart lshttpd
@@ -294,7 +294,7 @@ function install_php() {
 	# configure
 	# Download php.ini file
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/php/php.ini > /tmp/php.ini
-	if cat /tmp/php.ini | grep -q "max_input_vars"; then find /etc/php -type f -iname php.ini -exec cp /tmp/php.ini {} \; && print_colored green "Success: php.ini files updated."; else print_colored red "Error downloading php.ini ..."; fi
+	if cat /tmp/php.ini | grep -q "max_input_vars"; then find /etc/php -type f -iname php.ini -exec cp /tmp/php.ini {} \; && print_colored green "Success:" "php.ini files updated."; else print_colored red "Error downloading php.ini ..."; fi
 	rm /tmp/php.ini
 	
 	# cli adjustments
@@ -307,7 +307,7 @@ function install_php() {
 		
 	# Download php-fpm.conf
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/php/php-fpm.conf > /tmp/php-fpm.conf
-	if cat /tmp/php-fpm.conf | grep -q "error_log"; then find /etc/php -type f -iname php-fpm.conf -exec cp /tmp/php-fpm.conf {} \; && print_colored green "Success: php-fpm.conf file updated."; else print_colored red "Error downloading php-fpm.conf ..."; fi
+	if cat /tmp/php-fpm.conf | grep -q "error_log"; then find /etc/php -type f -iname php-fpm.conf -exec cp /tmp/php-fpm.conf {} \; && print_colored green "Success:" "php-fpm.conf file updated."; else print_colored red "Error downloading php-fpm.conf ..."; fi
 	rm /tmp/php-fpm.conf
 	find /etc/php -type f -iname php-fpm.conf | while read file; do
 		version=$(echo "$file" | awk -F'/' '{print $4}')
@@ -358,7 +358,7 @@ function install_percona() {
 	
 	# download my.cnf
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/sql/my.cnf > /tmp/my.cnf
-	cat /tmp/my.cnf | grep -q "mysqld" && cp /tmp/my.cnf /etc/mysql/my.cnf && print_colored green "Success: my.cnf updated." || print_colored red "Error downloading my.cnf ..."
+	cat /tmp/my.cnf | grep -q "mysqld" && cp /tmp/my.cnf /etc/mysql/my.cnf && print_colored green "Success:" "my.cnf updated." || print_colored red "Error downloading my.cnf ..."
 	rm /tmp/my.cnf
 	MYSQL_MEM=$(calculate_memory_configs "MYSQL_MEM")
 	MYSQL_POOL_COUNT=$(calculate_memory_configs "MYSQL_POOL_COUNT")
@@ -366,8 +366,7 @@ function install_percona() {
 	sed -i "s/^innodb_buffer_pool_instances.*$/innodb_buffer_pool_instances	 = $MYSQL_POOL_COUNT/" /etc/mysql/my.cnf
 	sed -i "s/^innodb_buffer_pool_size.*$/innodb_buffer_pool_size				= ${MYSQL_MEM}M/" /etc/mysql/my.cnf
 	sed -i "s/^innodb_log_file_size.*$/innodb_log_file_size					 = ${MYSQL_LOG_SIZE}M/" /etc/mysql/my.cnf
-	systemctl restart mysql
-	
+	systemctl restart mysql	
 	
 	# Stop MySQL service
 	systemctl stop mysql
@@ -413,7 +412,7 @@ function install_redis() {
 	
 	# redis config
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/redis/redis.conf > /tmp/redis.conf
-	cat /tmp/redis.conf | grep -q "maxmemory" && cp /tmp/redis.conf /etc/redis/redis.conf && print_colored green "Success: redis.conf updated." || print_colored red "Error downloading redis.conf ..."
+	cat /tmp/redis.conf | grep -q "maxmemory" && cp /tmp/redis.conf /etc/redis/redis.conf && print_colored green "Success:" "redis.conf updated." || print_colored red "Error downloading redis.conf ..."
 	rm /tmp/redis.conf
 	REDIS_MEM=$(calculate_memory_configs "REDIS_MEM")
 	sed -i "s/^maxmemory 128mb.*$/maxmemory ${REDIS_MEM}mb/" /etc/redis/redis.conf
@@ -435,7 +434,7 @@ function install_postfix() {
 	
 	# download postfix	
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/postfix/main.cf > /tmp/main.cf
-	cat /tmp/main.cf | grep -q "smtpd_banner" && cp /tmp/main.cf /etc/postfix/main.cf && print_colored green "Success: main.cf updated." || print_colored red "Error downloading main.cf ..."
+	cat /tmp/main.cf | grep -q "smtpd_banner" && cp /tmp/main.cf /etc/postfix/main.cf && print_colored green "Success:" "main.cf updated." || print_colored red "Error downloading main.cf ..."
 	rm /tmp/main.cf
 	echo 'postmaster: /dev/null\nroot: /dev/null' | sudo tee /etc/aliases > /dev/null
 	systemctl restart postfix
@@ -446,63 +445,42 @@ function install_postfix() {
 function before_install_display
 {	
 	# info
-	REDIS_MEM=$(calculate_memory_configs "REDIS_MEM")
+	CPU_CORES=$(calculate_memory_configs "CPU_CORES")
 	MYSQL_MEM=$(calculate_memory_configs "MYSQL_MEM")
-	PHP_MEM=$(calculate_memory_configs "PHP_MEM")
 	MYSQL_POOL_COUNT=$(calculate_memory_configs "MYSQL_POOL_COUNT")
-	PHP_POOL_COUNT=$(calculate_memory_configs "PHP_POOL_COUNT")
 	MYSQL_LOG_SIZE=$(calculate_memory_configs "MYSQL_LOG_SIZE")
+	REDIS_MEM=$(calculate_memory_configs "REDIS_MEM")
+	PHP_MEM=$(calculate_memory_configs "PHP_MEM")	
+	PHP_POOL_COUNT=$(calculate_memory_configs "PHP_POOL_COUNT")	
 	
-	echo ""
-    print_colored cyan "Server capabilities:"
-    print_colored yellow "OLS URL:       " "https://$(curl -s http://checkip.amazonaws.com || printf "0.0.0.0"):$OLS_PORT"
-    print_colored yellow "OLS username:  " "$OLS_USER"
-    print_colored yellow "OLS password:  " "$OLS_PASS"
-	print_colored yellow "OLS port:      " "$OLS_PORT"
 	echo ""
 	echo "---"
-	echo ""
-	
-    echo ""
+    print_colored cyan "Server capabilities:"
+    print_colored yellow "CPU cores:         " "https://$(curl -s http://checkip.amazonaws.com || printf "0.0.0.0"):$OLS_PORT"
+    print_colored yellow "OLS username:      " "$OLS_USER"
+    print_colored yellow "OLS password:      " "$OLS_PASS"
+	print_colored yellow "OLS port:          " "$OLS_PORT"
+	echo "---"
     print_colored cyan "OpenLiteSpeed:"
     print_colored yellow "OLS URL:           " "https://$(curl -s http://checkip.amazonaws.com || printf "0.0.0.0"):$OLS_PORT"
     print_colored yellow "OLS username:      " "$OLS_USER"
     print_colored yellow "OLS password:      " "$OLS_PASS"
-	
-	echo ""
 	echo "---"
-	echo ""
 	print_colored cyan "PerconaDB:"
     print_colored yellow "DB version:        " "8.0"
     print_colored yellow "DB auth:           " "root user using 'auth_socket' plugin"
-	print_colored yellow "InnoDB Pool Size:  " "MYSQL_MEM"
-	print_colored yellow "InnoDB Pool Count: " "MYSQL_POOL_COUNT"
-	
-	echo ""
+	print_colored yellow "InnoDB Pool Size:  " "${MYSQL_MEM}M"
+	print_colored yellow "InnoDB Pool Count: " "$MYSQL_POOL_COUNT"
 	echo "---"
-	echo ""
 	print_colored cyan "PHP:"
-	print_colored yellow "Versions:          " "PHP FPM 7.4, 8.0, 8.1 and 8.2 available"
+	print_colored yellow "Versions:          " "7.4, 8.0, 8.1 and 8.2 (fpm)"
+	print_colored yellow "PHP Workers:       " "7.4, 8.0, 8.1 and 8.2 (fpm)"
     print_colored yellow "OPCache:           " "Available up to 256M"
 	print_colored yellow "Redis:             " "Available up to ${REDIS_MEM}M (allkeys-lru)"
-	
-    echo ""
 	echo "---"
-	echo ""
-	print_colored cyan "Aditional packages:  " "Postfix"
-	
-	# for now...
-	FORCEYES="1"
-    if [ "$FORCEYES" != "1" ] ; then
-        printf 'Are these settings correct? Type n to quit, otherwise will continue. [Y/n]  '
-        read answer
-        if [ "$answer" = "N" ] || [ "$answer" = "n" ] ; then
-            print_colored red "Aborting installation!"
-            exit 0
-        fi
-    fi  
-    echo
-    print_colored cyan 'Starting installation >> >> >> >> >> >> >>'
+	print_colored cyan   "Aditional packages:" "Postfix"
+	echo "---"
+	echo ""	
 }
 
 
@@ -513,14 +491,31 @@ function before_install_display
 # run
 print_colored green "Starting install..."
 
-# display
+# display and ask permission
 before_install_display
 
+# confirmation request
+CONFIRM_SETUP="0"
+printf 'Are these settings correct? Type n to quit, otherwise will continue. [Y/n]  '
+read answer
+if [ "$answer" = "N" ] || [ "$answer" = "n" ] ; then
+    print_colored red "Aborting installation!"
+    exit 0
+else
+	CONFIRM_SETUP="0"
+	echo ""
+fi
+	
+print_colored cyan 'Starting installation >> >> >> >> >> >> >>'
+echo ""
+
 # install
-for FUNCTION_NAME in $(echo "$FUNC_NAMES" | tr ',' '\n' | uniq); do
-    echo "Running function: $FUNCTION_NAME"
-	"$FUNCTION_NAME"
-done
+if [ "$CONFIRM_SETUP" != "0" ] ; then
+	for FUNCTION_NAME in $(echo "$FUNC_NAMES" | tr ',' '\n' | uniq); do
+		echo "Running function: $FUNCTION_NAME"
+		"$FUNCTION_NAME"
+	done
+fi 
 
 # finish
 print_colored green "All done!"
