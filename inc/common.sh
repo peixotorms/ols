@@ -24,19 +24,30 @@ function gen_rand_pass() {
 
 # This function can be used to print text in a specified color using ANSI escape codes. 
 # It takes a color as its first argument (red, green, yellow, blue, magenta, cyan, or default), followed by the text that you want to print
+# ex: print_colored white "white text" "normal text"
 function print_colored() {
-    local color=$1
-    shift
-    case "$color" in
+    local color_code
+    case "$1" in
         red) color_code=31;;
         green) color_code=32;;
         yellow) color_code=33;;
         blue) color_code=34;;
         magenta) color_code=35;;
         cyan) color_code=36;;
+        white) color_code=1;;
+        bold) color_code=1;;
         *) color_code=0;;
     esac
-    printf "\033[${color_code}m%s\033[0m\n" "$@"
+    shift
+    if [[ "$color_code" == "0" ]]; then
+        printf "%s\n" "$@"
+    else
+        if [[ "$color_code" == "1" ]]; then
+            printf "\033[1m%s\033[0m\n" "$@"
+        else
+            printf "\033[${color_code}m%s\033[0m\n" "$@"
+        fi
+    fi
 }
 
 

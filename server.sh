@@ -7,22 +7,31 @@
 #		Author: Raul Peixoto, WP Raiser										 #
 ##############################################################################
 
+# import common functions
+source <(curl -sSf https://raw.githubusercontent.com/peixotorms/ols/main/inc/common.sh)
+
 # defaults
+OLS_PORT="7080"
+OLS_USER="admin"
+OLS_PASS=$(gen_rand_pass)
+
+
 # Parse command-line arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
         -h | --help ) # Print usage instructions
             echo ""
-            printf "Usage: bash [--functions <function_names>] [-u | --user <username>] [-p | --pass <password>] [-v | --verbose] [-h | --help]\n"
+            printf "Usage: bash [--functions <function_names>] [-u | --ols_user <username>] [-p | --ols_pass <password>] [-v | --verbose] [-h | --help]\n"
             echo ""
             printf "Options:\n"
             printf "%-4s%-11s%-49s\n" "" "-f | --functions" "Run a comma-separated list of function names:"
-            IFS=',' read -ra FUNC_NAMES <<< "update_system,setup_sshd,setup_repositories,setup_firewall,install_basic_packages,install_ols,install_php,install_wp_cli,install_percona,install_redis,install_postfix"
+            IFS=',' read -ra FUNC_NAMES <<< "update_system, setup_sshd, setup_repositories, setup_firewall, install_basic_packages, install_ols, install_php, install_wp_cli, install_percona, install_redis, install_postfix"
             for FUNC_NAME in "${FUNC_NAMES[@]}"; do
                 printf "%-15s%-48s\n" "" "$FUNC_NAME"
             done
-            printf "%-4s%-11s%-49s\n" "" "--user" "Customize OpenLiteSpeed username"
-            printf "%-4s%-11s%-49s\n" "" "--pass" "Customize OpenLiteSpeed password"
+            printf "%-4s%-11s%-49s\n" "" "--ols_user" "Customize OpenLiteSpeed username"
+            printf "%-4s%-11s%-49s\n" "" "--ols_pass" "Customize OpenLiteSpeed password"
+			printf "%-4s%-11s%-49s\n" "" "--ols_port" "Customize OpenLiteSpeed port"
             printf "%-4s%-11s%-49s\n" "" "--verbose | -v" "Enable verbose mode"
             printf "%-4s%-11s%-49s\n" "" "--help | -h" "Show this help message"
             echo ""
@@ -38,21 +47,30 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --ols_user ) # Set OLS_USER
-            if [ -n "$2" ]; then
+            if [[ "$2" =~ ^[[:alnum:]]{8,32}$ ]]; then
                 OLS_USER="$2"
             else
-                echo "Error: OLS_USER cannot be empty." >&2
+                print_colored red "Error: The specified OLS_USER is invalid." "Password must be between 8-32 alphanumeric chars."
                 exit 1
             fi
             shift
             shift
             ;;
         --ols_pass ) # Set OLS_PASS
-            if [ -n "$2" ]; then
+            if [[ "$2" =~ ^[[:alnum:],+=\-_!@]{8,32}$ ]]; then
                 OLS_PASS="$2"
             else
-                echo "Error: OLS_PASS cannot be empty." >&2
+                print_colored red "Error: The specified OLS_PASS is invalid." "Password must be 8-32 chars, alphanumeric, and may include ,+=-_!@"
                 exit 1
+            fi
+            shift
+            shift
+            ;;
+		--ols_port ) # Set OLS_PORT
+            if [[ "$2" =~ ^[0-9]+$ ]] && [ "$2" -ge 1 ] && [ "$2" -le 65535 ]; then
+                OLS_PORT="$2"
+            else
+                print_colored yellow "Warning:" "Invalid port specified: $2" "Using default port number 7080 instead."
             fi
             shift
             shift
@@ -62,7 +80,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         * ) # Invalid option
-            echo "Invalid option: $1" >&2
+            print_colored red "Invalid option: $1"
             exit 1
             ;;
     esac
@@ -70,10 +88,6 @@ done
 
 
 # START FUNCTIONS
-
-# import common functions
-source <(curl -sSf https://raw.githubusercontent.com/peixotorms/ols/main/inc/common.sh)
-
 
 # This function downloads and updates configuration files for sshd
 function setup_sshd
@@ -168,6 +182,7 @@ function install_ols() {
 	
 	# Set admin credentials
 	if [ $? = 0 ] ; then
+		[ -z "$OLS_USER" ] && OLS_USER="admin"
 		[ -z "$OLS_PASS" ] && OLS_PASS=$(gen_rand_pass)
 		ENCRYPT_PASS=`"/usr/local/lsws/admin/fcgi-bin/admin_php" -q "/usr/local/lsws/admin/misc/htpasswd.php" $OLS_PASS`
 		if [ $? = 0 ] ; then
@@ -177,6 +192,16 @@ function install_ols() {
 			fi
 		fi
 	fi
+	
+	# change default port
+	if [ ${OLS_PORT} != 7080 ]; then
+        if [ -e /usr/local/lsws/admin/conf/admin_config.conf ]; then 
+			sed -i "s/7080/${OLS_PORT}/g" /usr/local/lsws/admin/conf/admin_config.conf
+			print_colored green "OLS port has changed to ${OLS_PORT}"
+		else
+			print_colored red "Error changing OLS port on /usr/local/lsws/admin/conf/admin_config.conf (not found)"
+		fi
+    fi
 	
 	# download ols config
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/ols/httpd_config.conf > /tmp/httpd_config.conf
