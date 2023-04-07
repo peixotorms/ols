@@ -224,8 +224,24 @@ function install_ols() {
 	# start
 	echo "Installing OpenLiteSpeed... "
 
-	# Install OLS
-	DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" openlitespeed lsphp80 lsphp80-common lsphp80-curl
+	# packages
+	all_packages=""
+	for version in 74 80 81 82; do
+		available_packages="openlitespeed"
+		for package in lsphp${version} lsphp${version}-mysql lsphp${version}-imap lsphp${version}-curl lsphp${version}-common lsphp${version}-json lsphp${version}-imagick lsphp${version}-opcache lsphp${version}-redis lsphp${version}-memcached lsphp${version}-intl; do
+			if apt-cache show $package > /dev/null 2>&1; then
+			available_packages="$available_packages $package"
+			fi
+		done
+		if [[ ! -z $available_packages ]]; then
+			all_packages="$all_packages $available_packages"
+		fi
+	done
+	if [[ ! -z $all_packages ]]; then
+		DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" $all_packages
+	else
+		print_colored red "Error: No packages available for any LSPHP version."
+	fi
 	
 	# Set admin credentials
 	if [ $? = 0 ] ; then
@@ -254,6 +270,15 @@ function install_ols() {
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/ols/httpd_config.conf > /tmp/httpd_config.conf
 	cat /tmp/httpd_config.conf | grep -q "autoLoadHtaccess" && cp /tmp/httpd_config.conf /usr/local/lsws/conf/httpd_config.conf && print_colored green "Success:" "httpd_config.conf updated." || print_colored red "Error downloading httpd_config.conf ..."
 	rm /tmp/httpd_config.conf
+	
+	# set lsphp pool concurrency limit
+	LSPHP_POOL_COUNT=$(calculate_memory_configs "LSPHP_POOL_COUNT")
+	PHP_BACKLOG=$(calculate_memory_configs "PHP_BACKLOG")
+	sed -i "s/^.*maxConns.*$/  maxConns                ${LSPHP_POOL_COUNT}/g" /usr/local/lsws/conf/httpd_config.conf
+	sed -i "s/^.*PHP_LSAPI_CHILDREN.*$/  env                     PHP_LSAPI_CHILDREN=${LSPHP_POOL_COUNT}/g" /usr/local/lsws/conf/httpd_config.conf
+	sed -i "s/^.*backlog.*$/  backlog                 ${PHP_BACKLOG}/g" /usr/local/lsws/conf/httpd_config.conf
+	
+	# permissions
 	chown -R lsadm:lsadm /usr/local/lsws/conf/
 	systemctl restart lshttpd
 	
@@ -324,9 +349,11 @@ function install_php() {
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/php/php-fpm.conf > /tmp/php-fpm.conf
 	if cat /tmp/php-fpm.conf | grep -q "error_log"; then find /etc/php -type f -iname php-fpm.conf -exec cp /tmp/php-fpm.conf {} \; && print_colored green "Success:" "php-fpm.conf file updated."; else print_colored red "Error downloading php-fpm.conf ..."; fi
 	rm /tmp/php-fpm.conf
+	PHP_BACKLOG=$(calculate_memory_configs "PHP_BACKLOG")
 	find /etc/php -type f -iname php-fpm.conf | while read file; do
 		version=$(echo "$file" | awk -F'/' '{print $4}')
 		sed -i "s/#php_ver#/$version/g" "$file"
+		sed -i "s/^.*backlog.*$/listen.backlog = ${PHP_BACKLOG}/g" "$file"
 		systemctl stop php${version}-fpm
 	done
 	
@@ -470,6 +497,7 @@ function before_install_display
 	REDIS_MEM=$(calculate_memory_configs "REDIS_MEM")
 	PHP_MEM=$(calculate_memory_configs "PHP_MEM")	
 	PHP_POOL_COUNT=$(calculate_memory_configs "PHP_POOL_COUNT")	
+	LSPHP_POOL_COUNT=$(calculate_memory_configs "LSPHP_POOL_COUNT")
 	
 	echo ""
 	print_chars 60 -
@@ -492,8 +520,10 @@ function before_install_display
 	print_colored yellow "InnoDB Pool Count:   " "$MYSQL_POOL_COUNT"
 	echo ""
 	print_colored cyan   "PHP:                 "
-	print_colored yellow "Versions:            " "7.4, 8.0, 8.1 and 8.2 (fpm)"
-	print_colored yellow "PHP Workers:         " "$PHP_POOL_COUNT"
+	print_colored yellow "FPM Versions:        " "7.4, 8.0, 8.1 and 8.2 (fpm)"
+	print_colored yellow "FPM Workers:         " "$PHP_POOL_COUNT"
+	print_colored yellow "LSPHP Versions:      " "7.4, 8.0, 8.1 and 8.2 (lsapi)"
+	print_colored yellow "LSPHP Workers:       " "$LSPHP_POOL_COUNT"
     print_colored yellow "OPCache:             " "Available up to 256M"
 	print_colored yellow "Redis:               " "Available up to ${REDIS_MEM}M (allkeys-lru)"
 	echo ""
