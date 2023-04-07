@@ -39,13 +39,24 @@ function print_colored() {
         *) color_code=0;;
     esac
     shift
+
     if [[ "$color_code" == "0" ]]; then
         printf "%s\n" "$@"
     else
         if [[ "$color_code" == "1" ]]; then
-            printf "\033[1m%s\033[0m\n" "$@"
+            if [[ "$#" -eq 1 ]]; then
+                printf "\033[1m%s\033[0m\n" "$@"
+            else
+                printf "\033[1m%s\033[0m %s" "$1" "${@:2}"
+                printf "\n"
+            fi
         else
-            printf "\033[${color_code}m%s\033[0m\n" "$@"
+            if [[ "$#" -eq 1 ]]; then
+                printf "\033[${color_code}m%s\033[0m\n" "$@"
+            else
+                printf "\033[${color_code}m%s\033[0m %s" "$1" "${@:2}"
+                printf "\n"
+            fi
         fi
     fi
 }
