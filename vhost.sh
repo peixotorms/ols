@@ -426,11 +426,20 @@ create_letsencrypt_ssl() {
 
 # create ols virtual host and listener
 create_ols_vhost() {
-
 	
+	# create vhost file
+	VHCONF="/usr/local/lsws/conf/vhosts/$domain/vhconf.conf"
+	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/ols/vhconf.conf > /tmp/vhconf.conf
+	cat /tmp/vhconf.conf | grep -q "docRoot" && cp /tmp/vhconf.conf ${VHCONF} && print_colored green "Success: vhconf.conf updated." || print_colored red "Error downloading vhconf.conf ..."
+	rm /tmp/vhconf.conf
 	
-	
-	
+	# fix paths and other info
+	sed -i "s/##domain##/${domain}/g" "${VHCONF}"
+	sed -i "s/##aliases##/${aliases}/g" "${VHCONF}"
+	sed -i "s/##path##/${path}/g" "${VHCONF}"
+	sed -i "s/##user##/${sftp_user}/g" "${VHCONF}"
+	scripthandler="lsphp${php//./}";
+	sed -i "s/##php##/${scripthandler}/g" "${VHCONF}"
 	
 	systemctl restart lsws
 }
