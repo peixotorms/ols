@@ -257,14 +257,12 @@ function install_ols() {
 	fi
 	
 	# change default port
-	if [ ${OLS_PORT} != 7080 ]; then
-        if [ -e /usr/local/lsws/admin/conf/admin_config.conf ]; then 
-			sed -i "s/7080/${OLS_PORT}/g" /usr/local/lsws/admin/conf/admin_config.conf
-			print_colored magenta "Warning:" "OLS port has changed to ${OLS_PORT}"
-		else
-			print_colored red "Error:" "/usr/local/lsws/admin/conf/admin_config.conf not found."
-		fi
-    fi
+    if [ -e /usr/local/lsws/admin/conf/admin_config.conf ]; then 
+		sed -i "s/^.*address .*$/  address               *:${OLS_PORT}/g" /usr/local/lsws/admin/conf/admin_config.conf
+		print_colored magenta "Warning:" "OLS port updated to ${OLS_PORT}"
+	else
+		print_colored red "Error:" "/usr/local/lsws/admin/conf/admin_config.conf not found."
+	fi
 	
 	# download ols config
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/ols/httpd_config.conf > /tmp/httpd_config.conf
