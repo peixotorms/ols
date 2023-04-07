@@ -73,13 +73,24 @@ function calculate_memory_configs() {
 	local MYSQL_MEM=$(($RAM/2))
 	local PHP_MEM=$(($RAM - $REDIS_MEM - $MYSQL_MEM))
 	local CPU_CORES=$(nproc)
+	local DISK_AVAILABLE=$(df -BG /home | awk 'NR==2{print $4}')
+	local IP=$(curl -s http://checkip.amazonaws.com || printf "0.0.0.0")
 	
 	case $OPTION in
+		"IP")
+				echo $IP
+				;;
 		"REDIS_MEM")
 				echo $REDIS_MEM
 				;;
 		"CPU_CORES")
 				echo $CPU_CORES
+				;;
+		"TOTAL_RAM")
+				echo $TOTAL_RAM
+				;;
+		"DISK_AVAILABLE")
+				echo $DISK_AVAILABLE
 				;;
 		"MYSQL_MEM")
 				echo $MYSQL_MEM
@@ -110,7 +121,10 @@ function calculate_memory_configs() {
 	esac
 	
 	# usage
+	#IP=$(calculate_memory_configs "IP")
 	#CPU_CORES=$(calculate_memory_configs "CPU_CORES")
+	#TOTAL_RAM=$(calculate_memory_configs "TOTAL_RAM")
+	#DISK_AVAILABLE=$(calculate_memory_configs "DISK_AVAILABLE")
 	#REDIS_MEM=$(calculate_memory_configs "REDIS_MEM")
 	#MYSQL_MEM=$(calculate_memory_configs "MYSQL_MEM")
 	#PHP_MEM=$(calculate_memory_configs "PHP_MEM")
@@ -150,6 +164,7 @@ function validate_php_version() {
     return 1
 }
 
+
 # This function generates a valid user name based on the given parameter
 function generate_user_name() {
     local user_name=$(echo "$1" | tr -dc '[:alnum:]' | tr '[:upper:]' '[:lower:]')
@@ -159,7 +174,15 @@ function generate_user_name() {
     echo "${user_name:0:32}"
 }
 
+
 # Create folder if it doesn't exist
 function create_folder { [[ ! -d "$1" ]] && mkdir -p "$1"; }
 
+
+# Prints a specified number of characters on a single line.
+# Parameters:
+#   $1 - the number of characters to print
+#   $2 - the character to print
+# example: print_chars 60 -
+print_chars() { for ((i=1; i<=$1; i++)); do printf '%s' "$2"; done; printf '\n'; }
 

@@ -445,8 +445,11 @@ function install_postfix() {
 function before_install_display
 {	
 	# info
+	IP=$(calculate_memory_configs "IP")
 	CPU_CORES=$(calculate_memory_configs "CPU_CORES")
+	TOTAL_RAM=$(calculate_memory_configs "TOTAL_RAM")
 	MYSQL_MEM=$(calculate_memory_configs "MYSQL_MEM")
+	DISK_AVAILABLE=$(calculate_memory_configs "DISK_AVAILABLE")
 	MYSQL_POOL_COUNT=$(calculate_memory_configs "MYSQL_POOL_COUNT")
 	MYSQL_LOG_SIZE=$(calculate_memory_configs "MYSQL_LOG_SIZE")
 	REDIS_MEM=$(calculate_memory_configs "REDIS_MEM")
@@ -454,32 +457,32 @@ function before_install_display
 	PHP_POOL_COUNT=$(calculate_memory_configs "PHP_POOL_COUNT")	
 	
 	echo ""
-	echo "---"
+	print_chars 60 -
     print_colored cyan "Server capabilities:"
-    print_colored yellow "CPU cores:         " "https://$(curl -s http://checkip.amazonaws.com || printf "0.0.0.0"):$OLS_PORT"
-    print_colored yellow "OLS username:      " "$OLS_USER"
-    print_colored yellow "OLS password:      " "$OLS_PASS"
-	print_colored yellow "OLS port:          " "$OLS_PORT"
-	echo "---"
+    print_colored yellow "Public IP:         " "$IP"
+    print_colored yellow "CPU cores:         " "$CPU_CORES"
+    print_colored yellow "RAM Size:          " "$TOTAL_RAM"
+	print_colored yellow "Disk Available:    " "$DISK_AVAILABLE"
+	echo ""
     print_colored cyan "OpenLiteSpeed:"
-    print_colored yellow "OLS URL:           " "https://$(curl -s http://checkip.amazonaws.com || printf "0.0.0.0"):$OLS_PORT"
+    print_colored yellow "OLS URL:           " "https://${IP}:$OLS_PORT"
     print_colored yellow "OLS username:      " "$OLS_USER"
     print_colored yellow "OLS password:      " "$OLS_PASS"
-	echo "---"
+	echo ""
 	print_colored cyan "PerconaDB:"
     print_colored yellow "DB version:        " "8.0"
     print_colored yellow "DB auth:           " "root user using 'auth_socket' plugin"
 	print_colored yellow "InnoDB Pool Size:  " "${MYSQL_MEM}M"
 	print_colored yellow "InnoDB Pool Count: " "$MYSQL_POOL_COUNT"
-	echo "---"
+	echo ""
 	print_colored cyan "PHP:"
 	print_colored yellow "Versions:          " "7.4, 8.0, 8.1 and 8.2 (fpm)"
 	print_colored yellow "PHP Workers:       " "7.4, 8.0, 8.1 and 8.2 (fpm)"
     print_colored yellow "OPCache:           " "Available up to 256M"
 	print_colored yellow "Redis:             " "Available up to ${REDIS_MEM}M (allkeys-lru)"
-	echo "---"
+	echo ""
 	print_colored cyan   "Aditional packages:" "Postfix"
-	echo "---"
+	print_chars 60 -
 	echo ""	
 }
 
