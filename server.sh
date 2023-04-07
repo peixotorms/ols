@@ -41,26 +41,39 @@ while [[ $# -gt 0 ]]; do
             echo ""
             exit 0
             ;;
-       --functions | -f )
+		--functions | -f )
 			# Get the function names from the --functions flag
-			REQUESTED_NAMES=$(echo "$2" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | uniq | tr '\n' ',')
+			IFS=', ' read -ra REQUESTED_NAMES <<< "$2"
 			
 			# Only filter and merge function names if --functions is not empty
-			if [[ -n "$REQUESTED_NAMES" ]]; then
-				# Remove any requested function names that are not part of the default list
-				NAMES=$(echo "$REQUESTED_NAMES" | tr ',' '\n' | grep -f <(echo "$FUNC_NAMES" | tr ',' '\n') | tr '\n' ',')
+			if [[ ${#REQUESTED_NAMES[@]} -gt 0 ]]; then
+				# Initialize names arrays
+				NAMES=()
+				DEFAULT_NAMES=()
 				
-				# Remove any default function names that were not requested
-				DEFAULT_NAMES=$(echo "$FUNC_NAMES" | tr ',' '\n' | grep -f <(echo "$REQUESTED_NAMES" | tr ',' '\n') | tr '\n' ',')
+				# Filter requested function names and default function names
+				for func_name in ${FUNC_NAMES//,/ }; do
+					found=false
+					for name in "${REQUESTED_NAMES[@]}"; do
+						if [[ "$name" == "$func_name" ]]; then
+							NAMES+=("$func_name")
+							found=true
+							break
+						fi
+					done
+					if ! $found; then
+						DEFAULT_NAMES+=("$func_name")
+					fi
+				done
 				
 				# Use the requested function names if any, otherwise use the default names
-				if [[ -n "$NAMES" ]]; then
-					FUNC_NAMES="$NAMES"
+				if [[ ${#NAMES[@]} -gt 0 ]]; then
+					FUNC_NAMES="$(IFS=','; echo "${NAMES[*]}")"
 				else
-					FUNC_NAMES="$DEFAULT_NAMES"
+					FUNC_NAMES="$(IFS=','; echo "${DEFAULT_NAMES[*]}")"
 				fi
 			fi
-			
+
 			shift
 			shift
 			;;
@@ -429,53 +442,84 @@ function install_postfix() {
 	
 }
 
+
+function before_install_display
+{	
+	# info
+	REDIS_MEM=$(calculate_memory_configs "REDIS_MEM")
+	MYSQL_MEM=$(calculate_memory_configs "MYSQL_MEM")
+	PHP_MEM=$(calculate_memory_configs "PHP_MEM")
+	MYSQL_POOL_COUNT=$(calculate_memory_configs "MYSQL_POOL_COUNT")
+	PHP_POOL_COUNT=$(calculate_memory_configs "PHP_POOL_COUNT")
+	MYSQL_LOG_SIZE=$(calculate_memory_configs "MYSQL_LOG_SIZE")
+	
+	echo ""
+    print_colored cyan "Server capabilities:"
+    print_colored yellow "OLS URL:       " "https://$(curl -s http://checkip.amazonaws.com || printf "0.0.0.0"):$OLS_PORT"
+    print_colored yellow "OLS username:  " "$OLS_USER"
+    print_colored yellow "OLS password:  " "$OLS_PASS"
+	print_colored yellow "OLS port:      " "$OLS_PORT"
+	echo ""
+	echo "---"
+	echo ""
+	
+    echo ""
+    print_colored cyan "OpenLiteSpeed:"
+    print_colored yellow "OLS URL:           " "https://$(curl -s http://checkip.amazonaws.com || printf "0.0.0.0"):$OLS_PORT"
+    print_colored yellow "OLS username:      " "$OLS_USER"
+    print_colored yellow "OLS password:      " "$OLS_PASS"
+	
+	echo ""
+	echo "---"
+	echo ""
+	print_colored cyan "PerconaDB:"
+    print_colored yellow "DB version:        " "8.0"
+    print_colored yellow "DB auth:           " "root user using 'auth_socket' plugin"
+	print_colored yellow "InnoDB Pool Size:  " "MYSQL_MEM"
+	print_colored yellow "InnoDB Pool Count: " "MYSQL_POOL_COUNT"
+	
+	echo ""
+	echo "---"
+	echo ""
+	print_colored cyan "PHP:"
+	print_colored yellow "Versions:          " "PHP FPM 7.4, 8.0, 8.1 and 8.2 available"
+    print_colored yellow "OPCache:           " "Available up to 256M"
+	print_colored yellow "Redis:             " "Available up to ${REDIS_MEM}M (allkeys-lru)"
+	
+    echo ""
+	echo "---"
+	echo ""
+	print_colored cyan "Aditional packages:  " "Postfix"
+	
+	# for now...
+	FORCEYES="1"
+    if [ "$FORCEYES" != "1" ] ; then
+        printf 'Are these settings correct? Type n to quit, otherwise will continue. [Y/n]  '
+        read answer
+        if [ "$answer" = "N" ] || [ "$answer" = "n" ] ; then
+            print_colored red "Aborting installation!"
+            exit 0
+        fi
+    fi  
+    echo
+    print_colored cyan 'Starting installation >> >> >> >> >> >> >>'
+}
+
+
+
 # END FUNCTIONS
 
 
 # run
-print_colored cyan "Starting install..."
+print_colored green "Starting install..."
 
-# Run selected functions in order
-for FUNCTION_NAME in $(echo "$FUNCTION_NAMES" | tr ',' '\n' | uniq); do
-	case $FUNCTION_NAME in
-		"update_system")
-			update_system
-			;;
-		"setup_sshd")
-			setup_sshd
-			;;
-		"setup_repositories")
-			setup_repositories
-			;;
-		"setup_firewall")
-			setup_firewall
-			;;
-		"install_basic_packages")
-			install_basic_packages
-			;;
-		"install_ols")
-			install_ols
-			;;
-		"install_php")
-			install_php
-			;;
-		"install_wp_cli")
-			install_wp_cli
-			;;
-		"install_percona")
-			install_percona
-			;;
-		"install_redis")
-			install_redis
-			;;
-		"install_postfix")
-			install_postfix
-			;;
-		*)
-			print_colored red "Invalid function name: $FUNCTION_NAME"
-			exit 1
-			;;
-	esac
+# display
+before_install_display
+
+# install
+for FUNCTION_NAME in $(echo "$FUNC_NAMES" | tr ',' '\n' | uniq); do
+    echo "Running function: $FUNCTION_NAME"
+	"$FUNCTION_NAME"
 done
 
 # finish
