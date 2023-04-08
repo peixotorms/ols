@@ -408,6 +408,11 @@ install_wp() {
 
 # create ols virtual host and listener
 create_ols_vhost() {
+
+	# defaults
+	PHP_POOL_COUNT=$(calculate_memory_configs "PHP_POOL_COUNT")
+	PHP_BACKLOG=$(calculate_memory_configs "PHP_BACKLOG")
+	CPU_CORES=$(calculate_memory_configs "CPU_CORES")
 	
 	# vhconf.conf file for the virtual hosting settings
 	VHDIR="/usr/local/lsws/conf/vhosts/${domain}"
@@ -422,16 +427,16 @@ create_ols_vhost() {
 	sed -i "s~##aliases##~${aliases}~g" "${VHCONF}"
 	sed -i "s~##path##~${vpath}~g" "${VHCONF}"
 	sed -i "s~##user##~${sftp_user}~g" "${VHCONF}"
-	scripthandler="lsphp${php//./}"
-	sed -i "s~##php##~${scripthandler}~g" "${VHCONF}"
-
+	sed -i "s~##cpucores##~${CPU_CORES}~g" "${VHCONF}"
+	sed -i "s~##poolsize##~${PHP_POOL_COUNT}~g" "${VHCONF}"
+	sed -i "s~##php##~lsphp${php//./}~g" "${VHCONF}"
 
 	# create map rule for the listener block
 	if [ -n "$aliases" ]; then
 	  aliases_map="$(echo "$aliases" | sed 's/,/, /g')"
 	  newmap="map ${domain} ${domain}, ${aliases_map}"
 	else
-	  newmap="map ${domain}"
+	  newmap="map ${domain} ${domain}"
 	fi
 
 	# append it to httpd_config.conf
@@ -463,11 +468,10 @@ create_ols_vhost() {
 	
 	# restart
 	systemctl restart lsws
-		
+	
+	
 	# generate php pools
 	find /etc/php/*/fpm/pool.d -maxdepth 1 -type f -name "${domain}.conf" -delete
-	PHP_POOL_COUNT=$(calculate_memory_configs "PHP_POOL_COUNT")
-	PHP_BACKLOG=$(calculate_memory_configs "PHP_BACKLOG")
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/php/pool.conf > /tmp/pool.conf
 	for version in 7.4 8.0 8.1 8.2; do
 		CHECK="/etc/php/${version}/fpm/pool.d"
