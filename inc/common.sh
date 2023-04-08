@@ -191,3 +191,16 @@ function create_folder { [[ ! -d "$1" ]] && mkdir -p "$1"; }
 # example: print_chars 60 -
 print_chars() { for ((i=1; i<=$1; i++)); do printf '%s' "$2"; done; printf '\n'; }
 
+
+# start from 9000 and return the next available tcp port for php fpm
+function find_available_php_port {
+    local port=9000
+    while [[ $port -lt 12000 ]]; do
+        if ! lsof -i :$port > /dev/null; then
+            echo "$port"
+            return
+        fi
+        ((port++))
+    done
+}
+
