@@ -504,7 +504,7 @@ create_letsencrypt_ssl() {
 		echo "Testing ${domain}..."
 		response=$(curl -sSL -H "Cache-Control: no-cache" -k "http://${domain}/ssl-test.txt?nocache=$(date +%s)")
 		if [[ "${response}" == "OK" ]]; then
-			print_colored yellow "${domain} found"
+			print_colored green "Success:" "${domain} found"
 		else
 			print_colored red "Error:" "Failed to open: http://${domain}/ssl-test.txt?nocache=$(date +%s)"
 			all_successful=false
