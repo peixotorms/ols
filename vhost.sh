@@ -458,10 +458,10 @@ create_ols_vhost() {
 		if [ -d "${CHECK}" ]; then
 			AVAIL_POOL_PORT=$(find_available_php_port)
 			cat /tmp/pool.conf | grep -q "user" && cp /tmp/pool.conf ${POOL_LOC} && print_colored green "Success: pool.conf created for for PHP ${version} FPM." || print_colored red "Error downloading pool.conf ..."
-			sed -i "s/#user#/$sftp_user/g" "${POOL_LOC}"
-			sed -i "s/#port#/$AVAIL_POOL_PORT/g" "${POOL_LOC}"
-			sed -i "s/#children#/$PHP_POOL_COUNT/g" "${POOL_LOC}"
-			sed -i "s/#vpath#/${vpath}/g" "${POOL_LOC}"
+			sed -i "s~#user#~$sftp_user~g" "${POOL_LOC}"
+			sed -i "s~#port#~$AVAIL_POOL_PORT~g" "${POOL_LOC}"
+			sed -i "s~#children#~$PHP_POOL_COUNT~g" "${POOL_LOC}"
+			sed -i "s~#vpath#~${vpath}~g" "${POOL_LOC}"
 			sleep 5
 			systemctl restart php${version}-fpm
 			((AVAIL_POOL_PORT++))
