@@ -151,13 +151,15 @@ function update_limits
 	grep -qxF '127.0.0.1 localhost' /etc/hosts || echo "127.0.0.1 localhost" >> /etc/hosts
 	
 	echo 'Increasing unix socket limits...'
-	ulimit -n 65000
+	silent ulimit -n 65000
 	grep -qxF "* soft nofile 65000" /etc/security/limits.conf || echo "* soft nofile 65000" >> /etc/security/limits.conf
 	grep -qxF "* hard nofile 65000" /etc/security/limits.conf || echo "* hard nofile 65000" >> /etc/security/limits.conf
-	echo "net.core.somaxconn = 65000" | tee /etc/sysctl.d/99-somaxconn.conf && silent sysctl --system
+	echo "net.core.somaxconn = 65000" | tee /etc/sysctl.d/99-somaxconn.conf >/dev/null && silent sysctl --system
 	
 	echo "Increasing network buffer size..."
-	echo "net.ipv4.tcp_rmem = 4096 4194304 33554432" && echo "net.ipv4.tcp_wmem = 4096 4194304 33554432" | tee -a /etc/sysctl.d/99-tcp_mem.conf && silent sysctl --system	
+	echo "net.ipv4.tcp_rmem = 4096 4194304 33554432" > /etc/sysctl.d/99-tcp_mem.conf
+	echo "net.ipv4.tcp_wmem = 4096 4194304 33554432" >> /etc/sysctl.d/99-tcp_mem.conf
+	silent sysctl --system
 
 	# adjust swap to 2GB
 	# Get current swap size in gigabytes
@@ -171,18 +173,18 @@ function update_limits
 	if [ "${current_swap_size_gb%.*}" -ne "$target_swap_size_gb" ]; then
 		swapoff -a
 		[ -f /swapfile ] && rm /swapfile
-		fallocate -l 2G /swapfile
+		silent fallocate -l 2G /swapfile
 		chmod 600 /swapfile
-		mkswap /swapfile
-		swapon /swapfile
+		silent mkswap /swapfile
+		silent swapon /swapfile
 
 		# Update /etc/fstab to persist swap across reboots
 		grep -v '/swapfile' /etc/fstab > /tmp/fstab_no_swap
 		echo '/swapfile none swap sw 0 0' >> /tmp/fstab_no_swap
 		mv /tmp/fstab_no_swap /etc/fstab
-		print_colored green "Swap file adjusted to 2G."
+		print_colored green "Success:" "Swap file adjusted to 2G."
 	else
-		print_colored cyan "The current swap size is already 2GB."
+		print_colored cyan "Error:" "The current swap size is already 2GB."
 	fi
 
 	
