@@ -276,10 +276,10 @@ vhost_create_user() {
 	fi
 	
 	# permissions
-	chown -R "${sftp_user}":"${sftp_user}" "${path}"
+	chown -R root:root "${path}"
+	chown -R "${sftp_user}":"${sftp_user}" "${path}/backups"
+	chown -R "${sftp_user}":"${sftp_user}" "${path}/www"
 	chmod -R 0755 "${path}"
-	chown root:root "${path}"
-	chmod 750 "${path}"
 
 }
 
