@@ -47,7 +47,7 @@ while true; do
         --domain)
             domain="${2}"; shift 2
             if ! validate_domain "$domain"; then
-                print_colored red "Invalid domain name $domain"; exit 1
+                print_colored red "Error:" "Invalid domain name $domain"; exit 1
             fi
 			
 			# Create new variable without www subdomain
@@ -86,18 +86,18 @@ while true; do
 				# Check each alias domain using the validate_domain function
 				for alias in "${alias_list[@]}"; do
 					if ! validate_domain "$alias"; then
-						print_colored red "Invalid alias domain: $alias"; exit 1
+						print_colored red "Error:" "Invalid alias domain: $alias"; exit 1
 					fi
 				done
 				# Ensure that $domain is not in the alias_list array
 				if [[ " ${alias_list[@]} " =~ " $domain " ]]; then
-					print_colored red "Domain name cannot be an alias: $domain"; exit 1
+					print_colored red "Error:" "Domain name cannot be an alias: $domain"; exit 1
 				fi
 				# Overwrite the aliases variable with the imploded alias_list, separated with comma
 				aliases="$(IFS=','; echo "${alias_list[*]}")"
 			else
 				# The input string is invalid, so print an error message and exit.
-				print_colored red "Invalid aliases: ${2:-}"; exit 1
+				print_colored red "Error:" "Invalid aliases: ${2:-}"; exit 1
 			fi
 			;;
         --ssl)
@@ -106,7 +106,7 @@ while true; do
                     ssl="${2,,}"; shift 2
                     ;;
                 *)
-                    print_colored red "Invalid SSL value: $2. Must be 'yes' or 'no'."; exit 1
+                    print_colored red "Error:" "Invalid SSL value: $2. Must be 'yes' or 'no'."; exit 1
                     ;;
             esac
             ;;
@@ -116,14 +116,14 @@ while true; do
                     php="${2,,}"; shift 2
                     ;;
                 *)
-                    print_colored red "Invalid PHP version: $2. Must be 7.4, 8.0, 8.1, or 8.2."; exit 1
+                    print_colored red "Error:" "Invalid PHP version: $2. Must be 7.4, 8.0, 8.1, or 8.2."; exit 1
                     ;;
             esac
             ;;
         --vpath)
             path="${2:-/home/sites/$domain_no_www}"; shift 2
             if [[ "${vpath%/}" != *"/$domain_no_www" ]]; then
-                print_colored red "Invalid path: must include domain as the last directory name"; exit 1
+                print_colored red "Error:" "Invalid path: must include domain as the last directory name"; exit 1
             fi
             ;;
         --sftp_user)
@@ -135,9 +135,9 @@ while true; do
         --sftp_pass)
 			sftp_pass="${2:-$(gen_rand_pass)}"
 			if [[ "$sftp_pass" =~ [^a-zA-Z0-9,+=@\-_!] ]]; then
-				print_colored red "Invalid SFTP password format. Only alphanumeric characters and these special characters are allowed: ,+=@-_!"; exit 1
+				print_colored red "Error:" "Invalid SFTP password format. Only alphanumeric characters and these special characters are allowed: ,+=@-_!"; exit 1
 			elif [[ "${#sftp_pass}" -lt 8 ]] || [[ "${#sftp_pass}" -gt 32 ]]; then
-				print_colored red "Invalid SFTP password length. Must be between 8 and 32 characters."; exit 1
+				print_colored red "Error:" "Invalid SFTP password length. Must be between 8 and 32 characters."; exit 1
 			fi
 			shift 2
 			;;
@@ -158,9 +158,9 @@ while true; do
         --db_pass)
             db_pass="${2:-$(gen_rand_pass)}"
             if [[ "$db_pass" =~ [^a-zA-Z0-9,+=@\-_!] ]]; then
-                print_colored red "Invalid database password format. Only alphanumeric characters and these special characters are allowed: ,+=@-_!"; exit 1
+                print_colored red "Error:" "Invalid database password format. Only alphanumeric characters and these special characters are allowed: ,+=@-_!"; exit 1
             elif [[ "${#db_pass}" -lt 8 ]] || [[ "${#db_pass}" -gt 32 ]]; then
-                print_colored red "Invalid database password length. Must be between 8 and 32 characters."; exit 1
+                print_colored red "Error:" "Invalid database password length. Must be between 8 and 32 characters."; exit 1
             fi
             shift 2
             ;;
@@ -170,7 +170,7 @@ while true; do
                     wp_install="${2,,}"; shift 2
                     ;;
                 *)
-                    print_colored red "Invalid WordPress installation value: $2. Must be 'yes' or 'no'."; exit 1
+                    print_colored red "Error:" "Invalid WordPress installation value: $2. Must be 'yes' or 'no'."; exit 1
                     ;;
             esac
             ;;
@@ -185,9 +185,9 @@ while true; do
         --wp_pass)
             wp_pass="${2:-$(gen_rand_pass)}"
             if [[ "$wp_pass" =~ [^a-zA-Z0-9,+=@\-_!] ]]; then
-                print_colored red "Invalid WordPress password format. Only alphanumeric characters and these special characters are allowed: ,+=@-_!"; exit 1
+                print_colored red "Error:" "Invalid WordPress password format. Only alphanumeric characters and these special characters are allowed: ,+=@-_!"; exit 1
             elif [[ "${#wp_pass}" -lt 8 ]] || [[ "${#wp_pass}" -gt 32 ]]; then
-                print_colored red "Invalid WordPress password length. Must be between 8 and 32 characters."; exit 1
+                print_colored red "Error:" "Invalid WordPress password length. Must be between 8 and 32 characters."; exit 1
             fi
             shift 2
             ;;
@@ -197,7 +197,7 @@ while true; do
 					dev_mode="${2,,}"; shift 2
 					;;
 				*)
-					print_colored red "Invalid dev mode value: $2. Must be 'yes' or 'no'."; exit 1
+					print_colored red "Error:" "Invalid dev mode value: $2. Must be 'yes' or 'no'."; exit 1
 			esac
 			;;
         --)
@@ -205,7 +205,7 @@ while true; do
             break
             ;;
         *)
-            print_colored red "Internal error!"; exit 1
+            print_colored red "Error:" "Internal error!"; exit 1
             ;;
     esac
 	
@@ -217,13 +217,13 @@ done
 
 # Ensure --domain is mandatory
 if [[ -z "$domain" ]]; then
-    print_colored red "Error: --domain option is required."; exit 1
+    print_colored red "Error:" "--domain option is required."; exit 1
 fi
 
 
 
 # run
-print_colored cyan "Starting install..."
+print_colored cyan "Notice:" "Starting install..."
 
 printf "%-15s %s\n" "Domain:" "$domain"
 printf "%-15s %s\n" "Aliases:" "$aliases"
@@ -252,7 +252,7 @@ vhost_create_user() {
 	
 	# creating site structure
 	echo "Updating site structure and permissions..."
-	print_colored green "Using ${vpath} with owner ${sftp_user}"
+	print_colored green "Success:" "Using ${vpath} with owner ${sftp_user}"
 	create_folder "${vpath}"
 	create_folder "${vpath}/backups"
 	create_folder "${vpath}/logs"
@@ -265,14 +265,14 @@ vhost_create_user() {
 		usermod -aG sftp "${sftp_user}"
 		echo "User: ${sftp_user}" > "${vpath}/logs/user.sftp.log"
 		echo "Pass: ${sftp_pass}" >> "${vpath}/logs/user.sftp.log"
-		print_colored green "Created ${sftp_user} with pass ${sftp_pass} for ${vpath}"
+		print_colored green "Success:" "Created ${sftp_user} with pass ${sftp_pass} for ${vpath}"
 	else
-		print_colored cyan "User ${sftp_user} already exists, updating..."
+		print_colored cyan "Notice:" "User ${sftp_user} already exists, updating..."
 		usermod -d "${vpath}" -s /usr/sbin/nologin "${sftp_user}"
 		echo "${sftp_user}:${sftp_pass}" | chpasswd
 		echo "User: ${sftp_user}" >> "${vpath}/logs/user.sftp.log"
 		echo "Pass: ${sftp_pass}" >> "${vpath}/logs/user.sftp.log"
-		print_colored green "Updated ${sftp_user} with pass ${sftp_pass} for ${vpath}"
+		print_colored green "Success:" "Updated ${sftp_user} with pass ${sftp_pass} for ${vpath}"
 	fi
 	
 	# permissions
@@ -302,13 +302,13 @@ vhost_create_database() {
 	
 	# check if database exists
     if mysql -e "USE ${db_user};" &>/dev/null; then
-        print_colored cyan "Database ${db_user} already exists."
+        print_colored cyan "Notice:" "Database ${db_user} already exists."
     else
 		mysql -e "CREATE DATABASE IF NOT EXISTS ${db_user};"
 		if [ ${?} = 0 ]; then
-			print_colored green "Database ${db_user} created."
+			print_colored green "Success:" "Database ${db_user} created."
 		else
-			print_colored red "Database ${db_user} creation failed."
+			print_colored red "Error:" "Database ${db_user} creation failed."
 		fi
 	fi
 	
@@ -318,7 +318,7 @@ vhost_create_database() {
 	mysql -e "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, CREATE TEMPORARY TABLES, REFERENCES, TRIGGER, LOCK TABLES, SHOW VIEW ON ${db_user}.* TO '${db_user}'@'${db_host}';"
 	mysql -e "FLUSH PRIVILEGES;"
 	save_db_credentials
-	print_colored green "User ${db_user} password and priviledges created/updated."
+	print_colored green "Success:" "User ${db_user} password and priviledges created/updated."
 	
 }
 
@@ -334,14 +334,14 @@ install_wp() {
 	if test -e "${DOCHM}/wp-config.php"; then
 		
 		# update credentials
-		print_colored cyan "wp-config.php file exists, updating..."
+		print_colored cyan "Notice:" "wp-config.php file exists, updating..."
 		wp config set DB_HOST "${db_host}" --type=constant --allow-root
 		wp config set DB_NAME "${db_user}" --type=constant --allow-root
 		wp config set DB_USER "${db_user}" --type=constant --allow-root
 		wp config set DB_PASSWORD "${db_pass}" --type=constant --allow-root
 		
 		# finish
-		print_colored cyan "WordPress credentials are up to date on ${domain}"
+		print_colored cyan "Notice:" "WordPress credentials are up to date on ${domain}"
 		
 	else
 		
@@ -361,14 +361,14 @@ install_wp() {
 		wp option update permalink_structure '/%postname%/' --path="${DOCHM}" --allow-root --quiet
 		
 		# finish
-		print_colored cyan "WordPress is now installed on ${domain}"
+		print_colored cyan "Notice:" "WordPress is now installed on ${domain}"
 		
 	fi
 		
 	# download htaccess
 	if [ ! -f "${DOCHM}/.htaccess" ]; then
 		curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/wp/htaccess > /tmp/htaccess.txt
-		cat /tmp/htaccess.txt | grep -q "WordPress" && cp /tmp/htaccess.txt ${DOCHM}/.htaccess && print_colored green "Success: .htaccess updated." || print_colored red "Error downloading .htaccess ..."
+		cat /tmp/htaccess.txt | grep -q "WordPress" && cp /tmp/htaccess.txt ${DOCHM}/.htaccess && print_colored green "Success:" ".htaccess updated." || print_colored red "Error:" "downloading .htaccess ..."
 		rm /tmp/htaccess
 	fi
 		
@@ -396,7 +396,7 @@ create_ols_vhost() {
 	create_folder "${VHDIR}"
 	VHCONF="${VHDIR}/vhconf.conf"
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/ols/vhconf.conf > /tmp/vhconf.conf
-	cat /tmp/vhconf.conf | grep -q "docRoot" && cp /tmp/vhconf.conf ${VHCONF} && print_colored green "Success: vhconf.conf updated." || print_colored red "Error downloading vhconf.conf ..."
+	cat /tmp/vhconf.conf | grep -q "docRoot" && cp /tmp/vhconf.conf ${VHCONF} && print_colored green "Success:" "vhconf.conf updated." || print_colored red "Error:" "downloading vhconf.conf ..."
 	rm /tmp/vhconf.conf
 	
 	# fix paths and other info
@@ -456,7 +456,7 @@ create_ols_vhost() {
 		POOL_LOC="${CHECK}/${domain}.conf"
 		if [ -d "${CHECK}" ]; then
 			AVAIL_POOL_PORT=$(find_available_php_port)
-			cat /tmp/pool.conf | grep -q "user" && cp /tmp/pool.conf ${POOL_LOC} && print_colored green "Success: pool.conf created for for PHP ${version} FPM." || print_colored red "Error downloading pool.conf ..."
+			cat /tmp/pool.conf | grep -q "user" && cp /tmp/pool.conf ${POOL_LOC} && print_colored green "Success:" "pool.conf created for for PHP ${version} FPM." || print_colored red "Error:" "downloading pool.conf ..."
 			sed -i "s~#user#~$sftp_user~g" "${POOL_LOC}"
 			sed -i "s~#port#~$AVAIL_POOL_PORT~g" "${POOL_LOC}"
 			sed -i "s~#children#~$PHP_POOL_COUNT~g" "${POOL_LOC}"
@@ -479,7 +479,7 @@ create_ols_vhost() {
 			systemctl restart php${version}-fpm
 			((AVAIL_POOL_PORT++))
 		else
-			print_colored red "Directory for PHP ${version} does not exist"
+			print_colored red "Error:" "Directory for PHP ${version} does not exist"
 		fi
 	done
 	rm /tmp/pool.conf
@@ -506,7 +506,7 @@ create_letsencrypt_ssl() {
 		if [[ "${response}" == "OK" ]]; then
 			print_colored yellow "${domain} found"
 		else
-			print_colored red "Failed to open: http://${domain}/ssl-test.txt?nocache=$(date +%s)"
+			print_colored red "Error:" "Failed to open: http://${domain}/ssl-test.txt?nocache=$(date +%s)"
 			all_successful=false
 			failed_domains+=("$domain")
 		fi
@@ -514,11 +514,11 @@ create_letsencrypt_ssl() {
 
 	# Check if all domains were successful
 	if $all_successful; then
-		print_colored green "All domains were successful, creating ssl..."
+		print_colored green "Success:" "All domains were successful, creating ssl..."
 		certbot certonly --expand --agree-tos --non-interactive --keep-until-expiring --rsa-key-size 2048 -m "${email}" --webroot -w "${DOCHM}" -d "${domains}"
 		systemctl restart lsws
 	else
-		print_colored red "Failed domains: ${failed_domains[@]}"
+		print_colored red "Error:" "Failed domains: ${failed_domains[@]}"
 	fi
 
 }

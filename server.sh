@@ -123,7 +123,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         * ) # Invalid option
-            print_colored red "Invalid option: $1"
+            print_colored red "Error:" "Invalid option: $1"
             exit 1
             ;;
     esac
@@ -199,7 +199,7 @@ function setup_sshd
 	# download sshd_config
 	echo "Updating sshd_config... "
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/sshd/sshd_config > /tmp/sshd_config
-	cat /tmp/sshd_config | grep -q "ListenAddress" && cp /tmp/sshd_config /etc/ssh/sshd_config && print_colored green "Success:" "sshd_config updated." || print_colored red "Error downloading sshd_config ..."
+	cat /tmp/sshd_config | grep -q "ListenAddress" && cp /tmp/sshd_config /etc/ssh/sshd_config && print_colored green "Success:" "sshd_config updated." || print_colored red "Error:" "downloading sshd_config ..."
 	rm /tmp/sshd_config
 	if [[ "$SSH_PORT" != "22" ]]; then
 		sed -i "s/^Port 22.*$/Port ${SSH_PORT}/" /etc/ssh/sshd_config
@@ -300,7 +300,7 @@ function install_ols() {
 	if [[ ! -z $all_packages ]]; then
 		DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" $all_packages
 	else
-		print_colored red "Error: No packages available for any LSPHP version."
+		print_colored red "Error:" "No packages available for any LSPHP version."
 	fi
 	
 	# Set admin credentials
@@ -326,7 +326,7 @@ function install_ols() {
 	
 	# download ols config
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/ols/httpd_config.conf > /tmp/httpd_config.conf
-	cat /tmp/httpd_config.conf | grep -q "autoLoadHtaccess" && cp /tmp/httpd_config.conf /usr/local/lsws/conf/httpd_config.conf && print_colored green "Success:" "httpd_config.conf updated." || print_colored red "Error downloading httpd_config.conf ..."
+	cat /tmp/httpd_config.conf | grep -q "autoLoadHtaccess" && cp /tmp/httpd_config.conf /usr/local/lsws/conf/httpd_config.conf && print_colored green "Success:" "httpd_config.conf updated." || print_colored red "Error:" "downloading httpd_config.conf ..."
 	rm /tmp/httpd_config.conf
 	
 	# set lsphp pool concurrency limit
@@ -391,13 +391,13 @@ function install_php() {
 	if [[ ! -z $all_packages ]]; then
 		DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" $all_packages
 	else
-		print_colored red "Error: No packages available for any PHP version."
+		print_colored red "Error:" "No packages available for any PHP version."
 	fi
 	
 	# configure
 	# Download php.ini file
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/php/php.ini > /tmp/php.ini
-	if cat /tmp/php.ini | grep -q "max_input_vars"; then find /etc/php -type f -iname php.ini -exec cp /tmp/php.ini {} \; && print_colored green "Success:" "php.ini files updated."; else print_colored red "Error downloading php.ini ..."; fi
+	if cat /tmp/php.ini | grep -q "max_input_vars"; then find /etc/php -type f -iname php.ini -exec cp /tmp/php.ini {} \; && print_colored green "Success:" "php.ini files updated."; else print_colored red "Error:" "downloading php.ini ..."; fi
 	rm /tmp/php.ini
 	
 	# cli adjustments
@@ -410,7 +410,7 @@ function install_php() {
 		
 	# Download php-fpm.conf
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/php/php-fpm.conf > /tmp/php-fpm.conf
-	if cat /tmp/php-fpm.conf | grep -q "error_log"; then find /etc/php -type f -iname php-fpm.conf -exec cp /tmp/php-fpm.conf {} \; && print_colored green "Success:" "php-fpm.conf file updated."; else print_colored red "Error downloading php-fpm.conf ..."; fi
+	if cat /tmp/php-fpm.conf | grep -q "error_log"; then find /etc/php -type f -iname php-fpm.conf -exec cp /tmp/php-fpm.conf {} \; && print_colored green "Success:" "php-fpm.conf file updated."; else print_colored red "Error:" "downloading php-fpm.conf ..."; fi
 	rm /tmp/php-fpm.conf
 	find /etc/php -type f -iname php-fpm.conf | while read file; do
 		version=$(echo "$file" | awk -F'/' '{print $4}')
@@ -461,7 +461,7 @@ function install_percona() {
 	
 	# download my.cnf
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/sql/my.cnf > /tmp/my.cnf
-	cat /tmp/my.cnf | grep -q "mysqld" && cp /tmp/my.cnf /etc/mysql/my.cnf && print_colored green "Success:" "my.cnf updated." || print_colored red "Error downloading my.cnf ..."
+	cat /tmp/my.cnf | grep -q "mysqld" && cp /tmp/my.cnf /etc/mysql/my.cnf && print_colored green "Success:" "my.cnf updated." || print_colored red "Error:" "downloading my.cnf ..."
 	rm /tmp/my.cnf
 	MYSQL_MEM=$(calculate_memory_configs "MYSQL_MEM")
 	MYSQL_POOL_COUNT=$(calculate_memory_configs "MYSQL_POOL_COUNT")
@@ -515,7 +515,7 @@ function install_redis() {
 	
 	# redis config
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/redis/redis.conf > /tmp/redis.conf
-	cat /tmp/redis.conf | grep -q "maxmemory" && cp /tmp/redis.conf /etc/redis/redis.conf && print_colored green "Success:" "redis.conf updated." || print_colored red "Error downloading redis.conf ..."
+	cat /tmp/redis.conf | grep -q "maxmemory" && cp /tmp/redis.conf /etc/redis/redis.conf && print_colored green "Success:" "redis.conf updated." || print_colored red "Error:" "downloading redis.conf ..."
 	rm /tmp/redis.conf
 	REDIS_MEM=$(calculate_memory_configs "REDIS_MEM")
 	sed -i "s/^maxmemory 128mb.*$/maxmemory ${REDIS_MEM}mb/" /etc/redis/redis.conf
@@ -537,7 +537,7 @@ function install_postfix() {
 	
 	# download postfix	
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/postfix/main.cf > /tmp/main.cf
-	cat /tmp/main.cf | grep -q "smtpd_banner" && cp /tmp/main.cf /etc/postfix/main.cf && print_colored green "Success:" "main.cf updated." || print_colored red "Error downloading main.cf ..."
+	cat /tmp/main.cf | grep -q "smtpd_banner" && cp /tmp/main.cf /etc/postfix/main.cf && print_colored green "Success:" "main.cf updated." || print_colored red "Error:" "downloading main.cf ..."
 	rm /tmp/main.cf
 	echo 'postmaster: /dev/null\nroot: /dev/null' | sudo tee /etc/aliases > /dev/null
 	systemctl restart postfix
@@ -602,21 +602,21 @@ RESTART_SSH="0"
 
 # display summary and ask permission
 echo ""
-print_colored green "Starting install..."
+print_colored green "Success:" "Starting install..."
 before_install_display
 
 # confirmation request
 printf 'Are these settings correct? Type n to quit, otherwise will continue. [Y/n]  '
 read answer
 if [ "$answer" = "N" ] || [ "$answer" = "n" ] ; then
-    print_colored red "Aborting installation!"
+    print_colored red "Error:" "Aborting installation!"
     exit 0
 else
 	CONFIRM_SETUP="1"
 	echo ""
 fi
 	
-print_colored cyan 'Starting installation >> >> >> >> >> >> >>'
+print_colored cyan "Notice:" "Starting installation >> >> >> >> >> >> >>"
 echo ""
 
 # install
@@ -636,11 +636,11 @@ fi
 # restart sshd after port change, after everything else
 if [ "$RESTART_SSH" != "0" ] ; then
 	print_colored magenta "Warning:" "Remember to re-login again with the new $SSH_PORT port."
-	print_colored cyan "Installation complete!"
+	print_colored cyan "Notice:" "Installation complete!"
 	service sshd restart
 	exit 0
 fi 
 
 # finish
-print_colored cyan "Installation complete!"
+print_colored cyan "Notice:" "Installation complete!"
 
