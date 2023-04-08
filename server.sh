@@ -185,7 +185,7 @@ function update_limits
 		mv /tmp/fstab_no_swap /etc/fstab
 		print_colored green "Success:" "Swap file adjusted to 2G."
 	else
-		print_colored cyan "Error:" "The current swap size is already 2GB."
+		print_colored cyan "Notice:" "The current swap size is already 2GB."
 	fi
 
 	
