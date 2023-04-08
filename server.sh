@@ -274,7 +274,7 @@ function setup_firewall
 
 # Basic packages: certbot, pv, pigz, curl, wget, zip, memcached, etc
 function install_basic_packages() {
-	DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" certbot pv pigz curl wget zip memcached
+	DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" certbot pv pigz curl wget zip net-tools traceroute memcached
 }
 
 
@@ -412,11 +412,9 @@ function install_php() {
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/php/php-fpm.conf > /tmp/php-fpm.conf
 	if cat /tmp/php-fpm.conf | grep -q "error_log"; then find /etc/php -type f -iname php-fpm.conf -exec cp /tmp/php-fpm.conf {} \; && print_colored green "Success:" "php-fpm.conf file updated."; else print_colored red "Error downloading php-fpm.conf ..."; fi
 	rm /tmp/php-fpm.conf
-	PHP_BACKLOG=$(calculate_memory_configs "PHP_BACKLOG")
 	find /etc/php -type f -iname php-fpm.conf | while read file; do
 		version=$(echo "$file" | awk -F'/' '{print $4}')
 		sed -i "s/#php_ver#/$version/g" "$file"
-		sed -i "s/^.*backlog.*$/listen.backlog = ${PHP_BACKLOG}/g" "$file"
 		systemctl stop php${version}-fpm
 	done
 	
