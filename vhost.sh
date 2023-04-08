@@ -225,21 +225,39 @@ fi
 # run
 print_colored cyan "Notice:" "Starting install..."
 
-printf "%-15s %s\n" "Domain:" "$domain"
-printf "%-15s %s\n" "Aliases:" "$aliases"
-printf "%-15s %s\n" "SSL:" "$ssl"
-printf "%-15s %s\n" "PHP version:" "$php"
-printf "%-15s %s\n" "Path:" "${vpath}"
-printf "%-15s %s\n" "SFTP user:" "$sftp_user"
-printf "%-15s %s\n" "SFTP password:" "$sftp_pass"
-printf "%-15s %s\n" "DB host:" "$db_host"
-printf "%-15s %s\n" "DB port:" "$db_port"
-printf "%-15s %s\n" "DB user:" "$db_user"
-printf "%-15s %s\n" "DB password:" "$db_pass"
-printf "%-15s %s\n" "WP install:" "$wp_install"
-printf "%-15s %s\n" "WP user:" "$wp_user"
-printf "%-15s %s\n" "WP password:" "$wp_pass"
-printf "%-15s %s\n" "Dev mode:" "$dev_mode"
+# info
+IP=$(calculate_memory_configs "IP")
+CURSSHPORT=$(calculate_memory_configs "CURSSHPORT")
+
+echo ""
+print_chars 60 -
+print_colored cyan   "Site Information:    "
+print_colored yellow "Domain:              " "$domain"
+print_colored yellow "Aliases:             " "$aliases"
+print_colored yellow "Path:                " "${vpath}"
+print_colored yellow "SSL:                 " "$ssl"
+echo ""
+print_colored cyan   "SFTP Access:         "
+print_colored yellow "IP Adress:           " "$IP"
+print_colored yellow "SFTP Port:           " "$CURSSHPORT"
+print_colored yellow "SFTP User:           " "$sftp_user"
+print_colored yellow "SFTP Pass:           " "$sftp_pass"
+echo ""
+print_colored cyan   "PerconaDB:           "
+print_colored yellow "DB Name:             " "$db_user"
+print_colored yellow "DB Host:             " "$db_host"
+print_colored yellow "DB Port:             " "$db_port"
+print_colored yellow "DB User:             " "$db_user"
+print_colored yellow "DB Pass:             " "$db_pass"
+echo ""
+print_colored cyan   "PHP + WP:            "
+print_colored yellow "FPM Version:         " "$php"
+print_colored yellow "WP Install:          " "$wp_install"
+print_colored yellow "WP User:             " "$wp_user"
+print_colored yellow "WP Pass:             " "$wp_pass"
+print_colored yellow "Development Mode:    " "$dev_mode"
+print_chars 60 -
+echo ""	
 
 
 # START FUNCTIONS

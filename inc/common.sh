@@ -75,10 +75,14 @@ function calculate_memory_configs() {
 	local CPU_CORES=$(nproc)
 	local DISK_AVAILABLE=$(df -BG /home | awk 'NR==2{print $4}')
 	local IP=$(curl -s http://checkip.amazonaws.com || printf "0.0.0.0")
+	local CURSSHPORT=$(grep -E '^Port ' /etc/ssh/sshd_config | awk '{print $2}')
 	
 	case $OPTION in
 		"IP")
 				echo $IP
+				;;
+		"CURSSHPORT")
+				echo $CURSSHPORT
 				;;
 		"REDIS_MEM")
 				echo $REDIS_MEM
@@ -136,6 +140,8 @@ function calculate_memory_configs() {
 	#PHP_MEM=$(calculate_memory_configs "PHP_MEM")
 	#PHP_POOL_COUNT=$(calculate_memory_configs "PHP_POOL_COUNT")
 	#PHP_BACKLOG=$(calculate_memory_configs "PHP_BACKLOG")
+	#CURSSHPORT=$(calculate_memory_configs "CURSSHPORT")
+	
 	
 }
 

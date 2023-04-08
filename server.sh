@@ -11,6 +11,7 @@
 source <(curl -sSf https://raw.githubusercontent.com/peixotorms/ols/main/inc/common.sh)
 
 # defaults
+CURSSHPORT=$(calculate_memory_configs "CURSSHPORT")
 SSH_PORT="22"
 OLS_PORT="7080"
 OLS_USER="admin"
@@ -201,11 +202,9 @@ function setup_sshd
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/sshd/sshd_config > /tmp/sshd_config
 	cat /tmp/sshd_config | grep -q "ListenAddress" && cp /tmp/sshd_config /etc/ssh/sshd_config && print_colored green "Success:" "sshd_config updated." || print_colored red "Error:" "downloading sshd_config ..."
 	rm /tmp/sshd_config
-	if [[ "$SSH_PORT" != "22" ]]; then
-		sed -i "s/^Port 22.*$/Port ${SSH_PORT}/" /etc/ssh/sshd_config
-		print_colored magenta "Warning:" "SSH port is now set to $SSH_PORT."
-	fi
-	
+	[[ "${SSH_PORT}" != "22" ]] && sed -i "s/^Port 22.*$/Port ${SSH_PORT}/" /etc/ssh/sshd_config
+	[[ "${SSH_PORT}" != "${CURSSHPORT}" ]] && print_colored magenta "Warning:" "SSH port changed from ${CURSSHPORT} to $SSH_PORT."
+
 }
 
 
@@ -626,17 +625,17 @@ if [ "$CONFIRM_SETUP" != "0" ] ; then
 		"$FUNCTION_NAME"
 		
 		# sshd restart?
-		if [[ "$FUNCTION_NAME" = "setup_sshd" && "$SSH_PORT" != "22" ]]; then
+		if [[ "$FUNCTION_NAME" = "setup_sshd" && "${SSH_PORT}" != "${CURSSHPORT}" ]]; then
 			RESTART_SSH="1"
 		fi
+
 		
 	done
 fi 
 
 # restart sshd after port change, after everything else
 if [ "$RESTART_SSH" != "0" ] ; then
-	print_colored magenta "Warning:" "Remember to re-login again with the new $SSH_PORT port."
-	print_colored cyan "Notice:" "Installation complete!"
+	print_colored magenta "Warning:" "Please re-login using port $SSH_PORT"
 	service sshd restart
 	exit 0
 fi 
