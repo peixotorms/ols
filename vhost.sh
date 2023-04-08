@@ -427,8 +427,10 @@ create_letsencrypt_ssl() {
 # create ols virtual host and listener
 create_ols_vhost() {
 	
-	# create vhost file
-	VHCONF="/usr/local/lsws/conf/vhosts/$domain/vhconf.conf"
+	# vhconf.conf file for the virtual hosting settings
+	VHDIR="/usr/local/lsws/conf/vhosts/${domain}"
+	create_folder "${VHDIR}"
+	VHCONF="${VHDIR}/vhconf.conf"
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/ols/vhconf.conf > /tmp/vhconf.conf
 	cat /tmp/vhconf.conf | grep -q "docRoot" && cp /tmp/vhconf.conf ${VHCONF} && print_colored green "Success: vhconf.conf updated." || print_colored red "Error downloading vhconf.conf ..."
 	rm /tmp/vhconf.conf
@@ -441,6 +443,39 @@ create_ols_vhost() {
 	scripthandler="lsphp${php//./}";
 	sed -i "s/##php##/${scripthandler}/g" "${VHCONF}"
 	
+
+	# create map rule for the listener on httpd_config.conf
+	if [ -n "$aliases" ]; then
+	  aliases_map="$(echo "$aliases" | sed 's/,/, /g')"
+	  newmap="map ${domain} ${domain}, ${aliases_map}"
+	else
+	  newmap="map ${domain}"
+	fi
+	
+	# append it
+    sed -i '/^listener.*{/!b;n;/^\t'"$newmap"'$/!a\\t'"$newmap"'' ${VHCONF}
+	
+	
+	# create virtualhost block for httpd_config.conf
+	virtualhost="
+	virtualhost ${MY_DOMAIN} {
+		vhRoot                  ${path}
+		configFile              ${VHCONF}
+		allowSymbolLink         1
+		enableScript            1
+		restrained              1
+		user                    ${sftp_user}
+		group                   ${sftp_user}
+	}
+	"
+	
+	# append it
+    awk -i inplace '/^listener.*{/ {f=1} {if (!f) { print "\n" } print } if (f && NR==2) { printf "\n%s\n\n", "'"$virtualhost"'" }' "${VHCONF}"
+		
+	# permissions
+	chown -R lsadm:lsadm ${VHDIR}/*	
+	
+	# restart
 	systemctl restart lsws
 }
 
