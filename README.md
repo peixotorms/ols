@@ -16,7 +16,7 @@ The script accepts the following options:
 ```
 --functions, -f
     Run a comma-separated list of function names. 
-    Default: update_system, setup_sshd, setup_repositories, setup_firewall, install_basic_packages, install_ols, install_php, install_wp_cli, install_percona, install_redis, install_postfix
+    Default: update_system, update_limits, setup_sshd, setup_repositories, setup_firewall, install_basic_packages, install_ols, install_php, install_wp_cli, install_percona, install_redis, install_postfix
 
 --ols_user (optional)       Customize OpenLiteSpeed username. Must be between 8-32 alphanumeric chars.
 --ols_pass (optional)       Customize OpenLiteSpeed password. Must be between 8-32 alphanumeric chars include at least one of the following symbols: ,+=-_!@
@@ -49,7 +49,7 @@ The script accepts the following options:
 --aliases (optional)        Comma-separated list of domain aliases
 --ssl (optional)            Enable or disable SSL. Default is 'yes'
 --php (optional)            PHP version to install. Must be 7.4, 8.0, 8.1, or 8.2. Default is '8.0'
---path (optional)           Path to install website. Default is '/home/sites/<domain_name>'
+--vpath (optional)          Path to install website. Default is '/home/sites/<domain_name>'
 --sftp_user (optional)      SFTP username. Default is generated from domain name
 --sftp_pass (optional)      SFTP password. Default is a random 32 char pass
 --db_host (optional)        Database host. Default is 'localhost'
