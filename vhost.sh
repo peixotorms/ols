@@ -324,8 +324,7 @@ vhost_create_database() {
 
 
 # install a fresh wordpress site
-install_wp() {
-    
+install_wp() {    
    
     export WP_CLI_CACHE_DIR=/tmp
 	DOCHM="${path}/www"
@@ -481,6 +480,21 @@ create_ols_vhost() {
 	
 	# restart
 	systemctl restart lsws
+	
+	
+	# generate php pools
+	AVAIL_POOL_PORT=$(find_available_php_port)
+	
+	#curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/php/pool.conf > /tmp/pool.conf
+	#cat /tmp/pool.conf | grep -q "user" && cp /tmp/pool.conf ${VHCONF} && print_colored green "Success: pool.conf updated." || print_colored red "Error downloading vhconf.conf ..."
+	#rm /tmp/pool.conf
+	
+	
+	#/etc/php/7.4/fpm/pool.d/${domain}.conf
+	
+	
+	
+	
 }
 
 
@@ -493,8 +507,6 @@ vhost_create_database
 install_wp
 create_ols_vhost
 create_letsencrypt_ssl
-echo "missing ols configs"
-
 
 # finish
 print_colored green "All done!"
