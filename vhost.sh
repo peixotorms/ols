@@ -348,10 +348,11 @@ install_wp() {
 		# download and install
 		echo "Downloading wordpress..."
 		wp core download --path=${DOCHM} --allow-root --quiet
-		echo 'Configuring wp-config.php...'
-        wp core config --dbname="${db_user}" --dbuser="${db_user}" --dbpass="${db_pass}" --dbhost="${db_host}" --dbprefix="wp_" --path="${DOCHM}" --allow-root --quiet
+		
 		echo 'Installing WordPress...'
+		wp core config --dbname="${db_user}" --dbuser="${db_user}" --dbpass="${db_pass}" --dbhost="${db_host}" --dbprefix="wp_" --path="${DOCHM}" --allow-root --quiet
 		wp core install --url="${domain}" --title="WordPress" --admin_user="${wp_user}" --admin_password="${wp_pass}" --admin_email="change-me@${domain}" --skip-email --path="${DOCHM}" --allow-root --quiet
+		
 		echo 'Finalizing WordPress...'
 		wp site empty --yes --uploads --path="${DOCHM}" --allow-root --quiet
 		wp plugin delete $(wp plugin list --status=inactive --field=name --path="${DOCHM}" --allow-root --quiet) --path="${DOCHM}" --allow-root --quiet
@@ -384,42 +385,6 @@ install_wp() {
 	echo "WP User: ${wp_user}" > "${vpath}/logs/user.wp.log"
 	echo "WP Pass: ${wp_pass}" >> "${vpath}/logs/user.wp.log"
 		    
-}
-
-
-# create a ssl certificate
-create_letsencrypt_ssl() {
-	
-	# merge domain and aliases
-	domains="${domain}${aliases:+,${aliases}}"
-	email="no-reply@${domain}"
-	
-	# Convert the comma-separated string to an array
-	IFS=',' read -ra domains_array <<< "$domains"
-
-	# Loop through the domains and make a curl request to the domain
-	all_successful=true
-	failed_domains=()
-	for domain in "${domains_array[@]}"; do
-		echo "Testing ${domain}..."
-		response=$(curl -sSL -H "Cache-Control: no-cache" -k "http://${domain}/ssl-test.txt?nocache=$(date +%s)")
-		if [[ "${response}" == "OK" ]]; then
-			print_colored yellow "${domain} found"
-		else
-			print_colored red "Failed to open: http://${domain}/ssl-test.txt?nocache=$(date +%s)"
-			all_successful=false
-			failed_domains+=("$domain")
-		fi
-	done
-
-	# Check if all domains were successful
-	if $all_successful; then
-		print_colored green "All domains were successful, creating ssl..."
-		certbot certonly --expand --agree-tos --non-interactive --keep-until-expiring --rsa-key-size 2048 -m "${email}" --webroot -w "${DOCHM}" -d "${domains}"
-	else
-		print_colored red "Failed domains: ${failed_domains[@]}"
-	fi
-
 }
 
 
@@ -480,32 +445,24 @@ create_ols_vhost() {
 	
 	# restart
 	systemctl restart lsws
-	
-	
-	# generate php pools
-	AVAIL_POOL_PORT=$(find_available_php_port)
-	
-	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/php/pool.conf > /tmp/pool.conf
-	#cat /tmp/pool.conf | grep -q "user" && cp /tmp/pool.conf ${VHCONF} && print_colored green "Success: pool.conf updated." || print_colored red "Error downloading vhconf.conf ..."
-	#rm /tmp/pool.conf
-	
-	
-	#/etc/php/${version}/fpm/pool.d/${domain}.conf
-	
+
+
 	
 	# generate php pools
+	find /etc/php/*/fpm/pool.d -maxdepth 1 -type f -name "${domain}.conf" -delete
 	PHP_POOL_COUNT=$(calculate_memory_configs "PHP_POOL_COUNT")
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/php/pool.conf > /tmp/pool.conf
 	for version in 7.4 8.0 8.1 8.2; do
 		CHECK="/etc/php/${version}/fpm/pool.d"
 		POOL_LOC="${CHECK}/${domain}.conf"
 		if [ -d "${CHECK}" ]; then
-			cat /tmp/pool.conf | grep -q "user" && cp /tmp/pool.conf ${POOL_LOC} && print_colored green "Success: pool.conf created for for PHP ${version} FPM." || print_colored red "Error downloading pool.conf ..."
 			AVAIL_POOL_PORT=$(find_available_php_port)
+			cat /tmp/pool.conf | grep -q "user" && cp /tmp/pool.conf ${POOL_LOC} && print_colored green "Success: pool.conf created for for PHP ${version} FPM." || print_colored red "Error downloading pool.conf ..."
 			sed -i "s/#user#/$sftp_user/g" "${POOL_LOC}"
 			sed -i "s/#port#/$AVAIL_POOL_PORT/g" "${POOL_LOC}"
 			sed -i "s/#children#/$PHP_POOL_COUNT/g" "${POOL_LOC}"
 			sed -i "s/#vpath#/${vpath}/g" "${POOL_LOC}"
+			sleep 5
 			systemctl restart php${version}-fpm
 			((AVAIL_POOL_PORT++))
 		else
@@ -515,6 +472,44 @@ create_ols_vhost() {
 	rm /tmp/pool.conf
 		
 }
+
+
+# create a ssl certificate
+create_letsencrypt_ssl() {
+	
+	# merge domain and aliases
+	domains="${domain}${aliases:+,${aliases}}"
+	email="no-reply@${domain}"
+	
+	# Convert the comma-separated string to an array
+	IFS=',' read -ra domains_array <<< "$domains"
+
+	# Loop through the domains and make a curl request to the domain
+	all_successful=true
+	failed_domains=()
+	for domain in "${domains_array[@]}"; do
+		echo "Testing ${domain}..."
+		response=$(curl -sSL -H "Cache-Control: no-cache" -k "http://${domain}/ssl-test.txt?nocache=$(date +%s)")
+		if [[ "${response}" == "OK" ]]; then
+			print_colored yellow "${domain} found"
+		else
+			print_colored red "Failed to open: http://${domain}/ssl-test.txt?nocache=$(date +%s)"
+			all_successful=false
+			failed_domains+=("$domain")
+		fi
+	done
+
+	# Check if all domains were successful
+	if $all_successful; then
+		print_colored green "All domains were successful, creating ssl..."
+		certbot certonly --expand --agree-tos --non-interactive --keep-until-expiring --rsa-key-size 2048 -m "${email}" --webroot -w "${DOCHM}" -d "${domains}"
+		systemctl restart lsws
+	else
+		print_colored red "Failed domains: ${failed_domains[@]}"
+	fi
+
+}
+
 
 # END FUNCTIONS
 
