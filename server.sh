@@ -180,9 +180,9 @@ function update_limits
 		grep -v '/swapfile' /etc/fstab > /tmp/fstab_no_swap
 		echo '/swapfile none swap sw 0 0' >> /tmp/fstab_no_swap
 		mv /tmp/fstab_no_swap /etc/fstab
-		echo "Swap file adjusted to 2G."
+		print_colored green "Swap file adjusted to 2G."
 	else
-		echo "The current swap size is already 2GB."
+		print_colored cyan "The current swap size is already 2GB."
 	fi
 
 	

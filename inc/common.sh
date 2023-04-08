@@ -194,14 +194,33 @@ print_chars() { for ((i=1; i<=$1; i++)); do printf '%s' "$2"; done; printf '\n';
 
 
 # start from 9000 and return the next available tcp port for php fpm
-function find_available_php_port {
-    local port=9000
-    while [[ $port -lt 12000 ]]; do
-        if ! lsof -i :$port > /dev/null; then
-            echo "$port"
-            return
-        fi
-        ((port++))
+# Define a function to find the first available port number
+function find_available_php_port() {
+  # Declare an empty array to hold the port numbers
+  declare -a ports=()
+
+  # Find all .conf files in /etc/php/*/fpm/pool.d that contain the specified text
+  while IFS= read -r file; do
+    if grep -q '^\s*listen\s*=\s*.*:[0-9]\{1,\}' "$file"; then
+      # Extract the port number from the listen directive and add it to the array
+      port=$(grep -o ':[0-9]\{1,\}' "$file" | tr -d ':')
+      ports+=("$port")
+    fi
+  done < <(find /etc/php/*/fpm/pool.d -maxdepth 1 -type f -name '*.conf')
+
+  # Find the first available port number starting from 9000 sequentially
+  if (( ${#ports[@]} == 0 )); then
+    echo 9000
+  else
+    next_port=9000
+    for used_port in "${ports[@]}"; do
+      if ((next_port == used_port)); then
+        ((next_port++))
+      else
+        break
+      fi
     done
+    echo "$next_port"
+  fi
 }
 

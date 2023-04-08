@@ -25,7 +25,7 @@ while true; do
 			printf "%-4s%-25s%-52s\n" "" "--aliases" "Comma-separated list of domain aliases"
 			printf "%-4s%-25s%-52s\n" "" "--ssl" "Enable or disable SSL. Default is 'yes'"
 			printf "%-4s%-25s%-52s\n" "" "--php" "PHP version to install. Must be 7.4, 8.0, 8.1, or 8.2. Default is '8.0'"
-			printf "%-4s%-25s%-52s\n" "" "--path" "Path to install website. Default is '/home/sites/<domain_name>'"
+			printf "%-4s%-25s%-52s\n" "" "--vpath" "Path to install website. Default is '/home/sites/<domain_name>'"
 			printf "%-4s%-25s%-52s\n" "" "--sftp_user" "SFTP username. Default is generated from domain name"
 			printf "%-4s%-25s%-52s\n" "" "--sftp_pass" "SFTP password. Default is random"
 			printf "%-4s%-25s%-52s\n" "" "--db_host" "Database host. Default is 'localhost'"
@@ -54,7 +54,7 @@ while true; do
             domain_no_www="${domain/www.}"
 
             # Set default values based on domain
-            path="/home/sites/$domain_no_www"
+            vpath="/home/sites/$domain_no_www"
             sftp_user="$(generate_user_name "$domain_no_www")"
             db_user="$(generate_user_name "$domain_no_www")"
             wp_user="$(generate_user_name "$domain_no_www")"
@@ -120,9 +120,9 @@ while true; do
                     ;;
             esac
             ;;
-        --path)
+        --vpath)
             path="${2:-/home/sites/$domain_no_www}"; shift 2
-            if [[ "${path%/}" != *"/$domain_no_www" ]]; then
+            if [[ "${vpath%/}" != *"/$domain_no_www" ]]; then
                 print_colored red "Invalid path: must include domain as the last directory name"; exit 1
             fi
             ;;
@@ -229,7 +229,7 @@ printf "%-15s %s\n" "Domain:" "$domain"
 printf "%-15s %s\n" "Aliases:" "$aliases"
 printf "%-15s %s\n" "SSL:" "$ssl"
 printf "%-15s %s\n" "PHP version:" "$php"
-printf "%-15s %s\n" "Path:" "$path"
+printf "%-15s %s\n" "Path:" "${vpath}"
 printf "%-15s %s\n" "SFTP user:" "$sftp_user"
 printf "%-15s %s\n" "SFTP password:" "$sftp_pass"
 printf "%-15s %s\n" "DB host:" "$db_host"
@@ -252,34 +252,34 @@ vhost_create_user() {
 	
 	# creating site structure
 	echo "Updating site structure and permissions..."
-	print_colored green "Using $path with owner ${sftp_user}"
-	create_folder "${path}"
-	create_folder "${path}/backups"
-	create_folder "${path}/logs"
-	create_folder "${path}/www"
+	print_colored green "Using ${vpath} with owner ${sftp_user}"
+	create_folder "${vpath}"
+	create_folder "${vpath}/backups"
+	create_folder "${vpath}/logs"
+	create_folder "${vpath}/www"
 
 	# create sftp user
 	echo "Creating user $sftp_user ..."
 	if ! id -u "${sftp_user}" &>/dev/null; then
-		useradd -m -d "${path}" -s /usr/sbin/nologin -p "$(openssl passwd -1 "${sftp_pass}")" "${sftp_user}"
+		useradd -m -d "${vpath}" -s /usr/sbin/nologin -p "$(openssl passwd -1 "${sftp_pass}")" "${sftp_user}"
 		usermod -aG sftp "${sftp_user}"
-		echo "User: ${sftp_user}" > "${path}/logs/user.sftp.log"
-		echo "Pass: ${sftp_pass}" >> "${path}/logs/user.sftp.log"
-		print_colored green "Created ${sftp_user} with pass ${sftp_pass} for $path"
+		echo "User: ${sftp_user}" > "${vpath}/logs/user.sftp.log"
+		echo "Pass: ${sftp_pass}" >> "${vpath}/logs/user.sftp.log"
+		print_colored green "Created ${sftp_user} with pass ${sftp_pass} for ${vpath}"
 	else
 		print_colored cyan "User ${sftp_user} already exists, updating..."
-		usermod -d "${path}" -s /usr/sbin/nologin "${sftp_user}"
+		usermod -d "${vpath}" -s /usr/sbin/nologin "${sftp_user}"
 		echo "${sftp_user}:${sftp_pass}" | chpasswd
-		echo "User: ${sftp_user}" >> "${path}/logs/user.sftp.log"
-		echo "Pass: ${sftp_pass}" >> "${path}/logs/user.sftp.log"
-		print_colored green "Updated ${sftp_user} with pass ${sftp_pass} for $path"
+		echo "User: ${sftp_user}" >> "${vpath}/logs/user.sftp.log"
+		echo "Pass: ${sftp_pass}" >> "${vpath}/logs/user.sftp.log"
+		print_colored green "Updated ${sftp_user} with pass ${sftp_pass} for ${vpath}"
 	fi
 	
 	# permissions
-	chown -R root:root "${path}"
-	chown -R "${sftp_user}":"${sftp_user}" "${path}/backups"
-	chown -R "${sftp_user}":"${sftp_user}" "${path}/www"
-	chmod -R 0755 "${path}"
+	chown -R root:root "${vpath}"
+	chown -R "${sftp_user}":"${sftp_user}" "${vpath}/backups"
+	chown -R "${sftp_user}":"${sftp_user}" "${vpath}/www"
+	chmod -R 0755 "${vpath}"
 
 }
 
@@ -287,11 +287,11 @@ vhost_create_user() {
 # save the new database credentials
 save_db_credentials() {
     # Create the log file and write the database details to it
-    echo "Database: ${db_user}" > "${path}/logs/user.mysql.log"
-    echo "Username: ${db_user}" >> "${path}/logs/user.mysql.log"
-    echo "Password: ${db_pass}" >> "${path}/logs/user.mysql.log"
-    echo "Host: ${db_host}" >> "${path}/logs/user.mysql.log"
-    echo "Port: ${db_port}" >> "${path}/logs/user.mysql.log"
+    echo "Database: ${db_user}" > "${vpath}/logs/user.mysql.log"
+    echo "Username: ${db_user}" >> "${vpath}/logs/user.mysql.log"
+    echo "Password: ${db_pass}" >> "${vpath}/logs/user.mysql.log"
+    echo "Host: ${db_host}" >> "${vpath}/logs/user.mysql.log"
+    echo "Port: ${db_port}" >> "${vpath}/logs/user.mysql.log"
 }
 
 
@@ -327,7 +327,7 @@ vhost_create_database() {
 install_wp() {    
    
     export WP_CLI_CACHE_DIR=/tmp
-	DOCHM="${path}/www"
+	DOCHM="${vpath}/www"
 	cd ${DOCHM}
 	
 	# check for existing wp-config.php file
@@ -377,12 +377,12 @@ install_wp() {
 	fi
 		
 	# permissions
-	chown -R "${sftp_user}":"${sftp_user}" "${path}/www"
-	chmod -R 0755 "${path}/www"
+	chown -R "${sftp_user}":"${sftp_user}" "${vpath}/www"
+	chmod -R 0755 "${vpath}/www"
 			
 	# save credentials
-	echo "WP User: ${wp_user}" > "${path}/logs/user.wp.log"
-	echo "WP Pass: ${wp_pass}" >> "${path}/logs/user.wp.log"
+	echo "WP User: ${wp_user}" > "${vpath}/logs/user.wp.log"
+	echo "WP Pass: ${wp_pass}" >> "${vpath}/logs/user.wp.log"
 		    
 }
 
@@ -437,7 +437,7 @@ create_ols_vhost() {
 	# fix paths and other info
 	sed -i "s~##domain##~${domain}~g" "${VHCONF}"
 	sed -i "s~##aliases##~${aliases}~g" "${VHCONF}"
-	sed -i "s~##path##~${path}~g" "${VHCONF}"
+	sed -i "s~##path##~${vpath}~g" "${VHCONF}"
 	sed -i "s~##user##~${sftp_user}~g" "${VHCONF}"
 	scripthandler="lsphp${php//./}"
 	sed -i "s~##php##~${scripthandler}~g" "${VHCONF}"
@@ -459,7 +459,7 @@ create_ols_vhost() {
 	# create virtualhost block for httpd_config.conf
 	virtualhost="
     virtualhost ${domain} {
-        vhRoot                  ${path}
+        vhRoot                  ${vpath}
         configFile              ${VHCONF}
         allowSymbolLink         2
         enableScript            1
@@ -485,18 +485,36 @@ create_ols_vhost() {
 	# generate php pools
 	AVAIL_POOL_PORT=$(find_available_php_port)
 	
-	#curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/php/pool.conf > /tmp/pool.conf
+	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/php/pool.conf > /tmp/pool.conf
 	#cat /tmp/pool.conf | grep -q "user" && cp /tmp/pool.conf ${VHCONF} && print_colored green "Success: pool.conf updated." || print_colored red "Error downloading vhconf.conf ..."
 	#rm /tmp/pool.conf
 	
 	
-	#/etc/php/7.4/fpm/pool.d/${domain}.conf
+	#/etc/php/${version}/fpm/pool.d/${domain}.conf
 	
 	
-	
-	
+	# generate php pools
+	PHP_POOL_COUNT=$(calculate_memory_configs "PHP_POOL_COUNT")
+	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/php/pool.conf > /tmp/pool.conf
+	for version in 7.4 8.0 8.1 8.2; do
+		CHECK="/etc/php/${version}/fpm/pool.d"
+		POOL_LOC="${CHECK}/${domain}.conf"
+		if [ -d "${CHECK}" ]; then
+			cat /tmp/pool.conf | grep -q "user" && cp /tmp/pool.conf ${POOL_LOC} && print_colored green "Success: pool.conf created for for PHP ${version} FPM." || print_colored red "Error downloading pool.conf ..."
+			AVAIL_POOL_PORT=$(find_available_php_port)
+			sed -i "s/#user#/$sftp_user/g" "${POOL_LOC}"
+			sed -i "s/#port#/$AVAIL_POOL_PORT/g" "${POOL_LOC}"
+			sed -i "s/#children#/$PHP_POOL_COUNT/g" "${POOL_LOC}"
+			sed -i "s/#vpath#/${vpath}/g" "${POOL_LOC}"
+			systemctl restart php${version}-fpm
+			((AVAIL_POOL_PORT++))
+		else
+			print_colored red "Directory for PHP ${version} does not exist"
+		fi
+	done
+	rm /tmp/pool.conf
+		
 }
-
 
 # END FUNCTIONS
 
