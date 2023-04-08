@@ -318,7 +318,7 @@ function install_ols() {
 	# change default port
     if [ -e /usr/local/lsws/admin/conf/admin_config.conf ]; then 
 		sed -i "s/^.*address .*$/  address               *:${OLS_PORT}/g" /usr/local/lsws/admin/conf/admin_config.conf
-		print_colored magenta "Warning:" "OLS port updated to ${OLS_PORT}"
+		print_colored magenta "Warning:" "OLS port set to ${OLS_PORT}"
 	else
 		print_colored red "Error:" "/usr/local/lsws/admin/conf/admin_config.conf not found."
 	fi
