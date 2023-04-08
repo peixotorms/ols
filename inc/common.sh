@@ -151,6 +151,7 @@ function update_system
 	DEBIAN_FRONTEND=noninteractive silent apt update
 	DEBIAN_FRONTEND=noninteractive silent apt upgrade -y
 	DEBIAN_FRONTEND=noninteractive silent apt autoremove -y
+		
 }
 
 

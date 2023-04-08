@@ -443,7 +443,7 @@ create_ols_vhost() {
 	scripthandler="lsphp${php//./}"
 	sed -i "s~##php##~${scripthandler}~g" "${VHCONF}"
 
-	
+
 	# create map rule for the listener block
 	if [ -n "$aliases" ]; then
 	  aliases_map="$(echo "$aliases" | sed 's/,/, /g')"
@@ -462,9 +462,10 @@ create_ols_vhost() {
     virtualhost ${domain} {
         vhRoot                  ${path}
         configFile              ${VHCONF}
-        allowSymbolLink         1
+        allowSymbolLink         2
         enableScript            1
         restrained              1
+		setUIDMode              2
         user                    ${sftp_user}
         group                   ${sftp_user}
     }
@@ -476,7 +477,7 @@ create_ols_vhost() {
 	fi
 	
 	# permissions
-	chown -R lsadm:lsadm /usr/local/lsws/conf/vhosts	
+	chown -R lsadm:lsadm /usr/local/lsws/conf
 	
 	# restart
 	systemctl restart lsws

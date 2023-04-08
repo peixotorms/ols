@@ -15,7 +15,7 @@ SSH_PORT="22"
 OLS_PORT="7080"
 OLS_USER="admin"
 OLS_PASS=$(gen_rand_pass)
-FUNC_NAMES="update_system, setup_sshd, setup_repositories, setup_firewall, install_basic_packages, install_ols, install_php, install_wp_cli, install_percona, install_redis, install_postfix"
+FUNC_NAMES="update_system, update_limits, setup_sshd, setup_repositories, setup_firewall, install_basic_packages, install_ols, install_php, install_wp_cli, install_percona, install_redis, install_postfix"
 
 # Parse command-line arguments
 while [[ $# -gt 0 ]]; do
@@ -26,7 +26,7 @@ while [[ $# -gt 0 ]]; do
             echo ""
             printf "Options:\n"
             printf "%-4s%-11s%-49s\n" "" "-f | --functions" "Run a comma-separated list of function names:"
-            IFS=',' read -ra FUNC_NAMES <<< "update_system, setup_sshd, setup_repositories, setup_firewall, install_basic_packages, install_ols, install_php, install_wp_cli, install_percona, install_redis, install_postfix"
+            IFS=',' read -ra FUNC_NAMES <<< "update_system, update_limits, setup_sshd, setup_repositories, setup_firewall, install_basic_packages, install_ols, install_php, install_wp_cli, install_percona, install_redis, install_postfix"
             for FUNC_NAME in "${FUNC_NAMES[@]}"; do
                 printf "%-15s%-48s\n" "" "$FUNC_NAME"
             done
@@ -131,6 +131,64 @@ done
 
 
 # START FUNCTIONS
+
+
+# This function updates the system and disables hints on pending kernel upgrades
+function update_limits
+{
+		
+	# basic settings
+	echo 'Adjusting time to UTC and locale to en_US...'
+	silent dpkg-reconfigure -f noninteractive tzdata
+	silent locale-gen en_US en_US.utf8
+	silent localectl set-locale LANG=en_US.utf8
+	silent update-locale LC_ALL=en_US.utf8
+	
+	echo 'Setting nano as default editor...'
+	echo "SELECTED_EDITOR=\"/bin/nano\"" > /root/.selected_editor
+	
+	echo 'Setting localhost ip address...'
+	grep -qxF '127.0.0.1 localhost' /etc/hosts || echo "127.0.0.1 localhost" >> /etc/hosts
+	
+	echo 'Increasing unix socket limits...'
+	ulimit -n 65000
+	grep -qxF "* soft nofile 65000" /etc/security/limits.conf || echo "* soft nofile 65000" >> /etc/security/limits.conf
+	grep -qxF "* hard nofile 65000" /etc/security/limits.conf || echo "* hard nofile 65000" >> /etc/security/limits.conf
+	echo "net.core.somaxconn = 65000" | tee /etc/sysctl.d/99-somaxconn.conf && silent sysctl --system
+	
+	echo "Increasing network buffer size..."
+	echo "net.ipv4.tcp_rmem = 4096 4194304 33554432" && echo "net.ipv4.tcp_wmem = 4096 4194304 33554432" | tee -a /etc/sysctl.d/99-tcp_mem.conf && silent sysctl --system	
+
+	# adjust swap to 2GB
+	# Get current swap size in gigabytes
+	current_swap_size_gb=$(swapon --show=SIZE --noheadings | awk '{gsub(/[A-Za-z]/, "", $1); print $1}')
+
+	# Target swap size in gigabytes (2G)
+	target_swap_size_gb=2
+
+	# Check if current swap size is not 2G
+	echo "Adjusting swap file..."
+	if [ "${current_swap_size_gb%.*}" -ne "$target_swap_size_gb" ]; then
+		swapoff -a
+		[ -f /swapfile ] && rm /swapfile
+		fallocate -l 2G /swapfile
+		chmod 600 /swapfile
+		mkswap /swapfile
+		swapon /swapfile
+
+		# Update /etc/fstab to persist swap across reboots
+		grep -v '/swapfile' /etc/fstab > /tmp/fstab_no_swap
+		echo '/swapfile none swap sw 0 0' >> /tmp/fstab_no_swap
+		mv /tmp/fstab_no_swap /etc/fstab
+		echo "Swap file adjusted to 2G."
+	else
+		echo "The current swap size is already 2GB."
+	fi
+
+	
+}
+
+
 
 # This function downloads and updates configuration files for sshd
 function setup_sshd
