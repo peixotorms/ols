@@ -258,12 +258,6 @@ vhost_create_user() {
 	create_folder "${path}/logs"
 	create_folder "${path}/www"
 
-	# permissions
-	chown -R "${sftp_user}":"${sftp_user}" "${path}"
-	chmod -R 0755 "${path}"
-	chown root:root "${path}"
-	chmod 750 "${path}"
-
 	# create sftp user
 	echo "Creating user $sftp_user ..."
 	if ! id -u "${sftp_user}" &>/dev/null; then
@@ -279,7 +273,13 @@ vhost_create_user() {
 		echo "User: ${sftp_user}" >> "${path}/logs/user.sftp.log"
 		echo "Pass: ${sftp_pass}" >> "${path}/logs/user.sftp.log"
 		print_colored green "Updated ${sftp_user} with pass ${sftp_pass} for $path"
-	fi	
+	fi
+	
+	# permissions
+	chown -R "${sftp_user}":"${sftp_user}" "${path}"
+	chmod -R 0755 "${path}"
+	chown root:root "${path}"
+	chmod 750 "${path}"
 
 }
 
@@ -436,42 +436,45 @@ create_ols_vhost() {
 	rm /tmp/vhconf.conf
 	
 	# fix paths and other info
-	sed -i "s/##domain##/${domain}/g" "${VHCONF}"
-	sed -i "s/##aliases##/${aliases}/g" "${VHCONF}"
-	sed -i "s/##path##/${path}/g" "${VHCONF}"
-	sed -i "s/##user##/${sftp_user}/g" "${VHCONF}"
-	scripthandler="lsphp${php//./}";
-	sed -i "s/##php##/${scripthandler}/g" "${VHCONF}"
-	
+	sed -i "s~##domain##~${domain}~g" "${VHCONF}"
+	sed -i "s~##aliases##~${aliases}~g" "${VHCONF}"
+	sed -i "s~##path##~${path}~g" "${VHCONF}"
+	sed -i "s~##user##~${sftp_user}~g" "${VHCONF}"
+	scripthandler="lsphp${php//./}"
+	sed -i "s~##php##~${scripthandler}~g" "${VHCONF}"
 
-	# create map rule for the listener on httpd_config.conf
+	
+	# create map rule for the listener block
 	if [ -n "$aliases" ]; then
 	  aliases_map="$(echo "$aliases" | sed 's/,/, /g')"
 	  newmap="map ${domain} ${domain}, ${aliases_map}"
 	else
 	  newmap="map ${domain}"
 	fi
-	
-	# append it
-    sed -i '/^listener.*{/!b;n;/^\t'"$newmap"'$/!a\\t'"$newmap"'' ${VHCONF}
-	
+
+	# append it to httpd_config.conf
+	if ! grep -q "$newmap" "/usr/local/lsws/conf/httpd_config.conf"; then
+	  sed -i -e '/listener/,/\}/s/\}/  '"$newmap"'\n}/' "/usr/local/lsws/conf/httpd_config.conf"
+	fi
 	
 	# create virtualhost block for httpd_config.conf
 	virtualhost="
-	virtualhost ${MY_DOMAIN} {
-		vhRoot                  ${path}
-		configFile              ${VHCONF}
-		allowSymbolLink         1
-		enableScript            1
-		restrained              1
-		user                    ${sftp_user}
-		group                   ${sftp_user}
-	}
+    virtualhost ${domain} {
+        vhRoot                  ${path}
+        configFile              ${VHCONF}
+        allowSymbolLink         1
+        enableScript            1
+        restrained              1
+        user                    ${sftp_user}
+        group                   ${sftp_user}
+    }
 	"
 	
 	# append it
-    awk -i inplace '/^listener.*{/ {f=1} {if (!f) { print "\n" } print } if (f && NR==2) { printf "\n%s\n\n", "'"$virtualhost"'" }' "${VHCONF}"
-		
+	if ! grep -qF "virtualhost ${domain}" "/usr/local/lsws/conf/httpd_config.conf"; then
+		echo "$virtualhost" >> "/usr/local/lsws/conf/httpd_config.conf"
+	fi
+	
 	# permissions
 	chown -R lsadm:lsadm ${VHDIR}/*	
 	
