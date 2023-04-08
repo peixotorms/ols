@@ -476,7 +476,7 @@ create_ols_vhost() {
 	fi
 	
 	# permissions
-	chown -R lsadm:lsadm ${VHDIR}/*	
+	chown -R lsadm:lsadm /usr/local/lsws/conf/vhosts	
 	
 	# restart
 	systemctl restart lsws
