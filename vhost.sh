@@ -352,11 +352,12 @@ install_wp() {
 	if test -e "${DOCHM}/wp-config.php"; then
 		
 		# update credentials
-		print_colored cyan "Notice:" "wp-config.php file exists, updating..."
+		print_colored cyan "Notice:" "wp-config.php file exists, updating credentials..."
 		wp config set DB_HOST "${db_host}" --type=constant --allow-root
 		wp config set DB_NAME "${db_user}" --type=constant --allow-root
 		wp config set DB_USER "${db_user}" --type=constant --allow-root
 		wp config set DB_PASSWORD "${db_pass}" --type=constant --allow-root
+		wp user update "${wp_user}" --user_pass="${wp_pass}" --role=administrator --allow-root
 		
 		# finish
 		print_colored cyan "Notice:" "WordPress credentials are up to date on ${domain}"
