@@ -10,9 +10,13 @@
 # import common functions
 source <(curl -sSf https://raw.githubusercontent.com/peixotorms/ols/main/inc/common.sh)
 
+# runtime defaults
+CONFIRM_SETUP="0"
+IP=$(calculate_memory_configs "IP")
+CURSSHPORT=$(calculate_memory_configs "CURSSHPORT")
 
 # Parse command-line arguments
-TEMP=$(getopt -o 'h' --long help,domain:,aliases:,ssl:,php:,path:,sftp_user:,sftp_pass:,db_host:,db_port:,db_user:,db_pass:,wp_install:,wp_user:,wp_pass:,dev_mode: -n "$(basename -- "$0")" -- "$@")
+TEMP=$(getopt -o 'h' --long help,domain:,aliases:,ssl:,php:,vpath:,sftp_user:,sftp_pass:,db_host:,db_port:,db_user:,db_pass:,wp_install:,wp_user:,wp_pass:,dev_mode: -n "$(basename -- "$0")" -- "$@")
 eval set -- "$TEMP"
 while true; do
     case "$1" in
@@ -219,45 +223,6 @@ done
 if [[ -z "$domain" ]]; then
     print_colored red "Error:" "--domain option is required."; exit 1
 fi
-
-
-
-# run
-print_colored cyan "Notice:" "Starting install..."
-
-# info
-IP=$(calculate_memory_configs "IP")
-CURSSHPORT=$(calculate_memory_configs "CURSSHPORT")
-
-echo ""
-print_chars 60 -
-print_colored cyan   "Site Information:    "
-print_colored yellow "Domain:              " "$domain"
-print_colored yellow "Aliases:             " "$aliases"
-print_colored yellow "Path:                " "${vpath}"
-print_colored yellow "SSL:                 " "$ssl"
-echo ""
-print_colored cyan   "SFTP Access:         "
-print_colored yellow "IP Adress:           " "$IP"
-print_colored yellow "SFTP Port:           " "$CURSSHPORT"
-print_colored yellow "SFTP User:           " "$sftp_user"
-print_colored yellow "SFTP Pass:           " "$sftp_pass"
-echo ""
-print_colored cyan   "PerconaDB:           "
-print_colored yellow "DB Name:             " "$db_user"
-print_colored yellow "DB Host:             " "$db_host"
-print_colored yellow "DB Port:             " "$db_port"
-print_colored yellow "DB User:             " "$db_user"
-print_colored yellow "DB Pass:             " "$db_pass"
-echo ""
-print_colored cyan   "PHP + WP:            "
-print_colored yellow "FPM Version:         " "$php"
-print_colored yellow "WP Install:          " "$wp_install"
-print_colored yellow "WP User:             " "$wp_user"
-print_colored yellow "WP Pass:             " "$wp_pass"
-print_colored yellow "Development Mode:    " "$dev_mode"
-print_chars 60 -
-echo ""	
 
 
 # START FUNCTIONS
@@ -547,15 +512,70 @@ create_letsencrypt_ssl() {
 }
 
 
+before_install_display_vhost() {
+echo ""
+print_chars 60 -
+print_colored cyan   "Site Information:    "
+print_colored yellow "Domain:              " "$domain"
+print_colored yellow "Aliases:             " "$aliases"
+print_colored yellow "Path:                " "${vpath}"
+print_colored yellow "SSL:                 " "$ssl"
+echo ""
+print_colored cyan   "SFTP Access:         "
+print_colored yellow "IP Adress:           " "$IP"
+print_colored yellow "SFTP Port:           " "$CURSSHPORT"
+print_colored yellow "SFTP User:           " "$sftp_user"
+print_colored yellow "SFTP Pass:           " "$sftp_pass"
+echo ""
+print_colored cyan   "PerconaDB:           "
+print_colored yellow "DB Name:             " "$db_user"
+print_colored yellow "DB Host:             " "$db_host"
+print_colored yellow "DB Port:             " "$db_port"
+print_colored yellow "DB User:             " "$db_user"
+print_colored yellow "DB Pass:             " "$db_pass"
+echo ""
+print_colored cyan   "PHP + WP:            "
+print_colored yellow "FPM Version:         " "$php"
+print_colored yellow "WP Install:          " "$wp_install"
+print_colored yellow "WP User:             " "$wp_user"
+print_colored yellow "WP Pass:             " "$wp_pass"
+print_colored yellow "Development Mode:    " "$dev_mode"
+print_chars 60 -
+echo ""	
+}
+
+
 # END FUNCTIONS
 
+# runtime defaults
+CONFIRM_SETUP="0"
 
-# run
-vhost_create_user
-vhost_create_database
-install_wp
-create_ols_vhost
-create_letsencrypt_ssl
+# display summary and ask permission
+echo ""
+
+# confirmation request
+printf 'Are these settings correct? Type n to quit, otherwise will continue. [Y/n]  '
+read answer
+if [ "$answer" = "N" ] || [ "$answer" = "n" ] ; then
+    print_colored red "Error:" "Aborting installation!"
+    exit 0
+else
+	CONFIRM_SETUP="1"
+	echo ""
+fi
+	
+print_colored cyan "Notice:" "Starting installation >> >> >> >> >> >> >>"
+echo ""
+
+# install
+if [ "$CONFIRM_SETUP" != "0" ] ; then
+	before_install_display_vhost
+	vhost_create_user
+	vhost_create_database
+	install_wp
+	create_ols_vhost
+	create_letsencrypt_ssl
+fi 
 
 # finish
 print_colored green "All done!"

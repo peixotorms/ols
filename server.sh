@@ -10,11 +10,13 @@
 # import common functions
 source <(curl -sSf https://raw.githubusercontent.com/peixotorms/ols/main/inc/common.sh)
 
-# defaults
+# runtime defaults
+CONFIRM_SETUP="0"
+RESTART_SSH="0"
 CURSSHPORT=$(calculate_memory_configs "CURSSHPORT")
 SSH_PORT="22"
 OLS_PORT="7080"
-OLS_USER="admin"
+OLS_USER="olsadmin"
 OLS_PASS=$(gen_rand_pass)
 FUNC_NAMES="update_system, update_limits, setup_sshd, setup_repositories, setup_firewall, install_basic_packages, install_ols, install_php, install_wp_cli, install_percona, install_redis, install_postfix"
 
@@ -246,14 +248,15 @@ function setup_firewall
 	echo "Updating firewall policy..."
 	
 	# reinstall and reset firewall
-	silent iptables -P INPUT ACCEPT
-	silent iptables -P FORWARD ACCEPT
+	silent iptables -P INPUT DROP
+	silent iptables -P FORWARD DROP
 	silent iptables -P OUTPUT ACCEPT
-	silent iptables -F INPUT
-	silent iptables -F OUTPUT
-	silent iptables -F FORWARD
 	silent iptables -F
-
+	silent iptables -X
+	silent iptables -Z
+	silent iptables -P INPUT DROP
+	silent iptables -P FORWARD DROP
+	silent iptables -P OUTPUT ACCEPT
 
 	# Check if ufw is already installed, and only reinstall if not
 	if ! command -v ufw &> /dev/null; then
@@ -608,13 +611,10 @@ function before_install_display
 # END FUNCTIONS
 
 
-# runtime defaults
-CONFIRM_SETUP="0"
-RESTART_SSH="0"
+
 
 # display summary and ask permission
 echo ""
-print_colored green "Success:" "Starting install..."
 before_install_display
 
 # confirmation request
