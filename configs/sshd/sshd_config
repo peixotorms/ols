@@ -24,7 +24,8 @@ Subsystem sftp /usr/lib/openssh/sftp-server
 
 # sftp only rules
 Match Group sftp
+PasswordAuthentication yes
 ChrootDirectory %h
-ForceCommand internal-sftp
+ForceCommand /usr/bin/rssh_chroot_helper
 AllowTcpForwarding no
 

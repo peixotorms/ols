@@ -204,6 +204,13 @@ function setup_sshd
 	rm /tmp/sshd_config
 	[[ "${SSH_PORT}" != "22" ]] && sed -i "s/^Port 22.*$/Port ${SSH_PORT}/" /etc/ssh/sshd_config
 	[[ "${SSH_PORT}" != "${CURSSHPORT}" ]] && print_colored magenta "Warning:" "SSH port changed from ${CURSSHPORT} to $SSH_PORT."
+	
+	# installing rssh
+	echo "Installing restricted shell (rssh)... "
+	DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" rssh
+	
+	
+	
 
 }
 
@@ -239,9 +246,15 @@ function setup_firewall
 	echo "Updating firewall policy..."
 	
 	# reinstall and reset firewall
-	silent iptables --flush
-	silent iptables --delete-chain
-		 
+	silent iptables -P INPUT ACCEPT
+	silent iptables -P FORWARD ACCEPT
+	silent iptables -P OUTPUT ACCEPT
+	silent iptables -F INPUT
+	silent iptables -F OUTPUT
+	silent iptables -F FORWARD
+	silent iptables -F
+
+
 	# Check if ufw is already installed, and only reinstall if not
 	if ! command -v ufw &> /dev/null; then
 		DEBIAN_FRONTEND=noninteractive silent apt install -y ufw
