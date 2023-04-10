@@ -547,11 +547,10 @@ echo ""
 
 # END FUNCTIONS
 
-# runtime defaults
-CONFIRM_SETUP="0"
 
 # display summary and ask permission
 echo ""
+before_install_display_vhost
 
 # confirmation request
 printf 'Are these settings correct? Type n to quit, otherwise will continue. [Y/n]  '
@@ -569,7 +568,6 @@ echo ""
 
 # install
 if [ "$CONFIRM_SETUP" != "0" ] ; then
-	before_install_display_vhost
 	vhost_create_user
 	vhost_create_database
 	install_wp
