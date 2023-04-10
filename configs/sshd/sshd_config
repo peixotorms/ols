@@ -26,6 +26,5 @@ Subsystem sftp /usr/lib/openssh/sftp-server
 Match Group sftp
 PasswordAuthentication yes
 ChrootDirectory %h
-ForceCommand /usr/bin/rush -c sftp
+ForceCommand /usr/sbin/rush
 AllowTcpForwarding no
-

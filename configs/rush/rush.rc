@@ -1,0 +1,88 @@
+debug 1
+
+rule default
+  acct on
+  limits t10r20
+  umask 002
+  env - USER LOGNAME HOME PATH
+  info "Allowed commands: sftp, scp, rsync, zip, unzip, tar, gzip, gunzip, wget, curl, wp, cd, ls, mkdir, rm, mv, cp"
+  fall-through
+
+rule allowed-commands
+  command match "^/usr/bin/sftp"
+  command match "^/usr/bin/scp"
+  command match "^/usr/bin/rsync"
+  command match "^/usr/bin/zip"
+  command match "^/usr/bin/unzip"
+  command match "^/usr/bin/tar"
+  command match "^/usr/bin/gzip"
+  command match "^/usr/bin/gunzip"
+  command match "^/usr/bin/wget"
+  command match "^/usr/bin/curl"
+  command match "^/usr/local/bin/wp"
+  command match "^/bin/cd"
+  command match "^/bin/ls"
+  command match "^/bin/mkdir"
+  command match "^/usr/local/bin/rm-wrapper.sh"
+  command match "^/bin/mv"
+  command match "^/bin/cp"
+  chdir ~
+  fallthrough "deny"
+  
+rule deny-commands
+  deny message env "RUSH_DENY_REASON=$0"
+  deny message "This command is not allowed!"
+
+rule scp-to
+  command ^scp (-v )?-t( --)? /incoming/(alpha|ftp)/?
+  set[0] /usr/bin/scp
+  match[$] ! /\.\.
+  transform[$] s,^/incoming/,,
+  chroot /srv/rush
+  chdir /srv/incoming
+
+rule scp-from
+  command ^scp (-v )?-f
+  exit Error: Secure copy from this server is not allowed
+
+rule sftp-rush
+  command ^.*/sftp-server
+  uid >= 1000
+  set[0] /usr/lib/sftp-server
+  umask 002
+  chroot /srv/rush
+  chdir ~
+
+rule rsync-home
+  command ^rsync --server
+  uid >= 1000
+  set[0] /usr/bin/rsync
+  match[$] ^~/.*
+  match[$] ! \.\.
+  transform[$] s,^~/,./,
+  umask 002
+  chroot /srv/rush
+  chdir ~
+
+rule cvs
+  command ^cvs server
+  set[0] /usr/bin/cvs
+  env CVSROOT=/srv/cvsroot
+  chroot /srv/rush
+  chdir /srv/cvsroot
+
+rule svn-rush
+  command ^svnserve -t
+  transform s|-r *[^ ]*||;s|^svnserve |/usr/bin/svnserve -r /srv/rush/srv/svnroot |
+
+rule git-rush
+  command ^git-(receive|upload)-pack
+  match[1] ^/gitroot/[^ ]+\.git/?$
+  transform[0] s|^|/usr/bin/|
+  transform[1] s,/gitroot,/srv&,
+  chroot /srv/rush
+  chdir /
+
+rule git-trap
+  command ^git-(receive|upload)-pack
+  exit fatal: access to this repository is denied.

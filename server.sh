@@ -207,14 +207,21 @@ function setup_sshd
 	[[ "${SSH_PORT}" != "22" ]] && sed -i "s/^Port 22.*$/Port ${SSH_PORT}/" /etc/ssh/sshd_config
 	[[ "${SSH_PORT}" != "${CURSSHPORT}" ]] && print_colored magenta "Warning:" "SSH port changed from ${CURSSHPORT} to $SSH_PORT."
 	
-	# installing rssh
-	echo "Installing restricted shell (rush)... "
+	# installing GNU Rush
+	echo "Installing GNU Rush... "
 	DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" rush
-	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/sshd/default.shell > /tmp/default.shell
-	cat /tmp/default.shell | grep -q "rush" && cp /tmp/default.shell /etc/rush/default.shell && print_colored green "Success:" "default.shell updated." || print_colored red "Error:" "downloading default.shell ..."
-	rm /tmp/default.shell
-	chown root:root /etc/rush/default.shell
-	chmod 0644 /etc/rush/default.shell
+	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/rush/rush.rc > /tmp/rush.rc
+	cat /tmp/rush.rc | grep -q "rush" && cp /tmp/rush.rc /etc/rush/rush.rc && print_colored green "Success:" "rush.rc updated." || print_colored red "Error:" "downloading rush.rc ..."
+	rm /tmp/rush.rc
+	chown root:root /etc/rush/rush.rc
+	chmod 0644 /etc/rush/rush.rc
+	
+	# ask before deleting
+	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/rush/rush-rm-wrapper.sh > /tmp/rush-rm-wrapper.sh
+	cat /tmp/rush-rm-wrapper.sh | grep -q "response" && cp /tmp/rush-rm-wrapper.sh /usr/local/bin/rush-rm-wrapper.sh && print_colored green "Success:" "rush-rm-wrapper.sh updated." || print_colored red "Error:" "downloading rush-rm-wrapper.sh ..."
+	rm /tmp/rush-rm-wrapper.sh
+	chown root:root /usr/local/bin/rush-rm-wrapper.sh
+	chmod 0755 /usr/local/bin/rush-rm-wrapper.sh
 
 }
 
