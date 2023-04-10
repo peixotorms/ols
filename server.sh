@@ -208,11 +208,13 @@ function setup_sshd
 	[[ "${SSH_PORT}" != "${CURSSHPORT}" ]] && print_colored magenta "Warning:" "SSH port changed from ${CURSSHPORT} to $SSH_PORT."
 	
 	# installing rssh
-	echo "Installing restricted shell (rssh)... "
-	DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" rssh
-	
-	
-	
+	echo "Installing restricted shell (rush)... "
+	DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" rush
+	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/sshd/default.shell > /tmp/default.shell
+	cat /tmp/default.shell | grep -q "rush" && cp /tmp/default.shell /etc/rush/default.shell && print_colored green "Success:" "default.shell updated." || print_colored red "Error:" "downloading default.shell ..."
+	rm /tmp/default.shell
+	chown root:root /etc/rush/default.shell
+	chmod 0644 /etc/rush/default.shell
 
 }
 
