@@ -211,10 +211,10 @@ function setup_sshd
 	echo "Installing GNU Rush... "
 	DEBIAN_FRONTEND=noninteractive silent apt install -y -o Dpkg::Options::="--force-confdef" rush
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/rush/rush.rc > /tmp/rush.rc
-	cat /tmp/rush.rc | grep -q "rush" && cp /tmp/rush.rc /etc/rush/rush.rc && print_colored green "Success:" "rush.rc updated." || print_colored red "Error:" "downloading rush.rc ..."
+	cat /tmp/rush.rc | grep -q "rush" && cp /tmp/rush.rc /etc/rush.rc && print_colored green "Success:" "rush.rc updated." || print_colored red "Error:" "downloading rush.rc ..."
 	rm /tmp/rush.rc
-	chown root:root /etc/rush/rush.rc
-	chmod 0644 /etc/rush/rush.rc
+	chown root:root /etc/rush.rc
+	chmod 0644 /etc/rush.rc
 	
 	# ask before deleting
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/rush/rush-rm-wrapper.sh > /tmp/rush-rm-wrapper.sh
