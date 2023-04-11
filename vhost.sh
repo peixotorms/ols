@@ -244,14 +244,14 @@ vhost_create_user() {
 	# create sftp user
 	echo "Creating user $sftp_user ..."
 	if ! id -u "${sftp_user}" &>/dev/null; then
-		useradd -m -d "${vpath}" -s /usr/bin/rush -p "$(openssl passwd -1 "${sftp_pass}")" "${sftp_user}"
+		useradd -m -d "${vpath}" -s /usr/sbin/nologin -p "$(openssl passwd -1 "${sftp_pass}")" "${sftp_user}"
 		usermod -aG sftp "${sftp_user}"
 		echo "User: ${sftp_user}" > "${vpath}/logs/user.sftp.log"
 		echo "Pass: ${sftp_pass}" >> "${vpath}/logs/user.sftp.log"
 		print_colored green "Success:" "Created ${sftp_user} with pass ${sftp_pass} for ${vpath}"
 	else
 		print_colored cyan "Notice:" "User ${sftp_user} already exists, updating..."
-		usermod -d "${vpath}" -s /usr/bin/rush "${sftp_user}"
+		usermod -d "${vpath}" -s /usr/sbin/nologin "${sftp_user}"
 		echo "${sftp_user}:${sftp_pass}" | chpasswd
 		echo "User: ${sftp_user}" >> "${vpath}/logs/user.sftp.log"
 		echo "Pass: ${sftp_pass}" >> "${vpath}/logs/user.sftp.log"
