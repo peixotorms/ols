@@ -75,7 +75,7 @@ function calculate_memory_configs() {
 	local CPU_CORES=$(nproc)
 	local DISK_AVAILABLE=$(df -BG /home | awk 'NR==2{print $4}')
 	local IP=$(curl -s http://checkip.amazonaws.com || printf "0.0.0.0")
-	local CURSSHPORT=$(grep -E '^Port ' /etc/ssh/sshd_config | awk '{if($2 != "") print $2; else print "22"}')
+	local CURSSHPORT=$(awk '/Port[[:space:]]+[0-9]+/{print $2; found=1; exit} END{if (!found) print "22"}' /etc/ssh/sshd_config); 
 	
 	case $OPTION in
 		"IP")

@@ -16,7 +16,7 @@ IP=$(calculate_memory_configs "IP")
 CURSSHPORT=$(calculate_memory_configs "CURSSHPORT")
 
 # Parse command-line arguments
-TEMP=$(getopt -o 'h' --long help,domain:,aliases:,ssl:,php:,vpath:,sftp_user:,sftp_pass:,db_host:,db_port:,db_user:,db_pass:,wp_install:,wp_user:,wp_pass:,dev_mode: -n "$(basename -- "$0")" -- "$@")
+TEMP=$(getopt -o 'h' --long help,domain:,aliases:,email:,ssl:,php:,vpath:,sftp_user:,sftp_pass:,db_host:,db_port:,db_user:,db_pass:,wp_install:,wp_user:,wp_pass:,dev_mode: -n "$(basename -- "$0")" -- "$@")
 eval set -- "$TEMP"
 while true; do
     case "$1" in
@@ -27,6 +27,7 @@ while true; do
 			printf "Options:\n"
 			printf "%-4s%-25s%-52s\n" "" "--domain (required)" "Domain name to set up"
 			printf "%-4s%-25s%-52s\n" "" "--aliases" "Comma-separated list of domain aliases"
+			printf "%-4s%-25s%-52s\n" "" "--email" "Administrator email address"
 			printf "%-4s%-25s%-52s\n" "" "--ssl" "Enable or disable SSL. Default is 'yes'"
 			printf "%-4s%-25s%-52s\n" "" "--php" "PHP version to install. Must be 7.4, 8.0, 8.1, or 8.2. Default is '8.0'"
 			printf "%-4s%-25s%-52s\n" "" "--vpath" "Path to install website. Default is '/home/sites/<domain_name>'"
@@ -62,6 +63,7 @@ while true; do
             sftp_user="$(generate_user_name "$domain_no_www")"
             db_user="$(generate_user_name "$domain_no_www")"
             wp_user="$(generate_user_name "$domain_no_www")"
+			email="no-reply@$(echo "$domain" | sed 's/https\?:\/\/\([^\/]*\).*/\1/' | cut -d'/' -f1 || echo "$domain")"
 			
             # Set default passwords
             sftp_pass="$(gen_rand_pass)"
@@ -104,6 +106,14 @@ while true; do
 				print_colored red "Error:" "Invalid aliases: ${2:-}"; exit 1
 			fi
 			;;
+		--email)
+            if [[ ! "$2" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+                print_colored red "Error:" "Invalid email address: $2"
+                exit 1
+            fi
+            email="$2"
+            shift 2
+            ;;
         --ssl)
             case "${2,,}" in
                 yes|no)
@@ -322,7 +332,6 @@ install_wp() {
 		wp config set DB_NAME "${db_user}" --type=constant --allow-root
 		wp config set DB_USER "${db_user}" --type=constant --allow-root
 		wp config set DB_PASSWORD "${db_pass}" --type=constant --allow-root
-		wp user update "${wp_user}" --user_pass="${wp_pass}" --role=administrator --allow-root
 		
 		# finish
 		print_colored cyan "Notice:" "WordPress credentials are up to date on ${domain}"
@@ -335,7 +344,7 @@ install_wp() {
 		
 		echo 'Installing WordPress...'
 		wp core config --dbname="${db_user}" --dbuser="${db_user}" --dbpass="${db_pass}" --dbhost="${db_host}" --dbprefix="wp_" --path="${DOCHM}" --allow-root --quiet
-		wp core install --url="${domain}" --title="WordPress" --admin_user="${wp_user}" --admin_password="${wp_pass}" --admin_email="change-me@${domain}" --skip-email --path="${DOCHM}" --allow-root --quiet
+		wp core install --url="${domain}" --title="WordPress" --admin_user="${wp_user}" --admin_password="${wp_pass}" --admin_email="${email}" --skip-email --path="${DOCHM}" --allow-root --quiet
 		
 		echo 'Finalizing WordPress...'
 		wp site empty --yes --uploads --path="${DOCHM}" --allow-root --quiet
@@ -348,12 +357,20 @@ install_wp() {
 		print_colored cyan "Notice:" "WordPress is now installed on ${domain}"
 		
 	fi
+	
+	# add or update user
+	wp user get "${wp_user}" --format=count --allow-root | grep -q '1' && wp user update "${wp_user}" --user_pass="${wp_pass}" --role=administrator --allow-root || wp user create "${wp_user}" ${email} --user_pass="${wp_pass}" --role=administrator --skip-email --allow-root
 		
 	# download htaccess
 	if [ ! -f "${DOCHM}/.htaccess" ]; then
 		curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/wp/htaccess > /tmp/htaccess.txt
 		cat /tmp/htaccess.txt | grep -q "WordPress" && cp /tmp/htaccess.txt ${DOCHM}/.htaccess && print_colored green "Success:" ".htaccess updated." || print_colored red "Error:" "downloading .htaccess ..."
 		rm /tmp/htaccess
+	fi
+	
+	# dev mode enabled
+	if [ "$dev_mode" == "yes" ]; then 
+		sed -i '1s/^/# Start development mode\n/' ${DOCHM}/.htaccess && echo -e "\n# End development mode\n" >> ${DOCHM}/.htaccess; 
 	fi
 		
 	# create control file for letsencrypt
@@ -480,7 +497,6 @@ create_letsencrypt_ssl() {
 	
 	# merge domain and aliases
 	domains="${domain}${aliases:+,${aliases}}"
-	email="no-reply@${domain}"
 	
 	# Convert the comma-separated string to an array
 	IFS=',' read -ra domains_array <<< "$domains"
@@ -518,7 +534,8 @@ print_chars 60 -
 print_colored cyan   "Site Information:    "
 print_colored yellow "Domain:              " "$domain"
 print_colored yellow "Aliases:             " "$aliases"
-print_colored yellow "Path:                " "${vpath}"
+print_colored yellow "Email:               " "$email"
+print_colored yellow "Path:                " "$vpath"
 print_colored yellow "SSL:                 " "$ssl"
 echo ""
 print_colored cyan   "SFTP Access:         "
