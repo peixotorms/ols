@@ -520,6 +520,7 @@ create_letsencrypt_ssl() {
 	if $all_successful; then
 		print_colored green "Success:" "All domains were successful, creating ssl..."
 		certbot certonly --expand --agree-tos --non-interactive --keep-until-expiring --rsa-key-size 2048 -m "${email}" --webroot -w "${DOCHM}" -d "${domains}"
+		[ -f "${DOCHM}/ssl-test.txt" ] && rm "${DOCHM}/ssl-test.txt"
 		systemctl restart lsws
 	else
 		print_colored red "Error:" "Failed domains: ${failed_domains[@]}"
