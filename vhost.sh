@@ -359,13 +359,13 @@ install_wp() {
 	fi
 	
 	# add or update user
-	wp user get "${wp_user}" --format=count --allow-root | grep -q '1' && wp user update "${wp_user}" --user_pass="${wp_pass}" --role=administrator --allow-root || wp user create "${wp_user}" ${email} --user_pass="${wp_pass}" --role=administrator --skip-email --allow-root
+	wp user get "${wp_user}" --field=user_login --allow-root | grep -q "${wp_user}" && wp user update "${wp_user}" --user_pass="${wp_pass}" --role=administrator --skip-email --allow-root || wp user create "${wp_user}" ${email} --user_pass="${wp_pass}" --role=administrator --allow-root
 		
 	# download htaccess
 	if [ ! -f "${DOCHM}/.htaccess" ]; then
 		curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/wp/htaccess > /tmp/htaccess.txt
 		cat /tmp/htaccess.txt | grep -q "WordPress" && cp /tmp/htaccess.txt ${DOCHM}/.htaccess && print_colored green "Success:" ".htaccess updated." || print_colored red "Error:" "downloading .htaccess ..."
-		rm /tmp/htaccess
+		rm /tmp/htaccess.txt
 	fi
 	
 	# dev mode enabled
