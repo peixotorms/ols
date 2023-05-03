@@ -166,7 +166,7 @@ function update_limits
 
 	# adjust swap to 2GB
 	# Get current swap size in gigabytes
-	current_swap_size_gb=$(swapon --show=SIZE --noheadings | awk '{gsub(/[A-Za-z]/, "", $1); print $1}')
+	current_swap_size_gb=$(free --giga | awk '/Swap/ {print $2}')
 
 	# Target swap size in gigabytes (2G)
 	target_swap_size_gb=2
