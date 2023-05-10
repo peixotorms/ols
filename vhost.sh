@@ -379,6 +379,9 @@ install_wp() {
 		# permissions
 		chown -R "${sftp_user}":"${sftp_user}" "${vpath}/www"
 		chmod -R 0755 "${vpath}/www"
+		
+		# restart
+		systemctl restart lsws
 				
 		# save credentials
 		echo "WP User: ${wp_user}" > "${vpath}/logs/user.wp.log"
@@ -503,17 +506,17 @@ create_letsencrypt_ssl() {
 		cd ${DOCHM}
 		
 		# create control file for letsencrypt
-		echo "checking ${DOCHM}/.well-known/ssl-test.txt"
-		if [ ! -f "${DOCHM}/.well-known/ssl-test.txt" ]; then
-			echo "creating dir"
-			mkdir -p "${DOCHM}/.well-known"
-			echo "OK" > "${DOCHM}/.well-known/ssl-test.txt"
-			echo "creating file ${DOCHM}/.well-known/ssl-test.txt"
+		echo "checking ${DOCHM}/ssl-test.txt"
+		if [ ! -f "${DOCHM}/ssl-test.txt" ]; then
+			echo "OK" > "${DOCHM}/ssl-test.txt"
 		fi
 			
 		# permissions
-		chown -R "${sftp_user}":"${sftp_user}" "${vpath}/www"
-		chmod -R 0755 "${vpath}/www"
+		chown -R "${sftp_user}":"${sftp_user}" "${DOCHM}"
+		chmod -R 0755 "${DOCHM}"
+		
+		# restart
+		systemctl restart lsws
 		
 		# merge domain and aliases
 		domains="${domain}${aliases:+,${aliases}}"
@@ -526,11 +529,11 @@ create_letsencrypt_ssl() {
 		failed_domains=()
 		for domain in "${domains_array[@]}"; do
 			echo "Testing ${domain}..."
-			response=$(curl -sSL -H "Cache-Control: no-cache" -k "http://${domain}/.well-known/ssl-test.txt?nocache=$(date +%s)")
+			response=$(curl -sSL -H "Cache-Control: no-cache" -k "http://${domain}/ssl-test.txt?nocache=$(date +%s)")
 			if [[ "${response}" == "OK" ]]; then
 				print_colored green "Success:" "${domain} found"
 			else
-				print_colored red "Error:" "http://${domain}/.well-known/ssl-test.txt?nocache=$(date +%s)"
+				print_colored red "Error:" "http://${domain}/ssl-test.txt?nocache=$(date +%s)"
 				all_successful=false
 				failed_domains+=("$domain")
 			fi
@@ -540,7 +543,7 @@ create_letsencrypt_ssl() {
 		if $all_successful; then
 			print_colored green "Success:" "All domains were successful, creating ssl..."
 			certbot certonly --expand --agree-tos --non-interactive --keep-until-expiring --rsa-key-size 2048 -m "${email}" --webroot -w "${DOCHM}" -d "${domains}"
-			if [ -f "${DOCHM}/.well-known/ssl-test.txt" ]; then rm -rf "${DOCHM}/.well-known"; fi			
+			if [ -f "${DOCHM}/ssl-test.txt" ]; then rm "${DOCHM}/ssl-test.txt"; fi			
 			systemctl restart lsws
 		else
 			for domain in "${failed_domains[@]}"
