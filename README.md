@@ -59,7 +59,7 @@ The script accepts the following options:
 --wp_install (optional)     Install WordPress or not. Default is 'yes'
 --wp_user (optional)        WordPress username. Default is generated from domain name
 --wp_pass (optional)        WordPress password. Default is a random 32 char pass
---dev_mode (optional)       Enable or disable developer mode. Default is 'yes'
+--dev_mode (optional)       Enable or disable developer mode. Default is 'no'
 --help, -h                  Show this help message
 
 ```

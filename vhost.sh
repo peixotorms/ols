@@ -40,7 +40,7 @@ while true; do
 			printf "%-4s%-25s%-52s\n" "" "--wp_install" "Install WordPress or not. Default is 'yes'"
 			printf "%-4s%-25s%-52s\n" "" "--wp_user" "WordPress username. Default is generated from domain name"
 			printf "%-4s%-25s%-52s\n" "" "--wp_pass" "WordPress password. Default is random"
-			printf "%-4s%-25s%-52s\n" "" "--dev_mode" "Enable or disable developer mode. Default is 'yes'"
+			printf "%-4s%-25s%-52s\n" "" "--dev_mode" "Enable or disable developer mode. Default is 'no'"
 			printf "%-4s%-25s%-52s\n" "" "--help, -h" "Show this help message"
 			echo ""
 			printf "Examples:\n"
@@ -76,7 +76,7 @@ while true; do
 			db_host="localhost"
 			db_port="3306"
 			wp_install="yes"
-			dev_mode="yes"
+			dev_mode="no"
 			aliases=""
 			
             ;;
