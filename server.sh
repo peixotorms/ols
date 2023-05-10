@@ -581,27 +581,11 @@ function before_install_display
 	
 	for FUNCTION_NAME in $(echo "$FUNC_NAMES" | tr ',' '\n' | uniq); do
 		
-		if [[ "$FUNCTION_NAME" = "update_system" ]]; then
-			print_colored white  "Task:                " "Install updates!"
-		fi
-		
-		if [[ "$FUNCTION_NAME" = "update_limits" ]]; then
-			print_colored white  "Task:                " "Update swap and other limits!"
-		fi
-				
 		if [[ "$FUNCTION_NAME" = "setup_sshd" ]]; then
 			echo ""
 			print_colored white  "Task:                " "Reset ssh server settings!"
 			print_colored yellow "SSH Port:            " "$SSH_PORT"
 			echo ""
-		fi
-		
-		if [[ "$FUNCTION_NAME" = "setup_firewall" ]]; then
-			print_colored white  "Task:                " "Install and reset firewall!"
-		fi
-		
-		if [[ "$FUNCTION_NAME" = "install_basic_packages" ]]; then
-			print_colored white  "Task:                " "Process basic packages!"
 		fi
 		
 		if [[ "$FUNCTION_NAME" = "install_ols" ]]; then
@@ -632,17 +616,33 @@ function before_install_display
 			echo ""
 		fi
 		
-		if [[ "$FUNCTION_NAME" = "install_wp_cli" ]]; then
-			print_colored white  "Task:                " "Install wp-cli!"
-		fi
-		
 		if [[ "$FUNCTION_NAME" = "install_redis" ]]; then
 			echo ""
 			print_colored white  "Task:                " "Install and reset Redis!"
 			print_colored yellow "Memory:              " "${REDIS_MEM}M (allkeys-lru)"
 			echo ""
 		fi
+				
+		if [[ "$FUNCTION_NAME" = "update_system" ]]; then
+			print_colored white  "Task:                " "Install updates!"
+		fi
 		
+		if [[ "$FUNCTION_NAME" = "update_limits" ]]; then
+			print_colored white  "Task:                " "Update swap and other limits!"
+		fi
+				
+		if [[ "$FUNCTION_NAME" = "setup_firewall" ]]; then
+			print_colored white  "Task:                " "Install and reset firewall!"
+		fi
+		
+		if [[ "$FUNCTION_NAME" = "install_basic_packages" ]]; then
+			print_colored white  "Task:                " "Process basic packages!"
+		fi
+		
+		if [[ "$FUNCTION_NAME" = "install_wp_cli" ]]; then
+			print_colored white  "Task:                " "Install wp-cli!"
+		fi
+				
 		if [[ "$FUNCTION_NAME" = "install_postfix" ]]; then
 			print_colored white  "Task:                " "Install and reset Postfix!"
 			echo ""
