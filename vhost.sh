@@ -317,74 +317,74 @@ vhost_create_database() {
 
 
 # install a fresh wordpress site
-install_wp() {    
-   
-    export WP_CLI_CACHE_DIR=/tmp
-	DOCHM="${vpath}/www"
-	cd ${DOCHM}
-	
-	# check for existing wp-config.php file
-	if test -e "${DOCHM}/wp-config.php"; then
+install_wp() { 
+
+	# wp install enabled
+	if [ "$wp_install" == "yes" ]; then 
+	   
+		export WP_CLI_CACHE_DIR=/tmp
+		DOCHM="${vpath}/www"
+		cd ${DOCHM}
 		
-		# update credentials
-		print_colored cyan "Notice:" "wp-config.php file exists, updating credentials..."
-		wp config set DB_HOST "${db_host}" --type=constant --allow-root
-		wp config set DB_NAME "${db_user}" --type=constant --allow-root
-		wp config set DB_USER "${db_user}" --type=constant --allow-root
-		wp config set DB_PASSWORD "${db_pass}" --type=constant --allow-root
-		
-		# finish
-		print_colored cyan "Notice:" "WordPress credentials are up to date on ${domain}"
-		
-	else
-		
-		# download and install
-		echo "Downloading wordpress..."
-		wp core download --path=${DOCHM} --allow-root --quiet
-		
-		echo 'Installing WordPress...'
-		wp core config --dbname="${db_user}" --dbuser="${db_user}" --dbpass="${db_pass}" --dbhost="${db_host}" --dbprefix="wp_" --path="${DOCHM}" --allow-root --quiet
-		wp core install --url="${domain}" --title="WordPress" --admin_user="${wp_user}" --admin_password="${wp_pass}" --admin_email="${email}" --skip-email --path="${DOCHM}" --allow-root --quiet
-		
-		echo 'Finalizing WordPress...'
-		wp site empty --yes --uploads --path="${DOCHM}" --allow-root --quiet
-		wp plugin delete $(wp plugin list --status=inactive --field=name --path="${DOCHM}" --allow-root --quiet) --path="${DOCHM}" --allow-root --quiet
-		wp theme delete $(wp theme list --status=inactive --field=name --path="${DOCHM}" --allow-root --quiet) --path="${DOCHM}" --allow-root --quiet
-		wp config shuffle-salts --path="${DOCHM}" --allow-root --quiet
-		wp option update permalink_structure '/%postname%/' --path="${DOCHM}" --allow-root --quiet
-		
-		# finish
-		print_colored cyan "Notice:" "WordPress is now installed on ${domain}"
-		
-	fi
-	
-	# add or update user
-	wp user get "${wp_user}" --field=user_login --allow-root | grep -q "${wp_user}" && wp user update "${wp_user}" --user_pass="${wp_pass}" --role=administrator --skip-email --allow-root || wp user create "${wp_user}" ${email} --user_pass="${wp_pass}" --role=administrator --allow-root
-		
-	# download htaccess
-	if [ ! -f "${DOCHM}/.htaccess" ]; then
-		curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/wp/htaccess > /tmp/htaccess.txt
-		cat /tmp/htaccess.txt | grep -q "WordPress" && cp /tmp/htaccess.txt ${DOCHM}/.htaccess && print_colored green "Success:" ".htaccess updated." || print_colored red "Error:" "downloading .htaccess ..."
-		rm /tmp/htaccess.txt
-	fi
-	
-	# dev mode enabled
-	if [ "$dev_mode" == "yes" ]; then 
-		sed -i '1s/^/# Start development mode\n/' ${DOCHM}/.htaccess && echo -e "\n# End development mode\n" >> ${DOCHM}/.htaccess; 
-	fi
-		
-	# create control file for letsencrypt
-	if [ ! -f "${DOCHM}/ssl-test.txt" ]; then
-		echo "OK" > ${DOCHM}/ssl-test.txt
-	fi
-		
-	# permissions
-	chown -R "${sftp_user}":"${sftp_user}" "${vpath}/www"
-	chmod -R 0755 "${vpath}/www"
+		# check for existing wp-config.php file
+		if test -e "${DOCHM}/wp-config.php"; then
 			
-	# save credentials
-	echo "WP User: ${wp_user}" > "${vpath}/logs/user.wp.log"
-	echo "WP Pass: ${wp_pass}" >> "${vpath}/logs/user.wp.log"
+			# update credentials
+			print_colored cyan "Notice:" "wp-config.php file exists, updating credentials..."
+			wp config set DB_HOST "${db_host}" --type=constant --allow-root
+			wp config set DB_NAME "${db_user}" --type=constant --allow-root
+			wp config set DB_USER "${db_user}" --type=constant --allow-root
+			wp config set DB_PASSWORD "${db_pass}" --type=constant --allow-root
+			
+			# finish
+			print_colored cyan "Notice:" "WordPress credentials are up to date on ${domain}"
+			
+		else
+			
+			# download and install
+			echo "Downloading wordpress..."
+			wp core download --path=${DOCHM} --allow-root --quiet
+			
+			echo 'Installing WordPress...'
+			wp core config --dbname="${db_user}" --dbuser="${db_user}" --dbpass="${db_pass}" --dbhost="${db_host}" --dbprefix="wp_" --path="${DOCHM}" --allow-root --quiet
+			wp core install --url="${domain}" --title="WordPress" --admin_user="${wp_user}" --admin_password="${wp_pass}" --admin_email="${email}" --skip-email --path="${DOCHM}" --allow-root --quiet
+			
+			echo 'Finalizing WordPress...'
+			wp site empty --yes --uploads --path="${DOCHM}" --allow-root --quiet
+			wp plugin delete $(wp plugin list --status=inactive --field=name --path="${DOCHM}" --allow-root --quiet) --path="${DOCHM}" --allow-root --quiet
+			wp theme delete $(wp theme list --status=inactive --field=name --path="${DOCHM}" --allow-root --quiet) --path="${DOCHM}" --allow-root --quiet
+			wp config shuffle-salts --path="${DOCHM}" --allow-root --quiet
+			wp option update permalink_structure '/%postname%/' --path="${DOCHM}" --allow-root --quiet
+			
+			# finish
+			print_colored cyan "Notice:" "WordPress is now installed on ${domain}"
+			
+		fi
+		
+		# add or update user
+		wp user get "${wp_user}" --field=user_login --allow-root | grep -q "${wp_user}" && wp user update "${wp_user}" --user_pass="${wp_pass}" --role=administrator --skip-email --allow-root || wp user create "${wp_user}" ${email} --user_pass="${wp_pass}" --role=administrator --allow-root
+			
+		# download htaccess
+		if [ ! -f "${DOCHM}/.htaccess" ]; then
+			curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/wp/htaccess > /tmp/htaccess.txt
+			cat /tmp/htaccess.txt | grep -q "WordPress" && cp /tmp/htaccess.txt ${DOCHM}/.htaccess && print_colored green "Success:" ".htaccess updated." || print_colored red "Error:" "downloading .htaccess ..."
+			rm /tmp/htaccess.txt
+		fi
+		
+		# dev mode enabled
+		if [ "$dev_mode" == "yes" ]; then 
+			sed -i '1s/^/# Start development mode\n/' ${DOCHM}/.htaccess && echo -e "\n# End development mode\n" >> ${DOCHM}/.htaccess; 
+		fi
+			
+		# permissions
+		chown -R "${sftp_user}":"${sftp_user}" "${vpath}/www"
+		chmod -R 0755 "${vpath}/www"
+				
+		# save credentials
+		echo "WP User: ${wp_user}" > "${vpath}/logs/user.wp.log"
+		echo "WP Pass: ${wp_pass}" >> "${vpath}/logs/user.wp.log"
+	
+	fi 
 		    
 }
 
@@ -494,6 +494,15 @@ create_ols_vhost() {
 
 # create a ssl certificate
 create_letsencrypt_ssl() {
+
+	# create control file for letsencrypt
+	if [ ! -f "${DOCHM}/ssl-test.txt" ]; then
+		echo "OK" > ${DOCHM}/ssl-test.txt
+	fi
+		
+	# permissions
+	chown -R "${sftp_user}":"${sftp_user}" "${vpath}/www"
+	chmod -R 0755 "${vpath}/www"
 	
 	# merge domain and aliases
 	domains="${domain}${aliases:+,${aliases}}"
@@ -523,7 +532,10 @@ create_letsencrypt_ssl() {
 		[ -f "${DOCHM}/ssl-test.txt" ] && rm "${DOCHM}/ssl-test.txt"
 		systemctl restart lsws
 	else
-		print_colored red "Error:" "Failed domains: ${failed_domains[@]}"
+		for domain in "${failed_domains[@]}"
+		do
+		  print_colored red "Failed domain:" "$domain"
+		done
 	fi
 
 }
@@ -552,14 +564,17 @@ print_colored yellow "DB Port:             " "$db_port"
 print_colored yellow "DB User:             " "$db_user"
 print_colored yellow "DB Pass:             " "$db_pass"
 echo ""
-print_colored cyan   "PHP + WP:            "
-print_colored yellow "FPM Version:         " "$php"
-print_colored yellow "WP Install:          " "$wp_install"
-print_colored yellow "WP User:             " "$wp_user"
-print_colored yellow "WP Pass:             " "$wp_pass"
-print_colored yellow "Development Mode:    " "$dev_mode"
-print_chars 60 -
-echo ""	
+
+# wp install enabled
+if [ "$wp_install" == "yes" ]; then
+	print_colored cyan   "WordPress:           "
+	print_colored yellow "WP Install:          " "$wp_install"
+	print_colored yellow "WP User:             " "$wp_user"
+	print_colored yellow "WP Pass:             " "$wp_pass"
+	print_colored yellow "Development Mode:    " "$dev_mode"
+	print_chars 60 -
+	echo ""	
+fi
 }
 
 
