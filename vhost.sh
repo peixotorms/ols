@@ -497,10 +497,15 @@ create_letsencrypt_ssl() {
 
 	# setup ssl?
 	if [ "$ssl" == "yes" ]; then
-
+	
+		# www
+		DOCHM="${vpath}/www"
+		cd ${DOCHM}
+		
 		# create control file for letsencrypt
-		if [ ! -f "${DOCHM}/ssl-test.txt" ]; then
-			echo "OK" > ${DOCHM}/ssl-test.txt
+		if [ ! -f "${DOCHM}/.well-known/ssl-test.txt" ]; then
+			mkdir -p "${DOCHM}/.well-known"
+			echo "OK" > "${DOCHM}/.well-known/ssl-test.txt"
 		fi
 			
 		# permissions
@@ -518,11 +523,11 @@ create_letsencrypt_ssl() {
 		failed_domains=()
 		for domain in "${domains_array[@]}"; do
 			echo "Testing ${domain}..."
-			response=$(curl -sSL -H "Cache-Control: no-cache" -k "http://${domain}/ssl-test.txt?nocache=$(date +%s)")
+			response=$(curl -sSL -H "Cache-Control: no-cache" -k "http://${domain}/.well-known/ssl-test.txt?nocache=$(date +%s)")
 			if [[ "${response}" == "OK" ]]; then
 				print_colored green "Success:" "${domain} found"
 			else
-				print_colored red "Error:" "Failed to open: http://${domain}/ssl-test.txt?nocache=$(date +%s)"
+				print_colored red "Error:" "http://${domain}/.well-known/ssl-test.txt?nocache=$(date +%s)"
 				all_successful=false
 				failed_domains+=("$domain")
 			fi
@@ -532,7 +537,7 @@ create_letsencrypt_ssl() {
 		if $all_successful; then
 			print_colored green "Success:" "All domains were successful, creating ssl..."
 			certbot certonly --expand --agree-tos --non-interactive --keep-until-expiring --rsa-key-size 2048 -m "${email}" --webroot -w "${DOCHM}" -d "${domains}"
-			[ -f "${DOCHM}/ssl-test.txt" ] && rm "${DOCHM}/ssl-test.txt"
+			if [ -f "${DOCHM}/.well-known/ssl-test.txt" ]; then rm -rf "${DOCHM}/.well-known"; fi			
 			systemctl restart lsws
 		else
 			for domain in "${failed_domains[@]}"
