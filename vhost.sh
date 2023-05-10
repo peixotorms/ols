@@ -466,7 +466,7 @@ create_ols_vhost() {
 			
 			# first available port from 9000
 			AVAIL_POOL_PORT=$(find_available_php_port)
-			if [[ "$AVAIL_POOL_PORT" =~ ^[0-9]+$ && ! -z "$AVAIL_POOL_PORT" ]]; then
+			if [[ ! -z "$AVAIL_POOL_PORT" ]]; then
 				
 				cat /tmp/pool.conf | grep -q "user" && cp /tmp/pool.conf ${POOL_LOC} && print_colored green "Success:" "pool.conf created on port ${AVAIL_POOL_PORT for for PHP ${version} FPM." || print_colored red "Error:" "downloading pool.conf ..."
 				sed -i "s~#user#~$sftp_user~g" "${POOL_LOC}"
