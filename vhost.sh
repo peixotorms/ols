@@ -488,8 +488,9 @@ create_ols_vhost() {
 				fi
 				
 				# finish
-				sleep 5
-				systemctl restart php${version}-fpm
+				sleep 3
+				systemctl stop php${version}-fpm
+				systemctl start php${version}-fpm
 				
 			fi
 						
