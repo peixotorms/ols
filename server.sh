@@ -579,6 +579,7 @@ function before_install_display
 	print_colored yellow "Disk Available:      " "$DISK_AVAILABLE"
 	echo ""
 	
+	# with info
 	for FUNCTION_NAME in $(echo "$FUNC_NAMES" | tr ',' '\n' | uniq); do
 		
 		if [[ "$FUNCTION_NAME" = "setup_sshd" ]]; then
@@ -622,7 +623,12 @@ function before_install_display
 			print_colored yellow "Memory:              " "${REDIS_MEM}M (allkeys-lru)"
 			echo ""
 		fi
-				
+		
+	done
+	
+	# tasks only
+	for FUNCTION_NAME in $(echo "$FUNC_NAMES" | tr ',' '\n' | uniq); do
+						
 		if [[ "$FUNCTION_NAME" = "update_system" ]]; then
 			print_colored white  "Task:                " "Install updates!"
 		fi
