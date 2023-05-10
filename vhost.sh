@@ -581,7 +581,7 @@ before_install_display_vhost() {
 	print_colored yellow "SFTP User:           " "$sftp_user"
 	print_colored yellow "SFTP Pass:           " "$sftp_pass"
 	echo ""
-	print_colored cyan   "PerconaDB:           "
+	print_colored cyan   "Percona DB:          "
 	print_colored yellow "DB Name:             " "$db_user"
 	print_colored yellow "DB Host:             " "$db_host"
 	print_colored yellow "DB Port:             " "$db_port"
