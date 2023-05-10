@@ -550,6 +550,7 @@ before_install_display_vhost() {
 
 	echo ""
 	print_chars 60 -
+	echo ""
 	print_colored cyan   "Site Information:    "
 	print_colored yellow "Domain:              " "$domain"
 	print_colored yellow "Aliases:             " "$aliases"
