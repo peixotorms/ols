@@ -574,31 +574,83 @@ function before_install_display
 	print_chars 60 -
     print_colored cyan   "Server capabilities: "
     print_colored yellow "Public IP:           " "$IP"
-	print_colored yellow "SSH Port:            " "$SSH_PORT"
     print_colored yellow "CPU cores:           " "$CPU_CORES"
     print_colored yellow "RAM Size:            " "${TOTAL_RAM}M"
 	print_colored yellow "Disk Available:      " "$DISK_AVAILABLE"
-	echo ""
-    print_colored cyan   "OpenLiteSpeed:       "
-    print_colored yellow "OLS URL:             " "https://${IP}:$OLS_PORT"
-    print_colored yellow "OLS username:        " "$OLS_USER"
-    print_colored yellow "OLS password:        " "$OLS_PASS"
-	echo ""
-	print_colored cyan   "PerconaDB:           "
-    print_colored yellow "DB version:          " "8.0"
-    print_colored yellow "DB auth:             " "root user using 'auth_socket' plugin"
-	print_colored yellow "InnoDB Pool Size:    " "${MYSQL_MEM}M"
-	print_colored yellow "InnoDB Pool Count:   " "$MYSQL_POOL_COUNT"
-	echo ""
-	print_colored cyan   "PHP:                 "
-	print_colored yellow "FPM Versions:        " "7.4, 8.0, 8.1 and 8.2 (fpm + lsapi)"
-	print_colored yellow "PHP Workers:         " "$PHP_POOL_COUNT"
-    print_colored yellow "OPCache:             " "Available up to 256M"
-	print_colored yellow "Redis:               " "Available up to ${REDIS_MEM}M (allkeys-lru)"
-	echo ""
-	print_colored cyan   "Aditional packages:  " "Postfix"
+	
+	for FUNCTION_NAME in $(echo "$FUNC_NAMES" | tr ',' '\n' | uniq); do
+		
+		if [[ "$FUNCTION_NAME" = "update_system" ]]; then
+			print_colored white  "Task:                " "Install updates!"
+			echo ""
+		fi
+		
+		if [[ "$FUNCTION_NAME" = "update_limits" ]]; then
+			print_colored white  "Task:                " "Update swap and other limits!"
+			echo ""
+		fi
+				
+		if [[ "$FUNCTION_NAME" = "setup_sshd" ]]; then
+			print_colored white  "Task:                " "Reset ssh server settings!"
+			print_colored yellow "SSH Port:            " "$SSH_PORT"
+			echo ""
+		fi
+		
+		if [[ "$FUNCTION_NAME" = "setup_firewall" ]]; then
+			print_colored white  "Task:                " "Install and reset firewall!"
+			echo ""
+		fi
+		
+		if [[ "$FUNCTION_NAME" = "install_basic_packages" ]]; then
+			print_colored white  "Task:                " "Process basic packages!"
+		fi
+		
+		if [[ "$FUNCTION_NAME" = "install_ols" ]]; then
+			print_colored white  "Task:                " "Install and reset Openlitespeed!"
+			print_colored yellow "OLS URL:             " "https://${IP}:$OLS_PORT"
+			print_colored yellow "OLS username:        " "$OLS_USER"
+			print_colored yellow "OLS password:        " "$OLS_PASS"
+			echo ""
+		fi
+		
+		if [[ "$FUNCTION_NAME" = "install_percona" ]]; then
+			print_colored white  "Task:                " "Install and reset Percona Server for MySQL!"
+			print_colored yellow "DB version:          " "8.0"
+			print_colored yellow "DB auth:             " "root user using 'auth_socket' plugin"
+			print_colored yellow "InnoDB Pool Size:    " "${MYSQL_MEM}M"
+			print_colored yellow "InnoDB Pool Count:   " "$MYSQL_POOL_COUNT"
+			echo ""
+		fi
+		
+		if [[ "$FUNCTION_NAME" = "install_php" ]]; then
+			print_colored white  "Task:                " "Install and reset PHP!"
+			print_colored yellow "FPM Versions:        " "7.4, 8.0, 8.1 and 8.2"
+			print_colored yellow "PHP Workers:         " "$PHP_POOL_COUNT"
+			print_colored yellow "OPCache:             " "256M"
+			echo ""
+		fi
+		
+		if [[ "$FUNCTION_NAME" = "install_wp_cli" ]]; then
+			print_colored white  "Task:                " "Install wp-cli!"
+			echo ""
+		fi
+		
+		if [[ "$FUNCTION_NAME" = "install_redis" ]]; then
+			print_colored white  "Task:                " "Install and reset Redis!"
+			print_colored yellow "Memory:              " "${REDIS_MEM}M (allkeys-lru)"
+			echo ""
+		fi
+		
+		if [[ "$FUNCTION_NAME" = "install_postfix" ]]; then
+			print_colored white  "Task:                " "Install and reset Postfix!"
+			echo ""
+		fi
+		
+	done
+	
 	print_chars 60 -
 	echo ""	
+	
 }
 
 

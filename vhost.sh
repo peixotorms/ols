@@ -495,86 +495,93 @@ create_ols_vhost() {
 # create a ssl certificate
 create_letsencrypt_ssl() {
 
-	# create control file for letsencrypt
-	if [ ! -f "${DOCHM}/ssl-test.txt" ]; then
-		echo "OK" > ${DOCHM}/ssl-test.txt
-	fi
-		
-	# permissions
-	chown -R "${sftp_user}":"${sftp_user}" "${vpath}/www"
-	chmod -R 0755 "${vpath}/www"
-	
-	# merge domain and aliases
-	domains="${domain}${aliases:+,${aliases}}"
-	
-	# Convert the comma-separated string to an array
-	IFS=',' read -ra domains_array <<< "$domains"
+	# setup ssl?
+	if [ "ssl" == "yes" ]; then 
 
-	# Loop through the domains and make a curl request to the domain
-	all_successful=true
-	failed_domains=()
-	for domain in "${domains_array[@]}"; do
-		echo "Testing ${domain}..."
-		response=$(curl -sSL -H "Cache-Control: no-cache" -k "http://${domain}/ssl-test.txt?nocache=$(date +%s)")
-		if [[ "${response}" == "OK" ]]; then
-			print_colored green "Success:" "${domain} found"
-		else
-			print_colored red "Error:" "Failed to open: http://${domain}/ssl-test.txt?nocache=$(date +%s)"
-			all_successful=false
-			failed_domains+=("$domain")
+		# create control file for letsencrypt
+		if [ ! -f "${DOCHM}/ssl-test.txt" ]; then
+			echo "OK" > ${DOCHM}/ssl-test.txt
 		fi
-	done
+			
+		# permissions
+		chown -R "${sftp_user}":"${sftp_user}" "${vpath}/www"
+		chmod -R 0755 "${vpath}/www"
+		
+		# merge domain and aliases
+		domains="${domain}${aliases:+,${aliases}}"
+		
+		# Convert the comma-separated string to an array
+		IFS=',' read -ra domains_array <<< "$domains"
 
-	# Check if all domains were successful
-	if $all_successful; then
-		print_colored green "Success:" "All domains were successful, creating ssl..."
-		certbot certonly --expand --agree-tos --non-interactive --keep-until-expiring --rsa-key-size 2048 -m "${email}" --webroot -w "${DOCHM}" -d "${domains}"
-		[ -f "${DOCHM}/ssl-test.txt" ] && rm "${DOCHM}/ssl-test.txt"
-		systemctl restart lsws
-	else
-		for domain in "${failed_domains[@]}"
-		do
-		  print_colored red "Failed domain:" "$domain"
+		# Loop through the domains and make a curl request to the domain
+		all_successful=true
+		failed_domains=()
+		for domain in "${domains_array[@]}"; do
+			echo "Testing ${domain}..."
+			response=$(curl -sSL -H "Cache-Control: no-cache" -k "http://${domain}/ssl-test.txt?nocache=$(date +%s)")
+			if [[ "${response}" == "OK" ]]; then
+				print_colored green "Success:" "${domain} found"
+			else
+				print_colored red "Error:" "Failed to open: http://${domain}/ssl-test.txt?nocache=$(date +%s)"
+				all_successful=false
+				failed_domains+=("$domain")
+			fi
 		done
+
+		# Check if all domains were successful
+		if $all_successful; then
+			print_colored green "Success:" "All domains were successful, creating ssl..."
+			certbot certonly --expand --agree-tos --non-interactive --keep-until-expiring --rsa-key-size 2048 -m "${email}" --webroot -w "${DOCHM}" -d "${domains}"
+			[ -f "${DOCHM}/ssl-test.txt" ] && rm "${DOCHM}/ssl-test.txt"
+			systemctl restart lsws
+		else
+			for domain in "${failed_domains[@]}"
+			do
+			  print_colored red "Failed domain:" "$domain"
+			done
+		fi
+		
 	fi
 
 }
 
 
 before_install_display_vhost() {
-echo ""
-print_chars 60 -
-print_colored cyan   "Site Information:    "
-print_colored yellow "Domain:              " "$domain"
-print_colored yellow "Aliases:             " "$aliases"
-print_colored yellow "Email:               " "$email"
-print_colored yellow "Path:                " "$vpath"
-print_colored yellow "SSL:                 " "$ssl"
-echo ""
-print_colored cyan   "SFTP Access:         "
-print_colored yellow "IP Adress:           " "$IP"
-print_colored yellow "SFTP Port:           " "$CURSSHPORT"
-print_colored yellow "SFTP User:           " "$sftp_user"
-print_colored yellow "SFTP Pass:           " "$sftp_pass"
-echo ""
-print_colored cyan   "PerconaDB:           "
-print_colored yellow "DB Name:             " "$db_user"
-print_colored yellow "DB Host:             " "$db_host"
-print_colored yellow "DB Port:             " "$db_port"
-print_colored yellow "DB User:             " "$db_user"
-print_colored yellow "DB Pass:             " "$db_pass"
-echo ""
 
-# wp install enabled
-if [ "$wp_install" == "yes" ]; then
-	print_colored cyan   "WordPress:           "
-	print_colored yellow "WP Install:          " "$wp_install"
-	print_colored yellow "WP User:             " "$wp_user"
-	print_colored yellow "WP Pass:             " "$wp_pass"
-	print_colored yellow "Development Mode:    " "$dev_mode"
+	echo ""
 	print_chars 60 -
-	echo ""	
-fi
+	print_colored cyan   "Site Information:    "
+	print_colored yellow "Domain:              " "$domain"
+	print_colored yellow "Aliases:             " "$aliases"
+	print_colored yellow "Email:               " "$email"
+	print_colored yellow "Path:                " "$vpath"
+	print_colored yellow "SSL:                 " "$ssl"
+	echo ""
+	print_colored cyan   "SFTP Access:         "
+	print_colored yellow "IP Adress:           " "$IP"
+	print_colored yellow "SFTP Port:           " "$CURSSHPORT"
+	print_colored yellow "SFTP User:           " "$sftp_user"
+	print_colored yellow "SFTP Pass:           " "$sftp_pass"
+	echo ""
+	print_colored cyan   "PerconaDB:           "
+	print_colored yellow "DB Name:             " "$db_user"
+	print_colored yellow "DB Host:             " "$db_host"
+	print_colored yellow "DB Port:             " "$db_port"
+	print_colored yellow "DB User:             " "$db_user"
+	print_colored yellow "DB Pass:             " "$db_pass"
+	echo ""
+
+	# wp install enabled
+	if [ "$wp_install" == "yes" ]; then
+		print_colored cyan   "WordPress:           "
+		print_colored yellow "WP Install:          " "$wp_install"
+		print_colored yellow "WP User:             " "$wp_user"
+		print_colored yellow "WP Pass:             " "$wp_pass"
+		print_colored yellow "Dev Mode:            " "$dev_mode"
+		print_chars 60 -
+		echo ""	
+	fi
+	
 }
 
 
