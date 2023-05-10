@@ -496,7 +496,7 @@ create_ols_vhost() {
 create_letsencrypt_ssl() {
 
 	# setup ssl?
-	if [ "ssl" == "yes" ]; then 
+	if [ "$ssl" == "yes" ]; then
 
 		# create control file for letsencrypt
 		if [ ! -f "${DOCHM}/ssl-test.txt" ]; then
@@ -577,10 +577,12 @@ before_install_display_vhost() {
 		print_colored yellow "WP Install:          " "$wp_install"
 		print_colored yellow "WP User:             " "$wp_user"
 		print_colored yellow "WP Pass:             " "$wp_pass"
-		print_colored yellow "Dev Mode:            " "$dev_mode"
+		print_colored yellow "Development:         " "$dev_mode"
 		print_chars 60 -
 		echo ""	
 	fi
+
+	print_chars 60 -
 	
 }
 
