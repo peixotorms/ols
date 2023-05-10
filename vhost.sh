@@ -463,29 +463,35 @@ create_ols_vhost() {
 		CHECK="/etc/php/${version}/fpm/pool.d"
 		POOL_LOC="${CHECK}/${domain}.conf"
 		if [ -d "${CHECK}" ]; then
+			
+			# first available port from 9000
 			AVAIL_POOL_PORT=$(find_available_php_port)
-			cat /tmp/pool.conf | grep -q "user" && cp /tmp/pool.conf ${POOL_LOC} && print_colored green "Success:" "pool.conf created for for PHP ${version} FPM." || print_colored red "Error:" "downloading pool.conf ..."
-			sed -i "s~#user#~$sftp_user~g" "${POOL_LOC}"
-			sed -i "s~#port#~$AVAIL_POOL_PORT~g" "${POOL_LOC}"
-			sed -i "s~#children#~$PHP_POOL_COUNT~g" "${POOL_LOC}"
-			sed -i "s~#vpath#~${vpath}~g" "${POOL_LOC}"
-			sed -i "s~^.*backlog.*$~listen.backlog = ${PHP_BACKLOG}~g" "${POOL_LOC}"
-			
-			# update vhconf.conf php ports to match with the php pool for each version
-			if [ "$version" = "7.4" ]; then
-				sed -i "s~127.0.0.1:9000~127.0.0.1:${AVAIL_POOL_PORT}~g" "${VHCONF}"
-			elif [ "$version" = "8.0" ]; then
-				sed -i "s~127.0.0.1:9001~127.0.0.1:${AVAIL_POOL_PORT}~g" "${VHCONF}"
-			elif [ "$version" = "8.1" ]; then
-				sed -i "s~127.0.0.1:9002~127.0.0.1:${AVAIL_POOL_PORT}~g" "${VHCONF}"
-			elif [ "$version" = "8.2" ]; then
-				sed -i "s~127.0.0.1:9003~127.0.0.1:${AVAIL_POOL_PORT}~g" "${VHCONF}"
+			if [[ "$AVAIL_POOL_PORT" =~ ^[0-9]+$ && ! -z "$AVAIL_POOL_PORT" ]]; then
+				
+				cat /tmp/pool.conf | grep -q "user" && cp /tmp/pool.conf ${POOL_LOC} && print_colored green "Success:" "pool.conf created on port ${AVAIL_POOL_PORT for for PHP ${version} FPM." || print_colored red "Error:" "downloading pool.conf ..."
+				sed -i "s~#user#~$sftp_user~g" "${POOL_LOC}"
+				sed -i "s~#port#~$AVAIL_POOL_PORT~g" "${POOL_LOC}"
+				sed -i "s~#children#~$PHP_POOL_COUNT~g" "${POOL_LOC}"
+				sed -i "s~#vpath#~${vpath}~g" "${POOL_LOC}"
+				sed -i "s~^.*backlog.*$~listen.backlog = ${PHP_BACKLOG}~g" "${POOL_LOC}"
+				
+				# update vhconf.conf php ports to match with the php pool for each version
+				if [ "$version" = "7.4" ]; then
+					sed -i "s~127.0.0.1:9000~127.0.0.1:${AVAIL_POOL_PORT}~g" "${VHCONF}"
+				elif [ "$version" = "8.0" ]; then
+					sed -i "s~127.0.0.1:9001~127.0.0.1:${AVAIL_POOL_PORT}~g" "${VHCONF}"
+				elif [ "$version" = "8.1" ]; then
+					sed -i "s~127.0.0.1:9002~127.0.0.1:${AVAIL_POOL_PORT}~g" "${VHCONF}"
+				elif [ "$version" = "8.2" ]; then
+					sed -i "s~127.0.0.1:9003~127.0.0.1:${AVAIL_POOL_PORT}~g" "${VHCONF}"
+				fi
+				
+				# finish
+				sleep 5
+				systemctl restart php${version}-fpm
+				
 			fi
-			
-			# finish
-			sleep 5
-			systemctl restart php${version}-fpm
-			((AVAIL_POOL_PORT++))
+						
 		else
 			print_colored red "Error:" "Directory for PHP ${version} does not exist"
 		fi

@@ -214,19 +214,13 @@ function find_available_php_port() {
     fi
   done < <(find /etc/php/*/fpm/pool.d -maxdepth 1 -type f -name '*.conf')
 
-  # Find the first available port number starting from 9000 sequentially
-  if (( ${#ports[@]} == 0 )); then
-    echo 9000
-  else
-    next_port=9000
-    for used_port in "${ports[@]}"; do
-      if ((next_port == used_port)); then
-        ((next_port++))
-      else
-        break
-      fi
-    done
-    echo "$next_port"
-  fi
+  # Find the first available port number starting from 9000 that is not in the ports array
+  for ((port=9000; port<=65535; port++)); do
+    if ! [[ "${ports[*]}" =~ $port ]]; then
+      echo "$port"
+      return
+    fi
+  done
 }
+
 
