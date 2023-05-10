@@ -503,9 +503,12 @@ create_letsencrypt_ssl() {
 		cd ${DOCHM}
 		
 		# create control file for letsencrypt
+		echo "checking ${DOCHM}/.well-known/ssl-test.txt"
 		if [ ! -f "${DOCHM}/.well-known/ssl-test.txt" ]; then
+			echo "creating dir"
 			mkdir -p "${DOCHM}/.well-known"
 			echo "OK" > "${DOCHM}/.well-known/ssl-test.txt"
+			echo "creating file ${DOCHM}/.well-known/ssl-test.txt"
 		fi
 			
 		# permissions
