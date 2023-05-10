@@ -172,7 +172,7 @@ while true; do
         --db_pass)
             db_pass="${2:-$(gen_rand_pass)}"
             if [[ "$db_pass" =~ [^a-zA-Z0-9,+=@\-_!] ]]; then
-                print_colored red "Error:" "Invalid database password format. Only alphanumeric characters and these special characters are allowed: ,+=@-_!"; exit 1
+                print_colored red "Error:" "Invalid database password format. Only alphanumeric characters and these special characters are allowed: ,+=@-_! on $db_pass"; exit 1
             elif [[ "${#db_pass}" -lt 8 ]] || [[ "${#db_pass}" -gt 32 ]]; then
                 print_colored red "Error:" "Invalid database password length. Must be between 8 and 32 characters."; exit 1
             fi
