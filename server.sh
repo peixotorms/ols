@@ -577,20 +577,20 @@ function before_install_display
     print_colored yellow "CPU cores:           " "$CPU_CORES"
     print_colored yellow "RAM Size:            " "${TOTAL_RAM}M"
 	print_colored yellow "Disk Available:      " "$DISK_AVAILABLE"
+	echo ""
 	
 	for FUNCTION_NAME in $(echo "$FUNC_NAMES" | tr ',' '\n' | uniq); do
 		
 		if [[ "$FUNCTION_NAME" = "update_system" ]]; then
 			print_colored white  "Task:                " "Install updates!"
-			echo ""
 		fi
 		
 		if [[ "$FUNCTION_NAME" = "update_limits" ]]; then
 			print_colored white  "Task:                " "Update swap and other limits!"
-			echo ""
 		fi
 				
 		if [[ "$FUNCTION_NAME" = "setup_sshd" ]]; then
+			echo ""
 			print_colored white  "Task:                " "Reset ssh server settings!"
 			print_colored yellow "SSH Port:            " "$SSH_PORT"
 			echo ""
@@ -598,7 +598,6 @@ function before_install_display
 		
 		if [[ "$FUNCTION_NAME" = "setup_firewall" ]]; then
 			print_colored white  "Task:                " "Install and reset firewall!"
-			echo ""
 		fi
 		
 		if [[ "$FUNCTION_NAME" = "install_basic_packages" ]]; then
@@ -606,6 +605,7 @@ function before_install_display
 		fi
 		
 		if [[ "$FUNCTION_NAME" = "install_ols" ]]; then
+			echo ""
 			print_colored white  "Task:                " "Install and reset Openlitespeed!"
 			print_colored yellow "OLS URL:             " "https://${IP}:$OLS_PORT"
 			print_colored yellow "OLS username:        " "$OLS_USER"
@@ -614,6 +614,7 @@ function before_install_display
 		fi
 		
 		if [[ "$FUNCTION_NAME" = "install_percona" ]]; then
+			echo ""
 			print_colored white  "Task:                " "Install and reset Percona Server for MySQL!"
 			print_colored yellow "DB version:          " "8.0"
 			print_colored yellow "DB auth:             " "root user using 'auth_socket' plugin"
@@ -623,6 +624,7 @@ function before_install_display
 		fi
 		
 		if [[ "$FUNCTION_NAME" = "install_php" ]]; then
+			echo ""
 			print_colored white  "Task:                " "Install and reset PHP!"
 			print_colored yellow "FPM Versions:        " "7.4, 8.0, 8.1 and 8.2"
 			print_colored yellow "PHP Workers:         " "$PHP_POOL_COUNT"
@@ -632,10 +634,10 @@ function before_install_display
 		
 		if [[ "$FUNCTION_NAME" = "install_wp_cli" ]]; then
 			print_colored white  "Task:                " "Install wp-cli!"
-			echo ""
 		fi
 		
 		if [[ "$FUNCTION_NAME" = "install_redis" ]]; then
+			echo ""
 			print_colored white  "Task:                " "Install and reset Redis!"
 			print_colored yellow "Memory:              " "${REDIS_MEM}M (allkeys-lru)"
 			echo ""
