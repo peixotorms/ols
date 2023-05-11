@@ -217,7 +217,7 @@ function setup_repositories
 	echo "Adding Percona repositories..."
 	silent curl -s https://repo.percona.com/apt/percona-release_latest.generic_all.deb -o /tmp/percona-release_latest.generic_all.deb
 	silent apt-get -y -f install gnupg2 lsb-release 
-	dpkg -i /tmp/percona-release_latest.generic_all.deb
+	silent dpkg -i /tmp/percona-release_latest.generic_all.deb
 	rm /tmp/percona-release_latest.generic_all.deb
 	
 	# ols
