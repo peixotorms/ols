@@ -526,6 +526,10 @@ create_letsencrypt_ssl() {
 		# restart
 		systemctl restart lsws
 		
+		# server IP
+		$IP
+
+		
 		# merge domain and aliases
 		domains="${domain}${aliases:+,${aliases}}"
 		
@@ -536,15 +540,41 @@ create_letsencrypt_ssl() {
 		all_successful=true
 		failed_domains=()
 		for domain in "${domains_array[@]}"; do
-			echo "Testing ${domain}..."
-			response=$(curl --dns-servers 8.8.8.8,1.1.1.1 -sSL -H "Cache-Control: no-cache" -k "http://${domain}/ssl-test.txt?nocache=$(date +%s)")
-			if [[ "${response}" == "OK" ]]; then
-				print_colored green "Success:" "${domain} found"
+				
+			# dig IP addresses from google
+			echo "Testing ${domain} with google dns..."
+			dig_test=$(dig "@8.8.8.8" "$domain" +short)
+			IFS=$'\n' read -r -d '' -a a_records <<< "$dig_test"
+
+			# Check if the IP address is present in the array
+			ip_found=false
+			for a in "${a_records[@]}"; do
+				if [[ "$a" == "$IP" ]]; then
+					ip_found=true
+					echo "Dig test is positive for IP ${IP}"
+					break
+				fi
+			done
+			
+			# dig success
+			if "$ip_found" = true; then
+				
+				# http test
+				response=$(curl -sSL -H "Cache-Control: no-cache" -k "http://${domain}/ssl-test.txt?nocache=$(date +%s)")
+				if [[ "${response}" == "OK" ]]; then
+					print_colored green "Success:" "${domain} found"
+				else
+					print_colored red "Error:" "http://${domain}/ssl-test.txt?nocache=$(date +%s)"
+					all_successful=false
+					failed_domains+=("$domain")
+				fi
+								
 			else
-				print_colored red "Error:" "http://${domain}/ssl-test.txt?nocache=$(date +%s)"
 				all_successful=false
 				failed_domains+=("$domain")
+				print_colored red "Failed domain:" "$domain"
 			fi
+			
 		done
 
 		# Check if all domains were successful

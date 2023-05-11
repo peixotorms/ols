@@ -74,7 +74,7 @@ function calculate_memory_configs() {
 	local PHP_MEM=$(($RAM - $REDIS_MEM - $MYSQL_MEM))
 	local CPU_CORES=$(nproc)
 	local DISK_AVAILABLE=$(df -BG /home | awk 'NR==2{print $4}')
-	local IP=$(curl -s http://checkip.amazonaws.com || printf "0.0.0.0")
+	local IP=$(curl -s http://checkip.amazonaws.com 2>/dev/null || curl -s https://ifconfig.me 2>/dev/null || curl -s https://ipinfo.io/ip || printf "0.0.0.0")
 	local CURSSHPORT=$(awk '/Port[[:space:]]+[0-9]+/{print $2; found=1; exit} END{if (!found) print "22"}' /etc/ssh/sshd_config); 
 	
 	case $OPTION in
