@@ -537,7 +537,7 @@ create_letsencrypt_ssl() {
 		failed_domains=()
 		for domain in "${domains_array[@]}"; do
 			echo "Testing ${domain}..."
-			response=$(curl -sSL -H "Cache-Control: no-cache" -k "http://${domain}/ssl-test.txt?nocache=$(date +%s)")
+			response=$(curl --dns-servers 8.8.8.8,1.1.1.1 -sSL -H "Cache-Control: no-cache" -k "http://${domain}/ssl-test.txt?nocache=$(date +%s)")
 			if [[ "${response}" == "OK" ]]; then
 				print_colored green "Success:" "${domain} found"
 			else
