@@ -525,11 +525,7 @@ create_letsencrypt_ssl() {
 		
 		# restart
 		systemctl restart lsws
-		
-		# server IP
-		$IP
 
-		
 		# merge domain and aliases
 		domains="${domain}${aliases:+,${aliases}}"
 		
@@ -579,10 +575,18 @@ create_letsencrypt_ssl() {
 
 		# Check if all domains were successful
 		if $all_successful; then
+		
+			# success
 			print_colored green "Success:" "All domains were successful, creating ssl..."
+			
+			# issue certificate
 			certbot certonly --expand --agree-tos --non-interactive --keep-until-expiring --rsa-key-size 2048 -m "${email}" --webroot -w "${DOCHM}" -d "${domains}"
 			if [ -f "${DOCHM}/ssl-test.txt" ]; then rm "${DOCHM}/ssl-test.txt"; fi			
 			systemctl restart lsws
+			
+			# add cron if not exists
+			(crontab -l 2>/dev/null | grep -q -F '45 1 */3 * * /usr/bin/certbot renew > /dev/null 2>&1') || (crontab -l 2>/dev/null; echo '45 1 */3 * * /usr/bin/certbot renew > /dev/null 2>&1') | crontab -			
+			
 		else
 			for domain in "${failed_domains[@]}"
 			do

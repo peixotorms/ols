@@ -349,8 +349,14 @@ function install_ols() {
 	sed -i "s/^.* PHP_LSAPI_CHILDREN.*$/  env                     PHP_LSAPI_CHILDREN=3/g" /usr/local/lsws/conf/httpd_config.conf
 	sed -i "s/^.*backlog .*$/  backlog                 ${PHP_BACKLOG}/g" /usr/local/lsws/conf/httpd_config.conf
 	
+	# configure
+	# Download php.ini file
+	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/php/php.ini > /tmp/php.ini
+	if cat /tmp/php.ini | grep -q "max_input_vars"; then find /usr/local/lsws -type f -iname php.ini -exec cp /tmp/php.ini {} \; && print_colored green "Success:" "lsapi php.ini files updated."; else print_colored red "Error:" "downloading php.ini ..."; fi
+	rm /tmp/php.ini
+	
 	# permissions
-	chown -R lsadm:lsadm /usr/local/lsws/conf/
+	chown -R lsadm:lsadm /usr/local/lsws	
 	
 	# create self signed ssl
 	echo "Installing self signed ssl..."
@@ -374,6 +380,7 @@ function install_ols() {
 	chmod 0600 /usr/local/lsws/conf/$CERT
 	
 	# restart
+	killall -9 lsphp || echo "PHP process was not running."
 	systemctl restart lshttpd
 	
 }
@@ -692,9 +699,11 @@ if [ "$CONFIRM_SETUP" != "0" ] ; then
 		echo "Running function: $FUNCTION_NAME"
 		"$FUNCTION_NAME"
 		
-		# sshd restart?
+		# sshd restart warning?
 		if [[ "$FUNCTION_NAME" = "setup_sshd" && "${SSH_PORT}" != "${CURSSHPORT}" ]]; then
 			RESTART_SSH="1"
+		else
+			service sshd restart
 		fi
 
 		
