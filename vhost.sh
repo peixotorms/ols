@@ -560,7 +560,7 @@ create_letsencrypt_ssl() {
 			systemctl restart lsws
 			
 			# add cron if not exists
-			(crontab -l 2>/dev/null | grep -q -F '45 1 */3 * * /usr/bin/certbot renew > /dev/null 2>&1') || (crontab -l 2>/dev/null; echo '45 1 */3 * * /usr/bin/certbot renew > /dev/null 2>&1') | crontab -			
+			(crontab -l 2>/dev/null | grep -q -F '45 1 */3 * * /usr/bin/certbot renew && /usr/bin/systemctl reload lsws >/dev/null 2>&1') || (crontab -l 2>/dev/null; echo '45 1 */3 * * /usr/bin/certbot renew && /usr/bin/systemctl reload lsws >/dev/null 2>&1') | crontab -			
 			
 		else
 			for domain in "${failed_domains[@]}"
