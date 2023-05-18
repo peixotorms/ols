@@ -243,15 +243,12 @@ function setup_firewall
 	echo "Updating firewall policy..."
 	
 	# reinstall and reset firewall
-	silent iptables -P INPUT DROP
-	silent iptables -P FORWARD DROP
+	silent iptables -P INPUT ACCEPT
+	silent iptables -P FORWARD ACCEPT
 	silent iptables -P OUTPUT ACCEPT
 	silent iptables -F
 	silent iptables -X
 	silent iptables -Z
-	silent iptables -P INPUT DROP
-	silent iptables -P FORWARD DROP
-	silent iptables -P OUTPUT ACCEPT
 
 	# Check if ufw is already installed, and only reinstall if not
 	if ! command -v ufw &> /dev/null; then
