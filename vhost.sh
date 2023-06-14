@@ -72,7 +72,7 @@ while true; do
 			
 			# Initialize default values
 			ssl="yes"
-			php="8.0"
+			php="8.1"
 			db_host="localhost"
 			db_port="3306"
 			wp_install="yes"

@@ -285,7 +285,7 @@ function install_basic_packages() {
 }
 
 
-# OpenLiteSpeed web server and its PHP 8.0 packages.
+# OpenLiteSpeed web server and its PHP 8 packages.
 function install_ols() {
 
 	# start
