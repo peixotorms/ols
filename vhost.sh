@@ -457,48 +457,48 @@ create_ols_vhost() {
 	
 	
 	# generate php pools
-	find /etc/php/*/fpm/pool.d -maxdepth 1 -type f -name "${domain}.conf" -delete
-	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/php/pool.conf > /tmp/pool.conf
-	for version in 7.4 8.0 8.1 8.2; do
-		CHECK="/etc/php/${version}/fpm/pool.d"
-		POOL_LOC="${CHECK}/${domain}.conf"
-		if [ -d "${CHECK}" ]; then
+	#find /etc/php/*/fpm/pool.d -maxdepth 1 -type f -name "${domain}.conf" -delete
+	#curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/php/pool.conf > /tmp/pool.conf
+	#for version in 7.4 8.0 8.1 8.2; do
+	#	CHECK="/etc/php/${version}/fpm/pool.d"
+	#	POOL_LOC="${CHECK}/${domain}.conf"
+	#	if [ -d "${CHECK}" ]; then
 			
-			# first available port from 9000
-			AVAIL_POOL_PORT=$(find_available_php_port)
-			if [[ ! -z "$AVAIL_POOL_PORT" ]]; then
-			
-				cat /tmp/pool.conf | grep -q "user" && cp /tmp/pool.conf ${POOL_LOC} && print_colored green "Success:" "pool.conf created on port ${AVAIL_POOL_PORT} for PHP ${version} FPM." || print_colored red "Error:" "downloading pool.conf ..."
-    
-				sed -i "s~#user#~$sftp_user~g" "${POOL_LOC}"
-				sed -i "s~#port#~$AVAIL_POOL_PORT~g" "${POOL_LOC}"
-				sed -i "s~#children#~$PHP_POOL_COUNT~g" "${POOL_LOC}"
-				sed -i "s~#vpath#~${vpath}~g" "${POOL_LOC}"
-				sed -i "s~^.*backlog.*$~listen.backlog = ${PHP_BACKLOG}~g" "${POOL_LOC}"
-				
-				# update vhconf.conf php ports to match with the php pool for each version
-				if [ "$version" = "7.4" ]; then
-					sed -i "s~127.0.0.1:9000~127.0.0.1:${AVAIL_POOL_PORT}~g" "${VHCONF}"
-				elif [ "$version" = "8.0" ]; then
-					sed -i "s~127.0.0.1:9001~127.0.0.1:${AVAIL_POOL_PORT}~g" "${VHCONF}"
-				elif [ "$version" = "8.1" ]; then
-					sed -i "s~127.0.0.1:9002~127.0.0.1:${AVAIL_POOL_PORT}~g" "${VHCONF}"
-				elif [ "$version" = "8.2" ]; then
-					sed -i "s~127.0.0.1:9003~127.0.0.1:${AVAIL_POOL_PORT}~g" "${VHCONF}"
-				fi
-				
-				# finish
-				sleep 3
-				systemctl stop php${version}-fpm
-				systemctl start php${version}-fpm
-				
-			fi
-						
-		else
-			print_colored red "Error:" "Directory for PHP ${version} does not exist"
-		fi
-	done
-	rm /tmp/pool.conf
+	#		# first available port from 9000
+	#		AVAIL_POOL_PORT=$(find_available_php_port)
+	#		if [[ ! -z "$AVAIL_POOL_PORT" ]]; then
+	#		
+	#			cat /tmp/pool.conf | grep -q "user" && cp /tmp/pool.conf ${POOL_LOC} && print_colored green "Success:" 		"pool.conf created on port ${AVAIL_POOL_PORT} for PHP ${version} FPM." || print_colored red "Error:" "downloading pool.conf ..."
+    #
+	#			sed -i "s~#user#~$sftp_user~g" "${POOL_LOC}"
+	#			sed -i "s~#port#~$AVAIL_POOL_PORT~g" "${POOL_LOC}"
+	#			sed -i "s~#children#~$PHP_POOL_COUNT~g" "${POOL_LOC}"
+	#			sed -i "s~#vpath#~${vpath}~g" "${POOL_LOC}"
+	#			sed -i "s~^.*backlog.*$~listen.backlog = ${PHP_BACKLOG}~g" "${POOL_LOC}"
+	#			
+	#			# update vhconf.conf php ports to match with the php pool for each version
+	#			if [ "$version" = "7.4" ]; then
+	#				sed -i "s~127.0.0.1:9000~127.0.0.1:${AVAIL_POOL_PORT}~g" "${VHCONF}"
+	#			elif [ "$version" = "8.0" ]; then
+	#				sed -i "s~127.0.0.1:9001~127.0.0.1:${AVAIL_POOL_PORT}~g" "${VHCONF}"
+	#			elif [ "$version" = "8.1" ]; then
+	#				sed -i "s~127.0.0.1:9002~127.0.0.1:${AVAIL_POOL_PORT}~g" "${VHCONF}"
+	#			elif [ "$version" = "8.2" ]; then
+	#				sed -i "s~127.0.0.1:9003~127.0.0.1:${AVAIL_POOL_PORT}~g" "${VHCONF}"
+	#			fi
+	#			
+	#			# finish
+	#			sleep 3
+	#			systemctl stop php${version}-fpm
+	#			systemctl start php${version}-fpm
+	#			
+	#		fi
+	#					
+	#	else
+	#		print_colored red "Error:" "Directory for PHP ${version} does not exist"
+	#	fi
+	#done
+	#rm /tmp/pool.conf
 		
 }
 

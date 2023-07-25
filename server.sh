@@ -18,7 +18,7 @@ SSH_PORT="22"
 OLS_PORT="7080"
 OLS_USER="olsadmin"
 OLS_PASS=$(gen_rand_pass)
-FUNC_NAMES="update_system, update_limits, setup_sshd, setup_repositories, setup_firewall, install_basic_packages, install_ols, install_php, install_wp_cli, install_percona, install_redis, install_postfix"
+FUNC_NAMES="update_system, update_limits, setup_sshd, setup_repositories, setup_firewall, install_basic_packages, install_ols, install_wp_cli, install_percona, install_redis, install_postfix"
 
 # Parse command-line arguments
 while [[ $# -gt 0 ]]; do
