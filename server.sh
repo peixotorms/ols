@@ -408,6 +408,10 @@ function install_php() {
 		print_colored red "Error:" "No packages available for any PHP version."
 	fi
 	
+	# enable
+	phpenmod -v 8.2 -s cli bcmath curl gd gmp imap intl mbstring pgsql soap tidy xml xmlrpc zip opcache xsl imagick redis memcached
+
+	
 	# configure
 	# Download php.ini file
 	curl -skL https://raw.githubusercontent.com/peixotorms/ols/main/configs/php/php.ini > /tmp/php.ini
